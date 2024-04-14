@@ -1,49 +1,16 @@
 import os
 import torch
-from models import AFTN, Autoformer, Transformer, TimesNet, Nonstationary_Transformer, Linear, NLinear, DLinear, FEDformer, \
-    Informer, LightTS, Reformer, ETSformer, Pyraformer, PatchTST, MICN, Crossformer, FiLM, iTransformer, \
-    Koopa, ours, MTST, MSPEncoder, MSPT, MTSEncoder, FITS, MPT, AlignMTST, AFTNet, AFNO, AFTNet_M, CNN, LSTM, MSPTEmbed
-# from ours_old import AFTN, AFTNet, MSPNet
+from models import MSPT, MAE, MAEncoder, NLinear
 
 
 class Exp_Basic(object):
     def __init__(self, args):
         self.args = args
         self.model_dict = {
-            'TimesNet': TimesNet,
-            'Autoformer': Autoformer,
-            'Transformer': Transformer,
-            'Nonstationary_Transformer': Nonstationary_Transformer,
-            'Linear': Linear,
-            'DLinear': DLinear,
-            'NLinear': NLinear,
-            'FEDformer': FEDformer,
-            'Informer': Informer,
-            'LightTS': LightTS,
-            'Reformer': Reformer,
-            'ETSformer': ETSformer,
-            'PatchTST': PatchTST,
-            'Pyraformer': Pyraformer,
-            'MICN': MICN,
-            'Crossformer': Crossformer,
-            'FiLM': FiLM,
-            'iTransformer': iTransformer,
-            'Koopa': Koopa,
-            'ours': ours,
-            'AFTN': AFTN,
-            'MTST': MTST,
-            'MSPEncoder': MSPEncoder,
             'MSPT': MSPT,
-            'MTSEncoder': MTSEncoder,
-            'FITS': FITS,
-            'MPT': MPT,
-            'AlignMTST': AlignMTST,
-            'AFTNet': AFTNet,
-            'AFNO': AFNO,
-            'AFTNet_M': AFTNet_M,
-            'CNN': CNN,
-            'LSTM': LSTM,
-            'MSPTEmbed': MSPTEmbed
+            'MAE': MAE,
+            'MAEncoder': MAEncoder,
+            'NLinear': NLinear
         }
         self.device = self._acquire_device()
         self.model = self._build_model().to(self.device)

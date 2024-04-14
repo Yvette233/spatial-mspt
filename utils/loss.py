@@ -223,3 +223,14 @@ class TILDEQ_LOSS_OFFICIAL(nn.Module):
                 + self.gamma * self.amp_loss(outputs, targets)
         assert loss == loss, "Loss Nan!"
         return loss
+
+class ReconstructionLoss(nn.Module):
+    def __init__(self):
+        super().__init__()
+    
+    def forward(self, input, target, mask):
+        # print(input.shape, target.shape, mask.shape)
+        loss = (input - target) ** 2
+        loss = loss.mean(dim=-1)
+        loss = (loss * mask).sum() / mask.sum()
+        return loss

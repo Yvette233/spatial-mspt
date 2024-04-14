@@ -52,26 +52,29 @@ def adjust_learning_rate(optimizer, epoch, args):
 
 
 class EarlyStopping:
-    def __init__(self, patience=7, verbose=False, delta=0):
+    def __init__(self, patience=7, watch_epoch=0, verbose=False, delta=0):
         self.patience = patience
+        self.watch_epoch = watch_epoch
         self.verbose = verbose
         self.counter = 0
         self.best_score = None
         self.early_stop = False
         self.val_loss_min = np.Inf
         self.delta = delta
+        print(f'Patience count starts from {self.watch_epoch + 1} epoch')
 
-    def __call__(self, val_loss, model, path):
+    def __call__(self, current_epoch, val_loss, model, path):
         score = -val_loss
         if self.best_score is None:
             self.best_score = score
             self.save_checkpoint(val_loss, model, path)
         elif score < self.best_score + self.delta:
-            self.counter += 1
-            print(f'EarlyStopping counter: {self.counter} out of {self.patience}')
-            if self.counter >= self.patience:
-                self.early_stop = True
-                self.save_last_checkpoint(model, path)
+            if current_epoch > self.watch_epoch:
+                self.counter += 1
+                print(f'EarlyStopping counter: {self.counter} out of {self.patience}')
+                if self.counter >= self.patience:
+                    self.early_stop = True
+                    self.save_last_checkpoint(model, path)
         else:
             self.best_score = score
             self.save_checkpoint(val_loss, model, path)
@@ -85,6 +88,24 @@ class EarlyStopping:
     
     def save_last_checkpoint(self, model, path):
         torch.save(model.state_dict(), path + '/' + 'last.pth')
+
+import time
+class TrainTracking:
+    def __init__(self, num_epochs, num_steps):
+        self.num_epochs = num_epochs
+        self.num_steps = num_steps
+        self.time_now = time.time()
+        self.iter_count = 0
+
+    def __call__(self, cur_step, cur_epoch, loss):
+        self.iter_count += 1
+        if (cur_step + 1) % 100 == 0:
+            print("\titers: {0}, epoch: {1} | loss: {2:.7f}".format(cur_step + 1, cur_epoch + 1, loss.item()))
+            speed = (time.time() - self.time_now) / self.iter_count
+            left_time = speed * ((self.num_epochs - cur_epoch) * self.num_steps - cur_step)
+            print('\tspeed: {:.4f}s/iter; left time: {:.4f}s'.format(speed, left_time))
+            self.iter_count = 0
+            self.time_now = time.time()
 
 
 class dotdict(dict):

@@ -40,7 +40,7 @@ def metric(pred, true):
     rmse = RMSE(pred, true)
     mape = MAPE(pred, true)
     mspe = MSPE(pred, true)
-    corr = CORR(pred, true)
+    corr = CORR(pred, true)    
     r2score = r2_score(pred.squeeze(-1), true.squeeze(-1))
 
     return mae, mse, rmse, mape, mspe, rse, corr, r2score

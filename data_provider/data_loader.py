@@ -222,7 +222,6 @@ class Dataset_Custom(Dataset):
         # df_raw = pd.read_csv(os.path.join(self.root_path, self.data_path))
         # df_raw = pd.read_csv(os.path.join(self.root_path, self.data_path))[-15340:]
         df_raw = pd.read_csv(os.path.join(self.root_path, self.data_path))[7305:]
-        df_raw['sst'] = df_raw['sst'] - 273.15
 
         '''
         df_raw.columns: ['date', ...(other features), target feature]
@@ -231,19 +230,12 @@ class Dataset_Custom(Dataset):
         cols.remove(self.target)
         cols.remove('date')
         df_raw = df_raw[['date'] + cols + [self.target]]
-        num_train = int(len(df_raw) * 0.8)
-        num_test = int(len(df_raw) * 0.1)
+
+        num_train = int(len(df_raw) * 0.7)
+        num_test = int(len(df_raw) * 0.2)
         num_vali = len(df_raw) - num_train - num_test
-        # num_total = len(df_raw) - self.seq_len - self.pred_len + 1
-        # # print(num_total)
-        # num_train = int(num_total * 0.8)
-        # num_test = int(num_total * 0.1)
-        # num_vali = num_total - num_train - num_test
         border1s = [0, num_train - self.seq_len, len(df_raw) - num_test - self.seq_len]
         border2s = [num_train, num_train + num_vali, len(df_raw)]
-        # border1s = [0,                                            num_train,                                               num_train + num_vali]
-        # border2s = [num_train + self.seq_len + self.pred_len - 1, num_train + num_vali + self.seq_len + self.pred_len - 1, num_total + self.seq_len + self.pred_len - 1]
-        # print(border1s, border2s)
         border1 = border1s[self.set_type]
         border2 = border2s[self.set_type]
 
@@ -281,15 +273,12 @@ class Dataset_Custom(Dataset):
         s_end = s_begin + self.seq_len
         r_begin = s_end - self.label_len
         r_end = r_begin + self.label_len + self.pred_len
-        # print(f"seq_x:{s_begin}, {s_end}\nseq_y:{r_begin}, {r_end}\n")
-        # print(f"seq_y:{r_begin}, {r_end}\n")
+        
         seq_x = self.data_x[s_begin:s_end]
         seq_y = self.data_y[r_begin:r_end]
         seq_x_mark = self.data_stamp[s_begin:s_end]
         seq_y_mark = self.data_stamp[r_begin:r_end]
-        # print(f"seq_x_mark:{seq_x_mark}\n")
-        # print(f"seq_y_mark:{seq_y_mark}\n")
-        # print(seq_x.dtype, seq_y.dtype, seq_x_mark.dtype, seq_y_mark.dtype)
+        
         return seq_x, seq_y, np.float64(seq_x_mark), np.float64(seq_y_mark)
 
     def __len__(self):
