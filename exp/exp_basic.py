@@ -1,6 +1,6 @@
 import os
 import torch
-from models import MSPT, MAE, MAEncoder, NLinear
+from models import MSPT, MSPT_S, MSPT_L, MSPT_E, MAE, MAEncoder, NLinear
 
 
 class Exp_Basic(object):
@@ -8,6 +8,9 @@ class Exp_Basic(object):
         self.args = args
         self.model_dict = {
             'MSPT': MSPT,
+            'MSPT_S': MSPT_S,
+            'MSPT_L': MSPT_L,
+            'MSPT_E': MSPT_E,
             'MAE': MAE,
             'MAEncoder': MAEncoder,
             'NLinear': NLinear

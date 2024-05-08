@@ -2,13 +2,13 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from layers.Embed import DataEmbedding, positional_encoding
+from layers.Embed import PositionalEmbedding, TokenEmbedding, TemporalEmbedding, TimeFeatureEmbedding, positional_encoding
 from layers.Transformer_EncDec import Encoder, EncoderLayer, Decoder, DecoderLayer
 from layers.SelfAttention_Family import FullAttention, AttentionLayer
 from layers.Revin import RevIN
 
 import numpy as np
-from math import sqrt, ceil
+from math import sqrt
 from einops import rearrange, repeat
 
 def random_masking(xb, mask_ratio):
@@ -41,7 +41,27 @@ def random_masking(xb, mask_ratio):
     # unshuffle to get the binary mask
     mask = torch.gather(mask, dim=1, index=ids_restore)                                  # [bs x num_patch]
     return x_masked, x_kept, mask, ids_restore
-                            
+                                
+
+class DataEmbedding(nn.Module):
+    def __init__(self, c_in, d_model, embed_type='fixed', freq='h', dropout=0.1):
+        super(DataEmbedding, self).__init__()
+
+        self.value_embedding = TokenEmbedding(c_in=c_in, d_model=d_model)
+        self.position_embedding = PositionalEmbedding(d_model=d_model)
+        self.temporal_embedding = TemporalEmbedding(d_model=d_model, embed_type=embed_type,
+                                                    freq=freq) if embed_type != 'timeF' else TimeFeatureEmbedding(
+            d_model=d_model, embed_type=embed_type, freq=freq)
+        self.dropout = nn.Dropout(p=dropout)
+
+    def forward(self, x, x_mark):
+        if x_mark is None:
+            x = self.value_embedding(x) + self.position_embedding(x)
+        else:
+            x = self.value_embedding(
+                x) + self.temporal_embedding(x_mark) + self.position_embedding(x)
+        return self.dropout(x)
+    
 
 class SparseDispatcher(object):
     def __init__(self, num_experts, gates):
@@ -67,8 +87,8 @@ class SparseDispatcher(object):
 
     def combine(self, expert_out, multiply_by_gates=True):
         # apply exp to expert outputs, so we are not longer in log space
-        stitched = torch.cat(expert_out, 0).exp()
-        # stitched = torch.cat(expert_out, 0)
+        # stitched = torch.cat(expert_out, 0).exp()
+        stitched = torch.cat(expert_out, 0)
         if multiply_by_gates:
             stitched = torch.einsum("ikh,ik -> ikh", stitched, self._nonzero_gates) # [BN L D] [BN L] -> [BN L D]
         zeros = torch.zeros(self._gates.size(0), expert_out[-1].size(1), expert_out[-1].size(2),
@@ -76,76 +96,176 @@ class SparseDispatcher(object):
         # combine samples that have been processed by the same k experts
         combined = zeros.index_add(0, self._batch_index, stitched.float())
         # add eps to all zero values in order to avoid nans when going back to log space
-        combined[combined == 0] = np.finfo(float).eps
+        # combined[combined == 0] = np.finfo(float).eps
         # back to log space
-        return combined.log()
-        # return combined
+        # return combined.log()
+        return combined
 
 
-class Attention(nn.Module):
-    def __init__(self, num_patchs, patch_size, d_model, n_heads, d_keys=None, d_values=None,
-                 attention_dropout=0.1, pos_embed_dropout=0.1, learned_pos_embed=False,
-                 res_attention=False):
-        super(Attention, self).__init__()
+class DualAttention(nn.Module):
+    def __init__(self, n_vars, num_patchs, patch_size, d_model, n_heads, d_keys=None, d_values=None,
+                  attention_dropout=0.1, pos_embed_dropout=0.1, learned_pos_embed=False, cascaded=True, 
+                  res_attention=False, cross=True):
+        super(DualAttention, self).__init__()
 
         d_keys = d_keys or (d_model // n_heads)
         d_values = d_values or (d_model // n_heads)
 
-        self.embed_linear = nn.Linear(patch_size * d_model, patch_size * d_model)
-        self.pos_embed = positional_encoding(pe='zeros', learn_pe=True, q_len=num_patchs, d_model=patch_size*d_model) if learned_pos_embed else positional_encoding(pe='sincos', learn_pe=False, q_len=num_patchs, d_model=patch_size*d_model)
-        self.pos_embed_dropout = nn.Dropout(pos_embed_dropout)
-        self.query_projection = nn.Linear(patch_size * d_model, patch_size * d_keys * n_heads)
-        self.key_projection = nn.Linear(patch_size * d_model, patch_size * d_keys * n_heads)
-        self.value_projection = nn.Linear(patch_size * d_model, patch_size * d_values * n_heads)
-        self.out_projection = nn.Linear(patch_size * d_values * n_heads, patch_size * d_model)
+        self.n_vars = n_vars
+        self.num_patchs = num_patchs
+        self.patch_size = patch_size
+        self.d_model = d_model
         self.n_heads = n_heads
+        self.cross = cross
+        
+        ## intra_periodic_attention
+        if self.cross:
+            self.intra_periodic_tokens = nn.Parameter(torch.rand(1, n_vars, num_patchs, 1, 16))
+            self.intra_periodic_embedding_weights = nn.Parameter(torch.rand(num_patchs, 16, d_model))
+            self.intra_periodic_embedding_biases = nn.Parameter(torch.rand(num_patchs, d_model))
+
+            self.intra_periodic_pos_embed_q = positional_encoding(pe='zeros', learn_pe=True, q_len=1, d_model=d_model) if learned_pos_embed else positional_encoding(pe='sincos', learn_pe=False, q_len=1, d_model=d_model) # [1, 1, 1, d_model]
+
+            self.intra_periodic_pos_embed_kv = positional_encoding(pe='zeros', learn_pe=True, q_len=patch_size, d_model=d_model) if learned_pos_embed else positional_encoding(pe='sincos', learn_pe=False, q_len=patch_size, d_model=d_model)
+
+            self.intra_periodic_pos_embed_dropout = nn.Dropout(pos_embed_dropout)
+
+            self.intra_periodic_out_proj = nn.Linear(num_patchs, num_patchs * patch_size)
+
+        else:
+            self.intra_periodic_pos_embed = positional_encoding(pe='zeros', learn_pe=True, q_len=patch_size, d_model=d_model) if learned_pos_embed else positional_encoding(pe='sincos', learn_pe=False, q_len=patch_size, d_model=d_model)
+
+            self.intra_periodic_pos_embed_dropout = nn.Dropout(pos_embed_dropout)
+
+            self.intra_periodic_out_proj = nn.Linear(d_model, d_model)
+
+        self.intra_periodic_q_proj = nn.Linear(d_model, d_keys * n_heads)
+        self.intra_periodic_k_proj = nn.Linear(d_model, d_keys * n_heads)
+        self.intra_periodic_v_proj = nn.Linear(d_model, d_values * n_heads)
+
+        
+
+        ## inter_periodic_attention
+        self.inter_periodic_embed_linear = nn.Linear(patch_size * d_model, patch_size * d_model)
+        self.inter_periodic_pos_embed = positional_encoding(pe='zeros', learn_pe=True, q_len=num_patchs, d_model=d_model) if learned_pos_embed else positional_encoding(pe='sincos', learn_pe=False, q_len=num_patchs, d_model=d_model)
+        self.inter_periodic_pos_embed_dropout = nn.Dropout(pos_embed_dropout)
+
+        self.inter_periodic_q_proj = nn.Linear(patch_size * d_model, patch_size * d_keys * n_heads)
+        self.inter_periodic_k_proj = nn.Linear(patch_size * d_model, patch_size * d_keys * n_heads)
+        self.inter_periodic_v_proj = nn.Linear(patch_size * d_model, patch_size * d_values * n_heads)
+
+        self.inter_periodic_out_proj = nn.Linear(patch_size * d_model, patch_size * d_model)
+        
         self.attention_dropout = nn.Dropout(attention_dropout)
         self.res_attention = res_attention
+
 
     def forward(self, x, prev=None):
         B, N, P, D = x.shape
         H = self.n_heads
 
-        # embed the input
-        x = rearrange(x, 'B N P D -> B N (P D)')
-        x = self.embed_linear(x)
-        x = self.pos_embed_dropout(x + self.pos_embed)
+        # intra_out_concat = None
+        
+        n_vars = self.intra_periodic_tokens.shape[1]
 
-        # project the queries, keys and values
-        queries = self.query_projection(x)
-        keys = self.key_projection(x)
-        values = self.value_projection(x)
+        ####intra Attention#####
+        if self.cross:
+            intra_periodic_tokens = self.intra_periodic_tokens.expand(B//n_vars, -1, -1, -1, -1) # [B, n_vars, num_patchs, patch_size, 16]
+            # embed to d_model for each patch
+            intra_periodic_tokens = rearrange(intra_periodic_tokens, 'B C N 1 D -> (B C) 1 N D')
+            intra_periodic_tokens = torch.bmm(intra_periodic_tokens, self.intra_periodic_embedding_weights) + self.intra_periodic_embedding_biases
+            intra_periodic_tokens = rearrange(intra_periodic_tokens, 'BC 1 N D -> BC N 1 D')
 
-        # split the keys, queries and values in multiple heads
-        queries = rearrange(queries, 'B N (H D) -> B H N D', H=H)
-        keys = rearrange(keys, 'B N (H D) -> B H D N', H=H)
-        values = rearrange(values, 'B N (H D) -> B H N D', H=H)
+            # add position embedding
+            intra_periodic_pos_embed_q = repeat(self.intra_periodic_pos_embed_q, '1 D -> BC N 1 D', BC=B, N=N)
+            intra_periodic_pos_embed_kv = repeat(self.intra_periodic_pos_embed_kv, 'P D -> BC N P D', BC=B, N=N)
+            intra_periodic_tokens = self.intra_periodic_pos_embed_dropout(intra_periodic_tokens + intra_periodic_pos_embed_q)
+            cross_x = self.intra_periodic_pos_embed_dropout(x + intra_periodic_pos_embed_kv)
+
+            # project the queries, keys and values
+            intra_periodic_queries = self.intra_periodic_q_proj(intra_periodic_tokens)
+            intra_periodic_keys = self.intra_periodic_k_proj(cross_x)
+            intra_periodic_values = self.intra_periodic_v_proj(cross_x)
+
+            # split the keys, queries and values in multiple heads
+            intra_periodic_queries = rearrange(intra_periodic_queries, 'BC N 1 (H D) -> (BC N) H 1 D', H=self.n_heads)
+            intra_periodic_keys = rearrange(intra_periodic_keys, 'BC N P (H D) -> (BC N) H D P', H=self.n_heads)
+            intra_periodic_values = rearrange(intra_periodic_values, 'BC N P (H D) -> (BC N) H P D', H=self.n_heads)
+        
+        else:
+            # add position embedding
+            intra_periodic_pos_embed = repeat(self.intra_periodic_pos_embed, 'P D -> BC N P D', BC=B, N=N)
+            cross_x = self.intra_periodic_pos_embed_dropout(x + intra_periodic_pos_embed)
+
+            # project the queries, keys and values
+            intra_periodic_queries = self.intra_periodic_q_proj(cross_x)
+            intra_periodic_keys = self.intra_periodic_k_proj(cross_x)
+            intra_periodic_values = self.intra_periodic_v_proj(cross_x)
+
+            # split the keys, queries and values in multiple heads 
+            intra_periodic_queries = rearrange(intra_periodic_queries, 'BC N P (H D) -> (BC N) H P D', H=H)
+            intra_periodic_keys = rearrange(intra_periodic_keys, 'BC N P (H D) -> (BC N) H D P', H=H)
+            intra_periodic_values = rearrange(intra_periodic_values, 'BC N P (H D) -> (BC N) H P D', H=H)
+            
 
         # compute the unnormalized attention scores
         scale = 1. / sqrt(D // H)
-        # print(queries.shape, keys.shape)
-        attn_scores = torch.matmul(queries, keys) * scale # [bs x n_heads x q_len x k_len]
+        intra_periodic_attn_scores = torch.matmul(intra_periodic_queries, intra_periodic_keys) * scale # [bs x n_heads x q_len x k_len]
+
+        # # Add pre-softmax attention scores from the previous layer (optional)
+        # if self.res_attention and prev is not None:
+        #     intra_periodic_attn_scores = intra_periodic_attn_scores + prev
+
+        # normalize the attention weights
+        intra_periodic_attn_weights = F.softmax(intra_periodic_attn_scores, dim=-1)  # [bs x n_heads x q_len x k_len]
+        intra_periodic_attn_weights = self.attention_dropout(intra_periodic_attn_weights)
+
+        # compute the new values given the attention weights
+        intra_periodic_output = torch.matmul(intra_periodic_attn_weights, intra_periodic_values)  # output: [bs x n_heads x q_len x dim]
+
+        # concatenate the heads and project the output back to the patch_size*d_model dimensions
+        intra_periodic_output = rearrange(intra_periodic_output, '(BC N) H 1 D -> BC 1 (H D) N', N=N)
+        intra_periodic_output = self.intra_periodic_out_proj(intra_periodic_output)
+        intra_periodic_output = rearrange(intra_periodic_output, 'BC 1 D (N P) -> BC N P D', N=N)
+
+        ####inter Attention######
+        x_reshape = rearrange(x, 'BC N P D -> BC N (P D)') # [b*nvar, patch_num, dim*patch_len]
+
+        x_reshape = self.inter_periodic_embed_linear(x_reshape)
+        x_reshape = self.inter_periodic_pos_embed_dropout(x_reshape + self.inter_periodic_pos_embed)
+
+        # project the queries, keys and values
+        inter_periodic_queries = self.inter_periodic_q_proj(x_reshape)
+        inter_periodic_keys = self.inter_periodic_k_proj(x_reshape)
+        inter_periodic_values = self.inter_periodic_v_proj(x_reshape)
+
+        # split the keys, queries and values in multiple heads
+        inter_periodic_queries = rearrange(inter_periodic_queries, 'BC N (H D) -> BC H N D', H=H)
+        inter_periodic_keys = rearrange(inter_periodic_keys, 'BC N (H D) -> BC H D N', H=H)
+        inter_periodic_values = rearrange(inter_periodic_values, 'BC N (H D) -> BC H N D', H=H)
+
+        # compute the unnormalized attention scores
+        scale = 1. / sqrt(D // H)
+        inter_periodic_attn_scores = torch.matmul(inter_periodic_queries, inter_periodic_keys) * scale # [bs x n_heads x q_len x k_len]
 
         # Add pre-softmax attention scores from the previous layer (optional)
         if self.res_attention and prev is not None:
-            attn_scores = attn_scores + prev
+            inter_periodic_attn_scores = inter_periodic_attn_scores + prev
 
         # normalize the attention weights
-        attn_weights = F.softmax(attn_scores, dim=-1)  # [bs x n_heads x q_len x k_len]
-        attn_weights = self.attention_dropout(attn_weights)
+        inter_periodic_attn_weights = F.softmax(inter_periodic_attn_scores, dim=-1)  # [bs x n_heads x q_len x k_len]
+        inter_periodic_attn_weights = self.attention_dropout(inter_periodic_attn_weights)
 
         # compute the new values given the attention weights
-        output = torch.matmul(attn_weights, values)  # output: [bs x n_heads x q_len x dim]
+        inter_periodic_output = torch.matmul(inter_periodic_attn_weights, inter_periodic_values)  # output: [bs x n_heads x q_len x dim]
 
-        # concatenate the heads
-        output = rearrange(output, 'B H N D -> B N (H D)')
+        # concatenate the heads and project the output back to the patch_size*d_model dimensions
+        inter_periodic_output = rearrange(inter_periodic_output, 'BC H N D -> BC N (H D)')
+        inter_periodic_output = self.inter_periodic_out_proj(inter_periodic_output)
+        inter_periodic_output = rearrange(inter_periodic_output, 'BC N (P D) -> BC N P D', P=P, D=D)
 
-        # project the output back to the patch_size*d_model dimensions
-        output = self.out_projection(output)
-
-        output = rearrange(output, 'B N (P D) -> B N P D', P=P, D=D)
-
-        return output, attn_weights
+        out = intra_periodic_output + inter_periodic_output
+        return out, inter_periodic_attn_weights
 
 
 class MLP(nn.Module):
@@ -250,6 +370,7 @@ class Encoder(nn.Module):
         return x, attns
         
 
+    
 class EncoderStack(nn.Module):
     def __init__(self, configs):
         super(EncoderStack, self).__init__()
@@ -270,10 +391,10 @@ class EncoderStack(nn.Module):
                 Encoder(
                     [
                         EncoderLayer(
-                            Attention(
-                                num_patchs, patch_size, configs.d_model, configs.n_heads, attention_dropout=configs.dropout,
-                                pos_embed_dropout=configs.dropout, learned_pos_embed=False, res_attention=False),
-                            MLP(configs.d_model, configs.d_ff, dropout=configs.dropout),
+                            DualAttention(
+                                configs.enc_in, num_patchs, patch_size, configs.d_model, configs.n_heads, attention_dropout=configs.dropout,
+                                pos_embed_dropout=configs.dropout, learned_pos_embed=True, res_attention=True, cross=True),
+                            MLP(patch_size*configs.d_model, patch_size*configs.d_ff, dropout=configs.dropout),
                             configs.d_model,
                             dropout=configs.dropout,
                             pre_norm=False
@@ -287,7 +408,7 @@ class EncoderStack(nn.Module):
     def get_patch_sizes(self, seq_len, exclude_zero=True):
         # get the period list, first element is inf if exclude_zero is False
         peroid_list = 1 / torch.fft.rfftfreq(seq_len)[1:] if exclude_zero else 1 / torch.fft.rfftfreq(seq_len)
-        patch_sizes = peroid_list.ceil().int().unique()
+        patch_sizes = peroid_list.int().unique()
         return patch_sizes
 
     def fft_for_peroid(self, x, exclude_zero=True):
@@ -304,7 +425,7 @@ class EncoderStack(nn.Module):
 
     def groups_by_period(self, peroid_list, amplitude_list):
         # peroid_list [L] amplitude_list [bs, L]
-        int_peroid_list = peroid_list.ceil().int()
+        int_peroid_list = peroid_list.int()
         groups_period, indices = torch.unique(int_peroid_list, return_inverse=True)
         indices = indices.unsqueeze(0).expand(amplitude_list.shape[0], -1).to(amplitude_list.device)
         groups_amplitude = torch.zeros(amplitude_list.shape[0], groups_period.shape[0], device=amplitude_list.device)
@@ -341,7 +462,7 @@ class EncoderStack(nn.Module):
         groups_period, groups_amplitude = self.groups_by_period(period_list, amplitude_list) # [num_period], [bs, num_period]
         groups_amplitude = groups_amplitude.softmax(dim=-1) # [bs, num_period]
         gates = self.top_k_gating(x, groups_amplitude, train=self.training) # [bs, num_period]
-        
+
         dispatcher = SparseDispatcher(self.num_patch_sizes, gates)
         encoders_input = dispatcher.dispatch(x) # list[[bs, L, D]*num_patch_sizes] bs may be equal to zero
         encoders_output = [self.encoders[i](encoders_input[i])[0] for i in range(self.num_patch_sizes)] # list[[bs, L, D]*num_patch_sizes]
@@ -413,46 +534,38 @@ class PredictionHead(nn.Module):
     
     def forward(self, x, cross, x_mask=None, cross_mask=None, tau=None, delta=None):
         # x [B, S, C1] cross [B, L, C2]
-        # cross = rearrange(cross, '(B N) L D -> B L (N D)', N=self.n_vars)
-        # cross = self.channels_fusion(cross)
+        cross = rearrange(cross, '(B N) L D -> B L (N D)', N=self.n_vars)
+        cross = self.channels_fusion(cross)
         dec_out = self.decoder(x, cross, x_mask, cross_mask, tau, delta)
         return dec_out
     
 class LinearProbeHead(nn.Module):
     def __init__(self, configs):
         super().__init__()
-        
-        self.individual = configs.individual
-        self.n_vars = configs.enc_in
-        
-        if self.individual:
-            self.linears = nn.ModuleList()
-            self.dropouts = nn.ModuleList()
-            self.flattens = nn.ModuleList()
-            for i in range(self.n_vars):
-                self.flattens.append(nn.Flatten(start_dim=-2))
-                self.linears.append(nn.Linear(configs.seq_len * configs.d_model, configs.pred_len))
-                self.dropouts.append(nn.Dropout(configs.dropout))
-        else:
-            self.flatten = nn.Flatten(start_dim=-2)
-            self.linear = nn.Linear(configs.seq_len * configs.d_model, configs.pred_len)
-            self.dropout = nn.Dropout(configs.dropout)
-            
-    def forward(self, x):                                 # x: [bs, L, D]
-        if self.individual:
-            x = rearrange(x, '(B N) L D -> B N L D', N=self.n_vars)
-            x_out = []
-            for i in range(self.n_vars):
-                z = self.flattens[i](x[:,i,:,:])          # z: [bs x d_model * patch_num]
-                z = self.linears[i](z)                    # z: [bs x target_window]
-                z = self.dropouts[i](z)
-                x_out.append(z)
-            x = torch.stack(x_out, dim=-1)                 # x: [bs x nvars x target_window]
-        else:
-            x = self.flatten(x)
-            x = self.linear(x).unsqueeze(-1)
-            x = self.dropout(x)
-        return x
+        self.decoder = Decoder(
+            [
+                DecoderLayer(
+                    AttentionLayer(
+                        FullAttention(True, configs.factor, attention_dropout=configs.dropout,
+                                    output_attention=False),
+                        configs.d_model, configs.n_heads),
+                    AttentionLayer(
+                        FullAttention(False, configs.factor, attention_dropout=configs.dropout,
+                                    output_attention=False),
+                        configs.d_model, configs.n_heads),
+                    configs.d_model,
+                    configs.d_ff,
+                    dropout=configs.dropout,
+                    activation=configs.activation,
+                ) for l in range(configs.d_layers)
+            ],
+            norm_layer=nn.LayerNorm(configs.d_model),
+            projection=nn.Linear(configs.d_model, configs.c_out, bias=True)
+        )
+    
+    def forward(self, x, cross, x_mask=None, cross_mask=None, tau=None, delta=None):
+        dec_out = self.decoder(x, cross, x_mask, cross_mask, tau, delta)
+        return dec_out 
 
 
 class Model(nn.Module):
@@ -462,6 +575,7 @@ class Model(nn.Module):
         self.seq_len = configs.seq_len
         self.label_len = configs.label_len
         self.pred_len = configs.pred_len
+        self.top_k = configs.top_k
         self.e_layers = configs.e_layers
         self.mask_ratio = configs.mask_ratio
         self.individual = configs.individual
@@ -475,14 +589,32 @@ class Model(nn.Module):
         else:
             self.enc_embedding = DataEmbedding(configs.enc_in, configs.d_model, configs.embed, configs.freq, configs.dropout)
         self.dec_embedding = DataEmbedding(configs.dec_in, configs.d_model, configs.embed, configs.freq, configs.dropout)
+        
+        self.periodic_embedding = PeriodicEmbedding(d_model=configs.d_model, dropout=configs.dropout)
 
         self.encoder_stack = EncoderStack(configs)
         
         if self.pretrain:
             self.head = PretrainHead(configs) # custom head passed as a partial func with all its kwargs
         else:
-            # self.head = PredictionHead(configs)
-            self.head = LinearProbeHead(configs)
+            self.head = PredictionHead(configs)
+    
+    def random_masking(self, x, len_keep, ids_shuffle, ids_restore):
+        # xb: [bs x num_patch x dim]
+        bs, L, D = x.shape
+
+        # keep the first subset
+        ids_keep = ids_shuffle[:, :len_keep]                                        
+        x_kept = torch.gather(x, dim=1, index=ids_keep.unsqueeze(-1).repeat(1, 1, D))  
+    
+        # removed x
+        x_removed = torch.zeros(bs, L-len_keep, D, device=x.device)         
+        x_ = torch.cat([x_kept, x_removed], dim=1)   
+
+        # combine the kept part and the removed one
+        x_masked = torch.gather(x_, dim=1, index=ids_restore.unsqueeze(-1).repeat(1, 1, D))
+
+        return x_masked, x_kept
     
     def forward(self, x_enc, x_mark_enc, x_dec, x_mark_dec, mask=None):
         # x_enc [B, L, C] x_mark_enc [B, L, M] x_dec [B, S, C] x_mark_dec [B, S, M]
@@ -503,7 +635,7 @@ class Model(nn.Module):
 
         if self.pretrain:
             # mask
-            enc_out = self.encoder_stack(enc_out) # [bs, L, D]
+            enc_out = self.encoder_stack(enc_out, n_vars) # [bs, L, D]
             # dec_out = self.head(enc_outs, ids_restore, x_mask=None)
 
             dec_out = self.revin(dec_out, 'inverse')
@@ -511,11 +643,10 @@ class Model(nn.Module):
             return dec_out, mask
 
         else:
-            dec_out = self.dec_embedding(x_dec, x_mark_dec)
+            dec_out = self.dec_embedding(x_dec, None)
             enc_out = self.encoder_stack(enc_out) # [bs, L, D]
-            dec_out = self.head(enc_out)
+            dec_out = self.head(dec_out, enc_out)
 
-            # print(dec_out.shape)
             dec_out = self.revin(dec_out, 'inverse')
 
-            return dec_out[:, -self.pred_len:, :]
+            return dec_out

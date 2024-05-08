@@ -2,13 +2,14 @@ import torch
 from torch import nn
 
 class RevIN(nn.Module):
-    def __init__(self, num_features, affine=True):
+    def __init__(self, num_features, eps=1e-8, affine=True, subtract_last=False):
         super().__init__()
+        self.eps = eps
+        self.affine = affine
+        self.subtract_last = subtract_last
         if affine: # args.affine: use affine layers or not
             self.gamma = nn.Parameter(torch.ones(num_features)) # args.n_series: number of series
             self.beta = nn.Parameter(torch.zeros(num_features))
-        else:
-            self.gamma, self.beta = 1, 0
     
     def forward(self, batch_x, mode='forward', dec_inp=None):
         if mode == 'forward':
@@ -25,10 +26,24 @@ class RevIN(nn.Module):
     def preget(self, batch_x):
         self.avg = torch.mean(batch_x, axis=1, keepdim=True).detach() # b*1*d
         self.var = torch.var(batch_x, axis=1, keepdim=True).detach()  # b*1*d
+        if self.subtract_last:
+            self.last = batch_x[:,-1:,:] # b*1*d
 
     def forward_process(self, batch_input):
-        temp = (batch_input - self.avg)/torch.sqrt(self.var + 1e-8)
-        return temp.mul(self.gamma) + self.beta
+        if self.subtract_last:
+            batch_input = batch_input - self.last
+        else:
+            batch_input = batch_input - self.avg
+        batch_input = batch_input / torch.sqrt(self.var + self.eps)
+        if self.affine:
+            batch_input = batch_input * self.gamma + self.beta
+        return batch_input
 
     def inverse_process(self, batch_input):
-        return ((batch_input - self.beta) / self.gamma) * torch.sqrt(self.var + 1e-8) + self.avg
+        if self.affine:
+            batch_input = ((batch_input - self.beta) / self.gamma) * torch.sqrt(self.var + self.eps)
+        if self.subtract_last:
+            batch_input = batch_input + self.last
+        else:
+            batch_input = batch_input + self.avg
+        return batch_input
