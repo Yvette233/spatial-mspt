@@ -138,6 +138,19 @@ def visual(true, preds=None, name='./pic/test.pdf'):
     plt.legend()
     plt.savefig(name, bbox_inches='tight')
 
+def visual_climatology(true, preds=None, climatology=None, name='./pic/test.pdf'):
+    """
+    Results visualization
+    """
+    plt.figure()
+    plt.plot(true, label='GroundTruth', linewidth=2)
+    if preds is not None:
+        plt.plot(preds, label='Prediction', linewidth=2)
+    if climatology is not None:
+        plt.plot(climatology, label='Climatology', linewidth=2)
+    plt.legend()
+    plt.savefig(name, bbox_inches='tight')
+
 
 def adjustment(gt, pred):
     anomaly_state = False

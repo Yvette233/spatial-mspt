@@ -51,6 +51,7 @@ if __name__ == '__main__':
 
     # model define
     parser.add_argument('--individual', action='store_true', help='Channel independence', default=False)
+    parser.add_argument('--max_tokens', type=int, default=30, help='max tokens of the model')
     parser.add_argument('--top_k', type=int, default=5, help='for TimesBlock')
     parser.add_argument('--num_kernels', type=int, default=6, help='for Inception')
     parser.add_argument('--enc_in', type=int, default=7, help='encoder input size')

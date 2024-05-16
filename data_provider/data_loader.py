@@ -202,8 +202,8 @@ class Dataset_Custom(Dataset):
             self.label_len = size[1]
             self.pred_len = size[2]
         # init
-        assert flag in ['train', 'test', 'val']
-        type_map = {'train': 0, 'val': 1, 'test': 2}
+        assert flag in ['train', 'test', 'val', 'test_climatology']
+        type_map = {'train': 0, 'val': 1, 'test': 2, 'test_climatology': 3}
         self.set_type = type_map[flag]
 
         self.features = features
@@ -217,6 +217,9 @@ class Dataset_Custom(Dataset):
         self.__read_data__()
 
     def __read_data__(self):
+        if self.set_type == 3:
+            self.data_path = 'climatology_' + self.data_path
+            self.set_type = 2
         self.scaler = StandardScaler()
         # df_raw = pd.read_csv(os.path.join(self.root_path, self.data_path))[:15067]
         # df_raw = pd.read_csv(os.path.join(self.root_path, self.data_path))

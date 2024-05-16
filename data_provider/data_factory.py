@@ -14,7 +14,7 @@ def data_provider(args, flag):
     Data = data_dict[args.data]
     timeenc = 0 if args.embed != 'timeF' else 1
 
-    if flag == 'test':
+    if flag == 'test' or flag == 'test_climatology':
         shuffle_flag = False
         drop_last = True
         batch_size = 1  # bsz=1 for evaluation
