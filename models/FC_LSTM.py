@@ -15,13 +15,12 @@ class Model(nn.Module):
                             dropout=configs.dropout,
                             batch_first=True)
         
-        self.fc = nn.Linear(configs.seq_len*configs.d_model, configs.pred_len)
+        self.fc = nn.Linear(configs.d_model, configs.pred_len)
 
     def forward(self, x_enc, x_mark_enc, x_dec, x_mark_dec):
         h_t = torch.zeros(self.configs.e_layers, x_enc.size(0), self.configs.d_model).to(x_enc.device)
         c_t = torch.zeros(self.configs.e_layers, x_enc.size(0), self.configs.d_model).to(x_enc.device)
-        output, (h_t, c_t) = self.lstm(x_enc, (h_t, c_t))
-        output = torch.flatten(output, start_dim=1)
-        output = self.fc(output)
+        output, (h_t, c_t) = self.lstm(x_enc, (h_t, c_t)) # [B, T, N]
+        output = self.fc(output[:, -1:, :].flatten(start_dim=1)) # [B, 1, N] -> [B, N]
         output = output.unsqueeze(-1).repeat(1, 1, x_enc.size(-1))
         return output
