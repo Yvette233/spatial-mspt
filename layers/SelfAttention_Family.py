@@ -285,9 +285,13 @@ class AttentionLayer(nn.Module):
         _, S, _ = keys.shape
         H = self.n_heads
 
-        queries = self.query_projection(queries).view(B, L, H, -1)
-        keys = self.key_projection(keys).view(B, S, H, -1)
-        values = self.value_projection(values).view(B, S, H, -1)
+        queries = self.query_projection(queries)
+        keys = self.key_projection(keys)
+        values = self.value_projection(values)
+
+        queries = rearrange(queries, 'B L (H D) -> B L H D', H=H)
+        keys = rearrange(keys, 'B S (H D) -> B S H D', H=H)
+        values = rearrange(values, 'B S (H D) -> B S H D', H=H)
 
         out, attn = self.inner_attention(
             queries,
@@ -297,7 +301,7 @@ class AttentionLayer(nn.Module):
             tau=tau,
             delta=delta
         )
-        out = out.view(B, L, -1)
+        out = rearrange(out, 'B L H D -> B L (H D)')
 
         return self.out_projection(out), attn
 

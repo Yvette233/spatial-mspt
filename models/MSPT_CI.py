@@ -13,11 +13,10 @@ from math import sqrt, ceil
 from einops import rearrange, repeat
 
 class MultiScalePeriodicPatchEmbedding(nn.Module):
-    def __init__(self, seq_len, top_k=5, d_model=512, dropout=0., sparsity_threshold=0.01, hidden_size_factor=4, c_in=14, individual=False):
+    def __init__(self, seq_len, top_k=5, d_model=512, dropout=0., sparsity_threshold=0.01, hidden_size_factor=4, num_variates=14, individual=False):
         super(MultiScalePeriodicPatchEmbedding, self).__init__()
         self.seq_len = seq_len
         self.top_k = top_k
-        self.individual = individual
         # get the patch sizes
         self.patch_sizes = self.get_patch_sizes(seq_len)
         # AFNO1D parameters
@@ -31,10 +30,8 @@ class MultiScalePeriodicPatchEmbedding(nn.Module):
         self.b2 = nn.Parameter(self.scale * torch.randn(2, self.freq_seq_len * 2))
         # Patch Embedding parameters
         self.value_embeddings = nn.ModuleList()
-        self.padding_patch_layers = nn.ModuleList()
-        for patch_size in self.patch_sizes:
-            self.value_embeddings.append(nn.Linear(patch_size, d_model, bias=False) if individual else nn.Linear(c_in*patch_size, d_model, bias=False))
-            self.padding_patch_layers.append(nn.ReplicationPad1d((0, ceil(seq_len / patch_size) * patch_size - seq_len)))
+        for patch_len in self.patch_sizes:
+            self.value_embeddings.append(nn.Linear(patch_len, d_model, bias=False) if individual else nn.Linear(patch_len*num_variates, d_model, bias=False))
         self.position_embedding = PositionalEmbedding(d_model)
         self.dropout = nn.Dropout(dropout)
     
@@ -47,7 +44,7 @@ class MultiScalePeriodicPatchEmbedding(nn.Module):
         # x [B, L, C]
         B, L, C = x.shape
 
-        x = rearrange(x, 'B L C -> B C L') # [B, C, L] 
+        x = rearrange(x, 'B L C -> B C L') # [B, C, L]
         xf = torch.fft.rfft(x, dim=-1) # [B, C, L//2+1]
         xf_no_zero = xf[:, :, 1:] # [B, C, L//2]
 
@@ -57,26 +54,26 @@ class MultiScalePeriodicPatchEmbedding(nn.Module):
         o2_imag = torch.zeros([B, C, self.freq_seq_len * 2], device=x.device)
 
         o1_real = F.relu(
-            torch.einsum('...i,io->...o', xf_no_zero.real, self.w1[0]) - \
-            torch.einsum('...i,io->...o', xf_no_zero.imag, self.w1[1]) + \
+            torch.einsum('...bi,bio->...bo', xf_no_zero.real, self.w1[0]) - \
+            torch.einsum('...bi,bio->...bo', xf_no_zero.imag, self.w1[1]) + \
             self.b1[0]
         )
 
         o1_imag = F.relu(
-            torch.einsum('...i,io->...o', xf_no_zero.imag, self.w1[0]) + \
-            torch.einsum('...i,io->...o', xf_no_zero.real, self.w1[1]) + \
+            torch.einsum('...bi,bio->...bo', xf_no_zero.imag, self.w1[0]) + \
+            torch.einsum('...bi,bio->...bo', xf_no_zero.real, self.w1[1]) + \
             self.b1[1]
         )
 
         o2_real = (
-            torch.einsum('...i,io->...o', o1_real, self.w2[0]) - \
-            torch.einsum('...i,io->...o', o1_imag, self.w2[1]) + \
+            torch.einsum('...bi,bio->...bo', o1_real, self.w2[0]) - \
+            torch.einsum('...bi,bio->...bo', o1_imag, self.w2[1]) + \
             self.b2[0]
         )
 
         o2_imag = (
-            torch.einsum('...i,io->...o', o1_imag, self.w2[0]) + \
-            torch.einsum('...i,io->...o', o1_real, self.w2[1]) + \
+            torch.einsum('...bi,bio->...bo', o1_imag, self.w2[0]) + \
+            torch.einsum('...bi,bio->...bo', o1_real, self.w2[1]) + \
             self.b2[1]
         )
 
@@ -84,14 +81,14 @@ class MultiScalePeriodicPatchEmbedding(nn.Module):
         xf_no_zero = F.softshrink(xf_no_zero, lambd=self.sparsity_threshold) # [B, C, L-1, 2]
         xf_no_zero = torch.view_as_complex(xf_no_zero) # [B, C, L-1]
 
-        weights = torch.abs(xf_no_zero).mean(dim=-2) # [B, L-1]
+        weights = torch.abs(xf_no_zero).mean(dim=1) # [B, L-1]
         top_weights, top_indices = torch.topk(weights, self.top_k, dim=-1) # [B, top_k]
         top_weights = F.softmax(top_weights, dim=-1) # [B, top_k]
 
         zeros = torch.zeros_like(weights) # [B, L-1]
         gates = zeros.scatter_(-1, top_indices, top_weights) # [B, L-1]
 
-        return gates # [B, L-1]
+        return gates
 
     def dispatcher(self, x, gates):
         # sort experts
@@ -102,45 +99,32 @@ class MultiScalePeriodicPatchEmbedding(nn.Module):
         # assigns samples to experts whose gate is nonzero
         # expand according to batch index so we can just split by _part_sizes
         xs = x[_batch_index].squeeze(1)
-        return list(torch.split(xs, _part_sizes, dim=0))
+        return torch.split(xs, _part_sizes, dim=0)
     
     def patch_embedding(self, x, patch_size, index_of_patch):
         B, L, C = x.shape
         # do patching
-        x = rearrange(x, 'B L (C D) -> (B C) D L', D=1) if self.individual else rearrange(x, 'B L C -> B C L')
-        # padding_len = ceil(L / patch_size) * patch_size - L
-        # x = F.pad(x, (0, padding_len), 'replicate') # [B, L+padding_len, C]
-        x = self.padding_patch_layers[index_of_patch](x)
-        x = x.unfold(-1, patch_size, patch_size) # [B, C, L//patch_size, patch_size]
-        x = rearrange(x, 'B C L P -> B L (P C)')
-        x = self.value_embeddings[index_of_patch](x) + self.position_embedding(x) # [B, L, D]
+        padding_len = ceil(L / patch_size) * patch_size - L
+        x = F.pad(x, (0, 0, 0, padding_len), 'replicate') # [B, L+padding_len, C]
+        x = x.unfold(1, patch_size, patch_size) # [B, L//patch_size, patch_size, C]
+        x = rearrange(x, 'B L P C -> B L (P C)')
+        x = self.value_embeddings[index_of_patch](x) + self.position_embedding(x)
         return self.dropout(x)
 
     def forward(self, x):
         B, L, C = x.shape
-        gates = self.afno1d_for_peroid_weights(x) # [bs, L-1]
-        xs = self.dispatcher(x, gates) # L-1*[bs, L, D]
-        for i, patch_size in enumerate(self.patch_sizes): 
+        gates = self.afno1d_for_peroid_weights(x)
+        xs = self.dispatcher(x, gates)
+        for i, patch_size in enumerate(self.patch_sizes):
             xs[i] = self.patch_embedding(xs[i], patch_size, i)
-        return xs, gates # L-1*[bs, L, D], [bs, L-1]
+        return xs, gates
 
 
 class CrossScalePeriodicFeatureAggregator(nn.Module):
-    def __init__(self, patch_sizes, seq_len, d_model, num_variates=14, individual=False):
+    def __init__(self):
         super(CrossScalePeriodicFeatureAggregator, self).__init__()
-        self.patch_sizes = patch_sizes
-        self.seq_len = seq_len
-        self.num_variates = num_variates
-        self.individual = individual
-        self.projections = nn.ModuleList()
-        for patch_size in self.patch_sizes:
-            self.projections.append(nn.Linear(d_model, patch_size) if individual else nn.Linear(d_model, patch_size*num_variates))
-
+    
     def forward(self, xs, gates, multiply_by_gates=True):
-        # back to original length
-        for i, patch_size in enumerate(self.patch_sizes):
-            xs[i] = self.projections[i](xs[i])
-            xs[i] = rearrange(xs[i], 'B L (P C) -> B (L P) C', P=patch_size)[:,:self.seq_len,:]
         # sort experts
         sorted_experts, index_sorted_experts = torch.nonzero(gates).sort(0)
         _, _expert_index = sorted_experts.split(1, dim=1)
@@ -158,9 +142,7 @@ class CrossScalePeriodicFeatureAggregator(nn.Module):
         combined = zeros.index_add(0, _batch_index, stitched.float())
         # add eps to all zero values in order to avoid nans when going back to log space
         combined[combined == 0] = np.finfo(float).eps
-        # go back to log space
-        combined = combined.log()
-        return rearrange(combined, '(B C) L () -> B L C', C=self.num_variates) if self.individual else combined
+        return combined.log()
     
 
 class PredictionHead(nn.Module):
@@ -208,6 +190,7 @@ class Model(nn.Module):
         self.dec_embedding = DataEmbedding(1, configs.d_model, configs.embed, configs.freq, configs.dropout) if self.individual else DataEmbedding(configs.dec_in, configs.d_model, configs.embed, configs.freq, configs.dropout)
 
         self.encoders = nn.ModuleList()
+        self.decoders = nn.ModuleList()
         for patch_size in self.patch_sizes:
             self.encoders.append(
                 Encoder(
@@ -225,7 +208,27 @@ class Model(nn.Module):
                     norm_layer=torch.nn.LayerNorm(configs.d_model)
                 )
             )
-                    
+            self.decoders.append(
+                Decoder(
+                    [
+                        DecoderLayer(
+                            AttentionLayer(
+                                FullAttention(True, configs.factor, attention_dropout=configs.dropout,
+                                            output_attention=configs.output_attention), configs.d_model, configs.n_heads),
+                            AttentionLayer(
+                                FullAttention(False, configs.factor, attention_dropout=configs.dropout,
+                                            output_attention=configs.output_attention), configs.d_model, configs.n_heads),
+                            configs.d_model,
+                            configs.d_ff,
+                            dropout=configs.dropout,
+                            activation=configs.activation
+                        ) for l in range(configs.d_layers)
+                    ],
+                    norm_layer=torch.nn.LayerNorm(configs.d_model),
+                    # projection=nn.Linear(configs.d_model, configs.c_out, bias=True)
+                )
+            )
+        
         self.cspfa = CrossScalePeriodicFeatureAggregator()
 
         self.iTransformer = Encoder(
@@ -260,17 +263,14 @@ class Model(nn.Module):
         x_dec = self.dec_embedding(x_dec, None) # [B, S, D]
 
         # Encoder and Decoder
-        enc_outs = []
+        dec_outs = []
         for i, x_enc in enumerate(xs_enc):
-            enc_out, attns = self.encoders[i](x_enc) # [B, VT, D]
-            enc_outs.append(enc_out)
-
+            enc_out, attns = self.encoders[i](x_enc) # [B, L, D]
+            dec_out = self.decoders[i](x_dec, enc_out) # [B, S, D]
+            dec_outs.append(dec_out[:, -self.pred_len:, :]) # [B, P, D]
+        
         # Cross-scale periodic feature aggregator
-        enc_outs = self.cspfa(enc_outs, gates_enc) # [B, L, C]
-
-        # Multivariate Attention
-        enc_outs = rearrange(enc_outs, 'B L C -> B C L')
-
+        dec_outs = self.cspfa(dec_outs, gates_enc) # [B, P, D]
         
         # iTransformer
         if self.individual:

@@ -10,7 +10,7 @@ class PositionalEmbedding(nn.Module):
         super(PositionalEmbedding, self).__init__()
         # Compute the positional encodings once in log space.
         pe = torch.zeros(max_len, d_model).float()
-        pe.require_grad = False
+        pe.requires_grad = False
 
         position = torch.arange(0, max_len).float().unsqueeze(1)
         div_term = (torch.arange(0, d_model, 2).float()
@@ -24,6 +24,37 @@ class PositionalEmbedding(nn.Module):
 
     def forward(self, x):
         return self.pe[:, :x.size(1)]
+    
+class PositionalEmbedding2D(torch.nn.Module):
+    def __init__(self, d_model, height, width):
+        super(PositionalEmbedding2D, self).__init__()
+        self.d_model = d_model
+
+        if d_model % 4 != 0:
+            raise ValueError("Cannot use sin/cos positional encoding with "
+                            "odd dimension (got dim={:d})".format(d_model))
+
+        pe_2d = torch.zeros(height, width, d_model)
+        pe_2d.require_grad = False
+        # Each dimension use half of d_model
+        d_model = int(d_model / 2)
+        div_term = torch.exp(torch.arange(0., d_model, 2) *
+                            -(math.log(10000.0) / d_model)) # [d_model/2]
+        
+        pos_w = torch.arange(0., width).unsqueeze(1) # [W, 1]
+        pos_h = torch.arange(0., height).unsqueeze(1) # [H, 1]
+
+        pe_2d[:, :, 0:d_model:2] = torch.sin(pos_w * div_term).unsqueeze(0).repeat(height, 1, 1)
+        pe_2d[:, :, 1:d_model:2] = torch.cos(pos_w * div_term).unsqueeze(0).repeat(height, 1, 1)
+        pe_2d[:, :, d_model::2] = torch.sin(pos_h * div_term).unsqueeze(1).repeat(1, width, 1)
+        pe_2d[:, :, d_model+1::2] = torch.cos(pos_h * div_term).unsqueeze(1).repeat(1, width, 1)
+
+        pe_2d = pe_2d.unsqueeze(0)
+        self.register_buffer('pe_2d', pe_2d)
+
+    def forward(self, x):
+        return self.pe_2d[:, :x.size(1), :x.size(2), :]
+    
     
 
 class TokenEmbedding(nn.Module):
@@ -179,7 +210,6 @@ class PatchEmbedding(nn.Module):
 
         # Residual dropout
         self.dropout = nn.Dropout(dropout)
-        nn.Embedding
 
     def forward(self, x):
         # do patching

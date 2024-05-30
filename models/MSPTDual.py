@@ -590,7 +590,6 @@ class Model(nn.Module):
             self.enc_embedding = DataEmbedding(configs.enc_in, configs.d_model, configs.embed, configs.freq, configs.dropout)
         self.dec_embedding = DataEmbedding(configs.dec_in, configs.d_model, configs.embed, configs.freq, configs.dropout)
         
-        self.periodic_embedding = PeriodicEmbedding(d_model=configs.d_model, dropout=configs.dropout)
 
         self.encoder_stack = EncoderStack(configs)
         

@@ -30,9 +30,9 @@ if __name__ == '__main__':
     parser.add_argument('--target', type=str, default='OT', help='target feature in S or MS task')
     parser.add_argument('--freq', type=str, default='h',
                         help='freq for time features encoding, options:[s:secondly, t:minutely, h:hourly, d:daily, b:business days, w:weekly, m:monthly], you can also use more detailed freq like 15min or 3h')
-    parser.add_argument('--model_save_path', type=str, default='/root/autodl-tmp/checkpoints/', help='path to save model')
-    parser.add_argument('--results_save_path', type=str, default='/root/autodl-tmp/results/', help='path to save results')
-    parser.add_argument('--test_results_save_path', type=str, default='/root/autodl-tmp/test_results/', help='path to save test results')
+    parser.add_argument('--model_save_path', type=str, default='/home/lanzhenfeng/root/autodl-tmp/checkpoints/', help='path to save model')
+    parser.add_argument('--results_save_path', type=str, default='/home/lanzhenfeng/root/autodl-tmp/results/', help='path to save results')
+    parser.add_argument('--test_results_save_path', type=str, default='/home/lanzhenfeng/root/autodl-tmp/test_results/', help='path to save test results')
 
     # reconstruction task (Pretrain)
     parser.add_argument('--pretrain', action='store_true', help='pretrain or not', default=False)
@@ -111,7 +111,7 @@ if __name__ == '__main__':
     
     Exp = Exp_Main
 
-    if args.is_training:
+    if args.model == 'Climatology':
         for ii in range(args.itr):
             # setting record of experiments
             setting = '{}_{}_{}_ft{}_sl{}_ll{}_pl{}_dm{}_nh{}_el{}_dl{}_df{}_fc{}_eb{}_dt{}_{}_{}'.format(
@@ -133,33 +133,61 @@ if __name__ == '__main__':
                 args.des, ii)
 
             exp = Exp(args)  # set experiments
-            print('>>>>>>>start training : {}>>>>>>>>>>>>>>>>>>>>>>>>>>'.format(setting))
-            exp.train(setting)
-
             print('>>>>>>>testing : {}<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'.format(setting))
-            exp.test(setting, load_weight=True)
+            exp.test_climatology(setting)
             torch.cuda.empty_cache()
-    else:
-        ii = 0
-        setting = '{}_{}_{}_ft{}_sl{}_ll{}_pl{}_dm{}_nh{}_el{}_dl{}_df{}_fc{}_eb{}_dt{}_{}_{}'.format(
-            args.model_id,
-            args.model,
-            args.data,
-            args.features,
-            args.seq_len,
-            args.label_len,
-            args.pred_len,
-            args.d_model,
-            args.n_heads,
-            args.e_layers,
-            args.d_layers,
-            args.d_ff,
-            args.factor,
-            args.embed,
-            args.distil,
-            args.des, ii)
         
-        exp = Exp(args)  # set experiments
-        print('>>>>>>>testing : {}<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'.format(setting))
-        exp.test(setting, load_weight=True) 
-        torch.cuda.empty_cache()
+
+    else:
+        if args.is_training:
+            for ii in range(args.itr):
+                # setting record of experiments
+                setting = '{}_{}_{}_ft{}_sl{}_ll{}_pl{}_dm{}_nh{}_el{}_dl{}_df{}_fc{}_eb{}_dt{}_{}_{}'.format(
+                    args.model_id,
+                    args.model,
+                    args.data,
+                    args.features,
+                    args.seq_len,
+                    args.label_len,
+                    args.pred_len,
+                    args.d_model,
+                    args.n_heads,
+                    args.e_layers,
+                    args.d_layers,
+                    args.d_ff,
+                    args.factor,
+                    args.embed,
+                    args.distil,
+                    args.des, ii)
+
+                exp = Exp(args)  # set experiments
+                print('>>>>>>>start training : {}>>>>>>>>>>>>>>>>>>>>>>>>>>'.format(setting))
+                exp.train(setting)
+
+                print('>>>>>>>testing : {}<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'.format(setting))
+                exp.test(setting, load_weight=True)
+                torch.cuda.empty_cache()
+        else:
+            ii = 0
+            setting = '{}_{}_{}_ft{}_sl{}_ll{}_pl{}_dm{}_nh{}_el{}_dl{}_df{}_fc{}_eb{}_dt{}_{}_{}'.format(
+                args.model_id,
+                args.model,
+                args.data,
+                args.features,
+                args.seq_len,
+                args.label_len,
+                args.pred_len,
+                args.d_model,
+                args.n_heads,
+                args.e_layers,
+                args.d_layers,
+                args.d_ff,
+                args.factor,
+                args.embed,
+                args.distil,
+                args.des, ii)
+            
+            exp = Exp(args)  # set experiments
+            print('>>>>>>>testing : {}<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'.format(setting))
+            exp.test(setting, load_weight=True) 
+            torch.cuda.empty_cache()
