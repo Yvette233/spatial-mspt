@@ -1,6 +1,6 @@
 import os
 import torch
-from models import FC_LSTM, MSPT, MSPT_S, MSPT_L, MSPT_E, MAE, MAEncoder, DLinear, NLinear, TransDtSt_Part, iTransformer, MICN, TimesNet, Climatology
+from models import FC_LSTM, MSPT, MSPT_S, MSPT_L, MSPT_E, MAE, MAEncoder, DLinear, NLinear, TransDtSt_Part, iTransformer, MICN, TimesNet, Climatology, Informer
 
 
 class Exp_Basic(object):
@@ -20,7 +20,8 @@ class Exp_Basic(object):
             'iTransformer': iTransformer,
             'MICN': MICN,
             'TimesNet': TimesNet, 
-            'Climatology': Climatology
+            'Climatology': Climatology,
+            'Informer': Informer
         }
         self.device = self._acquire_device()
         self.model = self._build_model().to(self.device)
