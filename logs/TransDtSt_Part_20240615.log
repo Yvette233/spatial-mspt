@@ -1,0 +1,2886 @@
+Args in experiment:
+Namespace(is_training=1, model_id='omdata1_test1', model='TransDtSt_Part', data='custom', root_path='./dataset/multivariate/', data_path='oisst_lat_14.0_lon_112.0.csv', features='MS', target='sst', freq='d', model_save_path='/root/autodl-tmp/checkpoints/', results_save_path='/root/autodl-tmp/results/', test_results_save_path='/root/autodl-tmp/test_results/', pretrain=False, pretrain_epochs=10, mask_ratio=0.75, finetune=False, freeze_epochs=3, seq_len=365, label_len=30, pred_len=10, inverse=True, individual=False, max_tokens=30, top_k=5, num_kernels=6, enc_in=11, dec_in=11, c_out=11, d_model=256, n_heads=8, e_layers=3, d_layers=1, d_ff=1024, moving_avg=25, factor=1, distil=True, dropout=0.1, embed='timeF', activation='gelu', output_attention=False, num_workers=10, itr=1, train_epochs=10, batch_size=32, patience=3, learning_rate=0.0001, des='20240615', loss='MSE', lradj='HalfLR', use_amp=False, use_gpu=True, gpu=0, use_multi_gpu=False, devices='0,1,2,3', p_hidden_dims=[128, 128], p_hidden_layers=2)
+Use GPU: cuda:0
+>>>>>>>start training : omdata1_test1_TransDtSt_Part_custom_ftMS_sl365_ll30_pl10_dm256_nh8_el3_dl1_df1024_fc1_ebtimeF_dtTrue_20240615_0>>>>>>>>>>>>>>>>>>>>>>>>>>
+train 10108
+val 1489
+test 2986
+Patience count starts from 1 epoch
+Using HalfLR learning rate adjustment
+Starting training
+	iters: 100, epoch: 1 | loss: 0.1715161
+	speed: 0.0481s/iter; left time: 146.6110s
+	iters: 200, epoch: 1 | loss: 0.1340589
+	speed: 0.0354s/iter; left time: 104.4687s
+	iters: 300, epoch: 1 | loss: 0.1216502
+	speed: 0.0322s/iter; left time: 91.9409s
+Epoch: 1 cost time: 12.083184719085693
+Epoch: 1, Steps: 315 | Train Loss: 0.2059748 Vali Loss: 0.1603992 Test Loss: 0.1468514
+Validation loss decreased (inf --> 0.160399).  Saving model ...
+Adjusting learning rate to: 0.0000500
+	iters: 100, epoch: 2 | loss: 0.1785752
+	speed: 0.0374s/iter; left time: 102.3757s
+	iters: 200, epoch: 2 | loss: 0.1285575
+	speed: 0.0322s/iter; left time: 84.9403s
+	iters: 300, epoch: 2 | loss: 0.1111405
+	speed: 0.0321s/iter; left time: 81.3383s
+Epoch: 2 cost time: 10.680301904678345
+Epoch: 2, Steps: 315 | Train Loss: 0.1355264 Vali Loss: 0.1594083 Test Loss: 0.1400623
+Validation loss decreased (0.160399 --> 0.159408).  Saving model ...
+Adjusting learning rate to: 0.0000250
+	iters: 100, epoch: 3 | loss: 0.0972246
+	speed: 0.0364s/iter; left time: 88.1099s
+	iters: 200, epoch: 3 | loss: 0.1410728
+	speed: 0.0364s/iter; left time: 84.4898s
+	iters: 300, epoch: 3 | loss: 0.0826611
+	speed: 0.0329s/iter; left time: 73.0387s
+Epoch: 3 cost time: 11.077828407287598
+Epoch: 3, Steps: 315 | Train Loss: 0.1183933 Vali Loss: 0.1565573 Test Loss: 0.1475740
+Validation loss decreased (0.159408 --> 0.156557).  Saving model ...
+Adjusting learning rate to: 0.0000125
+	iters: 100, epoch: 4 | loss: 0.0761747
+	speed: 0.0360s/iter; left time: 75.9200s
+	iters: 200, epoch: 4 | loss: 0.0939201
+	speed: 0.0329s/iter; left time: 65.9998s
+	iters: 300, epoch: 4 | loss: 0.0820751
+	speed: 0.0336s/iter; left time: 63.9926s
+Epoch: 4 cost time: 10.793834209442139
+Epoch: 4, Steps: 315 | Train Loss: 0.1082361 Vali Loss: 0.1709183 Test Loss: 0.1576094
+EarlyStopping counter: 1 out of 3
+Adjusting learning rate to: 0.0000063
+	iters: 100, epoch: 5 | loss: 0.1108682
+	speed: 0.0375s/iter; left time: 67.1166s
+	iters: 200, epoch: 5 | loss: 0.0958307
+	speed: 0.0357s/iter; left time: 60.4363s
+	iters: 300, epoch: 5 | loss: 0.1135802
+	speed: 0.0355s/iter; left time: 56.4783s
+Epoch: 5 cost time: 11.409202814102173
+Epoch: 5, Steps: 315 | Train Loss: 0.1035336 Vali Loss: 0.1955969 Test Loss: 0.1708776
+EarlyStopping counter: 2 out of 3
+Adjusting learning rate to: 0.0000031
+	iters: 100, epoch: 6 | loss: 0.0893114
+	speed: 0.0347s/iter; left time: 51.1498s
+	iters: 200, epoch: 6 | loss: 0.0985627
+	speed: 0.0371s/iter; left time: 51.0277s
+	iters: 300, epoch: 6 | loss: 0.1163195
+	speed: 0.0356s/iter; left time: 45.4796s
+Epoch: 6 cost time: 11.247147560119629
+Epoch: 6, Steps: 315 | Train Loss: 0.1012773 Vali Loss: 0.1801163 Test Loss: 0.1598837
+EarlyStopping counter: 3 out of 3
+Adjusting learning rate to: 0.0000016
+Early stopping
+>>>>>>>testing : omdata1_test1_TransDtSt_Part_custom_ftMS_sl365_ll30_pl10_dm256_nh8_el3_dl1_df1024_fc1_ebtimeF_dtTrue_20240615_0<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+test 2986
+loading supervised model weight
+test shape: (2986, 1, 10, 1) (2986, 1, 10, 1)
+test shape: (2986, 10, 1) (2986, 10, 1)
+mse:0.324745774269104, mae:0.4441089928150177, rmse:0.5698646903038025, mape:0.015896307304501534, mspe:0.0004221494309604168, rse:0.3978901505470276, r2_score:0.8545826136759945, acc:0.9841036926954985
+corr: [37.317623 37.303474 37.30809  37.27604  37.21349  37.14139  37.091118
+ 37.07858  37.089184 36.983536]
+Args in experiment:
+Namespace(is_training=1, model_id='omdata1_test1', model='TransDtSt_Part', data='custom', root_path='./dataset/multivariate/', data_path='oisst_lat_14.0_lon_112.0.csv', features='MS', target='sst', freq='d', model_save_path='/root/autodl-tmp/checkpoints/', results_save_path='/root/autodl-tmp/results/', test_results_save_path='/root/autodl-tmp/test_results/', pretrain=False, pretrain_epochs=10, mask_ratio=0.75, finetune=False, freeze_epochs=3, seq_len=365, label_len=30, pred_len=15, inverse=True, individual=False, max_tokens=30, top_k=5, num_kernels=6, enc_in=11, dec_in=11, c_out=11, d_model=256, n_heads=8, e_layers=3, d_layers=1, d_ff=1024, moving_avg=25, factor=1, distil=True, dropout=0.1, embed='timeF', activation='gelu', output_attention=False, num_workers=10, itr=1, train_epochs=10, batch_size=32, patience=3, learning_rate=0.0001, des='20240615', loss='MSE', lradj='HalfLR', use_amp=False, use_gpu=True, gpu=0, use_multi_gpu=False, devices='0,1,2,3', p_hidden_dims=[128, 128], p_hidden_layers=2)
+Use GPU: cuda:0
+>>>>>>>start training : omdata1_test1_TransDtSt_Part_custom_ftMS_sl365_ll30_pl15_dm256_nh8_el3_dl1_df1024_fc1_ebtimeF_dtTrue_20240615_0>>>>>>>>>>>>>>>>>>>>>>>>>>
+train 10103
+val 1484
+test 2981
+Patience count starts from 1 epoch
+Using HalfLR learning rate adjustment
+Starting training
+	iters: 100, epoch: 1 | loss: 0.1655458
+	speed: 0.0490s/iter; left time: 149.5138s
+	iters: 200, epoch: 1 | loss: 0.1516626
+	speed: 0.0324s/iter; left time: 95.6830s
+	iters: 300, epoch: 1 | loss: 0.1830402
+	speed: 0.0332s/iter; left time: 94.6517s
+Epoch: 1 cost time: 12.071017026901245
+Epoch: 1, Steps: 315 | Train Loss: 0.2208815 Vali Loss: 0.1789867 Test Loss: 0.1619870
+Validation loss decreased (inf --> 0.178987).  Saving model ...
+Adjusting learning rate to: 0.0000500
+	iters: 100, epoch: 2 | loss: 0.1188577
+	speed: 0.0345s/iter; left time: 94.4356s
+	iters: 200, epoch: 2 | loss: 0.1705228
+	speed: 0.0329s/iter; left time: 86.6206s
+	iters: 300, epoch: 2 | loss: 0.1508241
+	speed: 0.0317s/iter; left time: 80.4087s
+Epoch: 2 cost time: 10.42274284362793
+Epoch: 2, Steps: 315 | Train Loss: 0.1472311 Vali Loss: 0.2385997 Test Loss: 0.2061252
+EarlyStopping counter: 1 out of 3
+Adjusting learning rate to: 0.0000250
+	iters: 100, epoch: 3 | loss: 0.1354938
+	speed: 0.0403s/iter; left time: 97.5614s
+	iters: 200, epoch: 3 | loss: 0.1599664
+	speed: 0.0343s/iter; left time: 79.6001s
+	iters: 300, epoch: 3 | loss: 0.1263048
+	speed: 0.0352s/iter; left time: 78.2360s
+Epoch: 3 cost time: 11.511159896850586
+Epoch: 3, Steps: 315 | Train Loss: 0.1274525 Vali Loss: 0.1758755 Test Loss: 0.1881183
+Validation loss decreased (0.178987 --> 0.175876).  Saving model ...
+Adjusting learning rate to: 0.0000125
+	iters: 100, epoch: 4 | loss: 0.1194347
+	speed: 0.0380s/iter; left time: 80.0235s
+	iters: 200, epoch: 4 | loss: 0.1074993
+	speed: 0.0332s/iter; left time: 66.5691s
+	iters: 300, epoch: 4 | loss: 0.1170960
+	speed: 0.0337s/iter; left time: 64.2213s
+Epoch: 4 cost time: 11.057690858840942
+Epoch: 4, Steps: 315 | Train Loss: 0.1156071 Vali Loss: 0.2231456 Test Loss: 0.2062462
+EarlyStopping counter: 1 out of 3
+Adjusting learning rate to: 0.0000063
+	iters: 100, epoch: 5 | loss: 0.1246290
+	speed: 0.0394s/iter; left time: 70.5128s
+	iters: 200, epoch: 5 | loss: 0.1420621
+	speed: 0.0349s/iter; left time: 58.9631s
+	iters: 300, epoch: 5 | loss: 0.1113768
+	speed: 0.0365s/iter; left time: 58.0178s
+Epoch: 5 cost time: 11.647649049758911
+Epoch: 5, Steps: 315 | Train Loss: 0.1115698 Vali Loss: 0.2074910 Test Loss: 0.2030759
+EarlyStopping counter: 2 out of 3
+Adjusting learning rate to: 0.0000031
+	iters: 100, epoch: 6 | loss: 0.0958024
+	speed: 0.0368s/iter; left time: 54.2518s
+	iters: 200, epoch: 6 | loss: 0.1010365
+	speed: 0.0372s/iter; left time: 51.1758s
+	iters: 300, epoch: 6 | loss: 0.0991656
+	speed: 0.0323s/iter; left time: 41.1879s
+Epoch: 6 cost time: 11.269990921020508
+Epoch: 6, Steps: 315 | Train Loss: 0.1084119 Vali Loss: 0.2198309 Test Loss: 0.2095673
+EarlyStopping counter: 3 out of 3
+Adjusting learning rate to: 0.0000016
+Early stopping
+>>>>>>>testing : omdata1_test1_TransDtSt_Part_custom_ftMS_sl365_ll30_pl15_dm256_nh8_el3_dl1_df1024_fc1_ebtimeF_dtTrue_20240615_0<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+test 2981
+loading supervised model weight
+test shape: (2981, 1, 15, 1) (2981, 1, 15, 1)
+test shape: (2981, 15, 1) (2981, 15, 1)
+mse:0.4139661490917206, mae:0.5072392225265503, rmse:0.6434020400047302, mape:0.01818082481622696, mspe:0.0005414860788732767, rse:0.44904035329818726, r2_score:0.7922109920992313, acc:0.981819175183773
+corr: [37.468685 37.440697 37.426598 37.37769  37.29898  37.217117 37.165833
+ 37.146606 37.14665  37.151707 37.149654 37.141216 37.1539   37.193188
+ 37.065193]
+Args in experiment:
+Namespace(is_training=1, model_id='omdata1_test1', model='TransDtSt_Part', data='custom', root_path='./dataset/multivariate/', data_path='oisst_lat_14.0_lon_112.0.csv', features='MS', target='sst', freq='d', model_save_path='/root/autodl-tmp/checkpoints/', results_save_path='/root/autodl-tmp/results/', test_results_save_path='/root/autodl-tmp/test_results/', pretrain=False, pretrain_epochs=10, mask_ratio=0.75, finetune=False, freeze_epochs=3, seq_len=365, label_len=30, pred_len=20, inverse=True, individual=False, max_tokens=30, top_k=5, num_kernels=6, enc_in=11, dec_in=11, c_out=11, d_model=256, n_heads=8, e_layers=3, d_layers=1, d_ff=1024, moving_avg=25, factor=1, distil=True, dropout=0.1, embed='timeF', activation='gelu', output_attention=False, num_workers=10, itr=1, train_epochs=10, batch_size=32, patience=3, learning_rate=0.0001, des='20240615', loss='MSE', lradj='HalfLR', use_amp=False, use_gpu=True, gpu=0, use_multi_gpu=False, devices='0,1,2,3', p_hidden_dims=[128, 128], p_hidden_layers=2)
+Use GPU: cuda:0
+>>>>>>>start training : omdata1_test1_TransDtSt_Part_custom_ftMS_sl365_ll30_pl20_dm256_nh8_el3_dl1_df1024_fc1_ebtimeF_dtTrue_20240615_0>>>>>>>>>>>>>>>>>>>>>>>>>>
+train 10098
+val 1479
+test 2976
+Patience count starts from 1 epoch
+Using HalfLR learning rate adjustment
+Starting training
+	iters: 100, epoch: 1 | loss: 0.2193607
+	speed: 0.0484s/iter; left time: 147.5635s
+	iters: 200, epoch: 1 | loss: 0.2015340
+	speed: 0.0336s/iter; left time: 99.2748s
+	iters: 300, epoch: 1 | loss: 0.1537076
+	speed: 0.0324s/iter; left time: 92.5130s
+Epoch: 1 cost time: 11.949761867523193
+Epoch: 1, Steps: 315 | Train Loss: 0.2286629 Vali Loss: 0.1929071 Test Loss: 0.1989775
+Validation loss decreased (inf --> 0.192907).  Saving model ...
+Adjusting learning rate to: 0.0000500
+	iters: 100, epoch: 2 | loss: 0.1340809
+	speed: 0.0370s/iter; left time: 101.1885s
+	iters: 200, epoch: 2 | loss: 0.1312828
+	speed: 0.0327s/iter; left time: 86.0757s
+	iters: 300, epoch: 2 | loss: 0.1267918
+	speed: 0.0330s/iter; left time: 83.7465s
+Epoch: 2 cost time: 10.772531986236572
+Epoch: 2, Steps: 315 | Train Loss: 0.1508723 Vali Loss: 0.2033462 Test Loss: 0.2000209
+EarlyStopping counter: 1 out of 3
+Adjusting learning rate to: 0.0000250
+	iters: 100, epoch: 3 | loss: 0.1198971
+	speed: 0.0364s/iter; left time: 88.0369s
+	iters: 200, epoch: 3 | loss: 0.1177323
+	speed: 0.0355s/iter; left time: 82.3043s
+	iters: 300, epoch: 3 | loss: 0.1249958
+	speed: 0.0363s/iter; left time: 80.6109s
+Epoch: 3 cost time: 11.338484048843384
+Epoch: 3, Steps: 315 | Train Loss: 0.1286672 Vali Loss: 0.2399291 Test Loss: 0.2087381
+EarlyStopping counter: 2 out of 3
+Adjusting learning rate to: 0.0000125
+	iters: 100, epoch: 4 | loss: 0.1121318
+	speed: 0.0375s/iter; left time: 78.9395s
+	iters: 200, epoch: 4 | loss: 0.1098137
+	speed: 0.0320s/iter; left time: 64.2503s
+	iters: 300, epoch: 4 | loss: 0.1019752
+	speed: 0.0352s/iter; left time: 67.0840s
+Epoch: 4 cost time: 10.986410140991211
+Epoch: 4, Steps: 315 | Train Loss: 0.1191576 Vali Loss: 0.2560484 Test Loss: 0.2346178
+EarlyStopping counter: 3 out of 3
+Adjusting learning rate to: 0.0000063
+Early stopping
+>>>>>>>testing : omdata1_test1_TransDtSt_Part_custom_ftMS_sl365_ll30_pl20_dm256_nh8_el3_dl1_df1024_fc1_ebtimeF_dtTrue_20240615_0<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+test 2976
+loading supervised model weight
+test shape: (2976, 1, 20, 1) (2976, 1, 20, 1)
+test shape: (2976, 20, 1) (2976, 20, 1)
+mse:0.4378623962402344, mae:0.5121409893035889, rmse:0.6617116928100586, mape:0.018401117995381355, mspe:0.0005791002186015248, rse:0.4615667164325714, r2_score:0.8085659338309377, acc:0.9815988820046186
+corr: [37.371155 37.05127  37.062283 37.07186  37.062508 37.017822 36.95477
+ 36.899487 36.870808 36.870975 36.893524 36.92243  36.955013 36.97812
+ 36.99996  37.022133 37.04022  37.05168  37.045464 37.00554 ]
+Args in experiment:
+Namespace(is_training=1, model_id='omdata1_test1', model='TransDtSt_Part', data='custom', root_path='./dataset/multivariate/', data_path='oisst_lat_14.0_lon_112.0.csv', features='MS', target='sst', freq='d', model_save_path='/root/autodl-tmp/checkpoints/', results_save_path='/root/autodl-tmp/results/', test_results_save_path='/root/autodl-tmp/test_results/', pretrain=False, pretrain_epochs=10, mask_ratio=0.75, finetune=False, freeze_epochs=3, seq_len=365, label_len=30, pred_len=25, inverse=True, individual=False, max_tokens=30, top_k=5, num_kernels=6, enc_in=11, dec_in=11, c_out=11, d_model=256, n_heads=8, e_layers=3, d_layers=1, d_ff=1024, moving_avg=25, factor=1, distil=True, dropout=0.1, embed='timeF', activation='gelu', output_attention=False, num_workers=10, itr=1, train_epochs=10, batch_size=32, patience=3, learning_rate=0.0001, des='20240615', loss='MSE', lradj='HalfLR', use_amp=False, use_gpu=True, gpu=0, use_multi_gpu=False, devices='0,1,2,3', p_hidden_dims=[128, 128], p_hidden_layers=2)
+Use GPU: cuda:0
+>>>>>>>start training : omdata1_test1_TransDtSt_Part_custom_ftMS_sl365_ll30_pl25_dm256_nh8_el3_dl1_df1024_fc1_ebtimeF_dtTrue_20240615_0>>>>>>>>>>>>>>>>>>>>>>>>>>
+train 10093
+val 1474
+test 2971
+Patience count starts from 1 epoch
+Using HalfLR learning rate adjustment
+Starting training
+	iters: 100, epoch: 1 | loss: 0.1886239
+	speed: 0.0485s/iter; left time: 147.8859s
+	iters: 200, epoch: 1 | loss: 0.1998537
+	speed: 0.0359s/iter; left time: 106.0773s
+	iters: 300, epoch: 1 | loss: 0.1745109
+	speed: 0.0341s/iter; left time: 97.1489s
+Epoch: 1 cost time: 12.36951994895935
+Epoch: 1, Steps: 315 | Train Loss: 0.2434816 Vali Loss: 0.2389886 Test Loss: 0.2250587
+Validation loss decreased (inf --> 0.238989).  Saving model ...
+Adjusting learning rate to: 0.0000500
+	iters: 100, epoch: 2 | loss: 0.1304794
+	speed: 0.0394s/iter; left time: 107.8083s
+	iters: 200, epoch: 2 | loss: 0.1582084
+	speed: 0.0358s/iter; left time: 94.2728s
+	iters: 300, epoch: 2 | loss: 0.1236320
+	speed: 0.0341s/iter; left time: 86.5666s
+Epoch: 2 cost time: 11.443489074707031
+Epoch: 2, Steps: 315 | Train Loss: 0.1520207 Vali Loss: 0.2436154 Test Loss: 0.2384281
+EarlyStopping counter: 1 out of 3
+Adjusting learning rate to: 0.0000250
+	iters: 100, epoch: 3 | loss: 0.1259355
+	speed: 0.0380s/iter; left time: 91.9368s
+	iters: 200, epoch: 3 | loss: 0.1134588
+	speed: 0.0367s/iter; left time: 85.2335s
+	iters: 300, epoch: 3 | loss: 0.1061266
+	speed: 0.0338s/iter; left time: 75.0834s
+Epoch: 3 cost time: 11.44812536239624
+Epoch: 3, Steps: 315 | Train Loss: 0.1326653 Vali Loss: 0.2826797 Test Loss: 0.2535099
+EarlyStopping counter: 2 out of 3
+Adjusting learning rate to: 0.0000125
+	iters: 100, epoch: 4 | loss: 0.1573766
+	speed: 0.0368s/iter; left time: 77.5909s
+	iters: 200, epoch: 4 | loss: 0.1236962
+	speed: 0.0340s/iter; left time: 68.1963s
+	iters: 300, epoch: 4 | loss: 0.1048623
+	speed: 0.0345s/iter; left time: 65.6801s
+Epoch: 4 cost time: 11.103871583938599
+Epoch: 4, Steps: 315 | Train Loss: 0.1233366 Vali Loss: 0.2619922 Test Loss: 0.2426095
+EarlyStopping counter: 3 out of 3
+Adjusting learning rate to: 0.0000063
+Early stopping
+>>>>>>>testing : omdata1_test1_TransDtSt_Part_custom_ftMS_sl365_ll30_pl25_dm256_nh8_el3_dl1_df1024_fc1_ebtimeF_dtTrue_20240615_0<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+test 2971
+loading supervised model weight
+test shape: (2971, 1, 25, 1) (2971, 1, 25, 1)
+test shape: (2971, 25, 1) (2971, 25, 1)
+mse:0.49525579810142517, mae:0.5493044257164001, rmse:0.703744113445282, mape:0.019662993028759956, mspe:0.0006431890069507062, rse:0.49056634306907654, r2_score:0.7639404179660454, acc:0.98033700697124
+corr: [37.505814 37.150566 37.15376  37.160934 37.172516 37.167038 37.136562
+ 37.09285  37.04683  37.00767  36.988907 36.997414 37.027527 37.054684
+ 37.079082 37.10476  37.12629  37.13873  37.146217 37.148758 37.159252
+ 37.187904 37.23262  37.275017 36.869465]
+Args in experiment:
+Namespace(is_training=1, model_id='omdata1_test1', model='TransDtSt_Part', data='custom', root_path='./dataset/multivariate/', data_path='oisst_lat_14.0_lon_112.0.csv', features='MS', target='sst', freq='d', model_save_path='/root/autodl-tmp/checkpoints/', results_save_path='/root/autodl-tmp/results/', test_results_save_path='/root/autodl-tmp/test_results/', pretrain=False, pretrain_epochs=10, mask_ratio=0.75, finetune=False, freeze_epochs=3, seq_len=365, label_len=30, pred_len=30, inverse=True, individual=False, max_tokens=30, top_k=5, num_kernels=6, enc_in=11, dec_in=11, c_out=11, d_model=256, n_heads=8, e_layers=3, d_layers=1, d_ff=1024, moving_avg=25, factor=1, distil=True, dropout=0.1, embed='timeF', activation='gelu', output_attention=False, num_workers=10, itr=1, train_epochs=10, batch_size=32, patience=3, learning_rate=0.0001, des='20240615', loss='MSE', lradj='HalfLR', use_amp=False, use_gpu=True, gpu=0, use_multi_gpu=False, devices='0,1,2,3', p_hidden_dims=[128, 128], p_hidden_layers=2)
+Use GPU: cuda:0
+>>>>>>>start training : omdata1_test1_TransDtSt_Part_custom_ftMS_sl365_ll30_pl30_dm256_nh8_el3_dl1_df1024_fc1_ebtimeF_dtTrue_20240615_0>>>>>>>>>>>>>>>>>>>>>>>>>>
+train 10088
+val 1469
+test 2966
+Patience count starts from 1 epoch
+Using HalfLR learning rate adjustment
+Starting training
+	iters: 100, epoch: 1 | loss: 0.1873376
+	speed: 0.0477s/iter; left time: 145.6518s
+	iters: 200, epoch: 1 | loss: 0.1761197
+	speed: 0.0341s/iter; left time: 100.6448s
+	iters: 300, epoch: 1 | loss: 0.2071673
+	speed: 0.0347s/iter; left time: 98.8200s
+Epoch: 1 cost time: 12.262825727462769
+Epoch: 1, Steps: 315 | Train Loss: 0.2379793 Vali Loss: 0.2373446 Test Loss: 0.2244388
+Validation loss decreased (inf --> 0.237345).  Saving model ...
+Adjusting learning rate to: 0.0000500
+	iters: 100, epoch: 2 | loss: 0.1456205
+	speed: 0.0389s/iter; left time: 106.3958s
+	iters: 200, epoch: 2 | loss: 0.1486960
+	speed: 0.0352s/iter; left time: 92.7937s
+	iters: 300, epoch: 2 | loss: 0.1521731
+	speed: 0.0348s/iter; left time: 88.2010s
+Epoch: 2 cost time: 11.444992780685425
+Epoch: 2, Steps: 315 | Train Loss: 0.1525480 Vali Loss: 0.2755464 Test Loss: 0.2649585
+EarlyStopping counter: 1 out of 3
+Adjusting learning rate to: 0.0000250
+	iters: 100, epoch: 3 | loss: 0.1401168
+	speed: 0.0368s/iter; left time: 88.9795s
+	iters: 200, epoch: 3 | loss: 0.1116784
+	speed: 0.0321s/iter; left time: 74.5508s
+	iters: 300, epoch: 3 | loss: 0.1210452
+	speed: 0.0332s/iter; left time: 73.6884s
+Epoch: 3 cost time: 10.713039636611938
+Epoch: 3, Steps: 315 | Train Loss: 0.1322787 Vali Loss: 0.2590014 Test Loss: 0.2590993
+EarlyStopping counter: 2 out of 3
+Adjusting learning rate to: 0.0000125
+	iters: 100, epoch: 4 | loss: 0.1332395
+	speed: 0.0386s/iter; left time: 81.3616s
+	iters: 200, epoch: 4 | loss: 0.1032889
+	speed: 0.0316s/iter; left time: 63.3548s
+	iters: 300, epoch: 4 | loss: 0.1184048
+	speed: 0.0326s/iter; left time: 62.1863s
+Epoch: 4 cost time: 10.8057861328125
+Epoch: 4, Steps: 315 | Train Loss: 0.1240879 Vali Loss: 0.2775091 Test Loss: 0.2752988
+EarlyStopping counter: 3 out of 3
+Adjusting learning rate to: 0.0000063
+Early stopping
+>>>>>>>testing : omdata1_test1_TransDtSt_Part_custom_ftMS_sl365_ll30_pl30_dm256_nh8_el3_dl1_df1024_fc1_ebtimeF_dtTrue_20240615_0<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+test 2966
+loading supervised model weight
+test shape: (2966, 1, 30, 1) (2966, 1, 30, 1)
+test shape: (2966, 30, 1) (2966, 30, 1)
+mse:0.49389147758483887, mae:0.5518960356712341, rmse:0.7027741074562073, mape:0.01978611946105957, mspe:0.0006447636405937374, rse:0.4895411729812622, r2_score:0.774318923249116, acc:0.9802138805389404
+corr: [37.44194  37.075207 37.061527 37.03015  36.988926 36.93902  36.896416
+ 36.868927 36.8546   36.854652 36.865776 36.88472  36.91515  36.94164
+ 36.95347  36.948753 36.94123  36.939526 36.93762  36.922417 36.91267
+ 36.933475 36.979034 37.03224  37.085236 37.12843  37.171978 37.220375
+ 37.285362 37.245922]
+Args in experiment:
+Namespace(is_training=1, model_id='omdata1_test1', model='TransDtSt_Part', data='custom', root_path='./dataset/multivariate/', data_path='oisst_lat_14.0_lon_112.0.csv', features='MS', target='sst', freq='d', model_save_path='/root/autodl-tmp/checkpoints/', results_save_path='/root/autodl-tmp/results/', test_results_save_path='/root/autodl-tmp/test_results/', pretrain=False, pretrain_epochs=10, mask_ratio=0.75, finetune=False, freeze_epochs=3, seq_len=365, label_len=0, pred_len=10, inverse=True, individual=False, max_tokens=30, top_k=5, num_kernels=6, enc_in=11, dec_in=11, c_out=11, d_model=256, n_heads=8, e_layers=3, d_layers=1, d_ff=1024, moving_avg=25, factor=1, distil=True, dropout=0.1, embed='timeF', activation='gelu', output_attention=False, num_workers=10, itr=1, train_epochs=10, batch_size=32, patience=3, learning_rate=0.0001, des='20240615', loss='MSE', lradj='HalfLR', use_amp=False, use_gpu=True, gpu=0, use_multi_gpu=False, devices='0,1,2,3', p_hidden_dims=[128, 128], p_hidden_layers=2)
+Use GPU: cuda:0
+>>>>>>>start training : omdata1_test1_TransDtSt_Part_custom_ftMS_sl365_ll0_pl10_dm256_nh8_el3_dl1_df1024_fc1_ebtimeF_dtTrue_20240615_0>>>>>>>>>>>>>>>>>>>>>>>>>>
+train 10108
+val 1489
+test 2986
+Patience count starts from 1 epoch
+Using HalfLR learning rate adjustment
+Starting training
+	iters: 100, epoch: 1 | loss: 0.2057195
+	speed: 0.0478s/iter; left time: 145.7294s
+	iters: 200, epoch: 1 | loss: 0.1578067
+	speed: 0.0320s/iter; left time: 94.3868s
+	iters: 300, epoch: 1 | loss: 0.1209017
+	speed: 0.0340s/iter; left time: 97.0276s
+Epoch: 1 cost time: 11.907080173492432
+Epoch: 1, Steps: 315 | Train Loss: 0.2217450 Vali Loss: 0.2295866 Test Loss: 0.2133664
+Validation loss decreased (inf --> 0.229587).  Saving model ...
+Adjusting learning rate to: 0.0000500
+	iters: 100, epoch: 2 | loss: 0.1739177
+	speed: 0.0365s/iter; left time: 99.8794s
+	iters: 200, epoch: 2 | loss: 0.1176628
+	speed: 0.0356s/iter; left time: 93.8370s
+	iters: 300, epoch: 2 | loss: 0.1275583
+	speed: 0.0357s/iter; left time: 90.5384s
+Epoch: 2 cost time: 11.2869393825531
+Epoch: 2, Steps: 315 | Train Loss: 0.1366546 Vali Loss: 0.1758657 Test Loss: 0.1583980
+Validation loss decreased (0.229587 --> 0.175866).  Saving model ...
+Adjusting learning rate to: 0.0000250
+	iters: 100, epoch: 3 | loss: 0.1057858
+	speed: 0.0399s/iter; left time: 96.7071s
+	iters: 200, epoch: 3 | loss: 0.1311078
+	speed: 0.0323s/iter; left time: 75.0416s
+	iters: 300, epoch: 3 | loss: 0.0935687
+	speed: 0.0317s/iter; left time: 70.3590s
+Epoch: 3 cost time: 10.902658700942993
+Epoch: 3, Steps: 315 | Train Loss: 0.1210996 Vali Loss: 0.1657894 Test Loss: 0.1727037
+Validation loss decreased (0.175866 --> 0.165789).  Saving model ...
+Adjusting learning rate to: 0.0000125
+	iters: 100, epoch: 4 | loss: 0.0854505
+	speed: 0.0350s/iter; left time: 73.8091s
+	iters: 200, epoch: 4 | loss: 0.1037396
+	speed: 0.0336s/iter; left time: 67.4910s
+	iters: 300, epoch: 4 | loss: 0.0885218
+	speed: 0.0369s/iter; left time: 70.4169s
+Epoch: 4 cost time: 11.10850477218628
+Epoch: 4, Steps: 315 | Train Loss: 0.1119457 Vali Loss: 0.1867329 Test Loss: 0.1774895
+EarlyStopping counter: 1 out of 3
+Adjusting learning rate to: 0.0000063
+	iters: 100, epoch: 5 | loss: 0.1188902
+	speed: 0.0341s/iter; left time: 61.0203s
+	iters: 200, epoch: 5 | loss: 0.0920241
+	speed: 0.0316s/iter; left time: 53.4552s
+	iters: 300, epoch: 5 | loss: 0.1306917
+	speed: 0.0339s/iter; left time: 53.9076s
+Epoch: 5 cost time: 10.501300811767578
+Epoch: 5, Steps: 315 | Train Loss: 0.1078587 Vali Loss: 0.2012327 Test Loss: 0.1773741
+EarlyStopping counter: 2 out of 3
+Adjusting learning rate to: 0.0000031
+	iters: 100, epoch: 6 | loss: 0.0925635
+	speed: 0.0391s/iter; left time: 57.7222s
+	iters: 200, epoch: 6 | loss: 0.1007943
+	speed: 0.0309s/iter; left time: 42.4560s
+	iters: 300, epoch: 6 | loss: 0.1244741
+	speed: 0.0330s/iter; left time: 42.0677s
+Epoch: 6 cost time: 10.806541919708252
+Epoch: 6, Steps: 315 | Train Loss: 0.1053961 Vali Loss: 0.1883511 Test Loss: 0.1796303
+EarlyStopping counter: 3 out of 3
+Adjusting learning rate to: 0.0000016
+Early stopping
+>>>>>>>testing : omdata1_test1_TransDtSt_Part_custom_ftMS_sl365_ll0_pl10_dm256_nh8_el3_dl1_df1024_fc1_ebtimeF_dtTrue_20240615_0<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+test 2986
+loading supervised model weight
+test shape: (2986, 1, 10, 1) (2986, 1, 10, 1)
+test shape: (2986, 10, 1) (2986, 10, 1)
+mse:0.3800451457500458, mae:0.48429107666015625, rmse:0.6164780259132385, mape:0.0174296535551548, mspe:0.0005037631490267813, rse:0.4304364323616028, r2_score:0.8049181453431921, acc:0.9825703464448452
+corr: [37.785187 37.71802  37.67016  37.670254 37.68371  37.67709  37.64841
+ 37.598537 37.54679  37.497562]
+Args in experiment:
+Namespace(is_training=1, model_id='omdata1_test1', model='TransDtSt_Part', data='custom', root_path='./dataset/multivariate/', data_path='oisst_lat_14.0_lon_112.0.csv', features='MS', target='sst', freq='d', model_save_path='/root/autodl-tmp/checkpoints/', results_save_path='/root/autodl-tmp/results/', test_results_save_path='/root/autodl-tmp/test_results/', pretrain=False, pretrain_epochs=10, mask_ratio=0.75, finetune=False, freeze_epochs=3, seq_len=365, label_len=0, pred_len=15, inverse=True, individual=False, max_tokens=30, top_k=5, num_kernels=6, enc_in=11, dec_in=11, c_out=11, d_model=256, n_heads=8, e_layers=3, d_layers=1, d_ff=1024, moving_avg=25, factor=1, distil=True, dropout=0.1, embed='timeF', activation='gelu', output_attention=False, num_workers=10, itr=1, train_epochs=10, batch_size=32, patience=3, learning_rate=0.0001, des='20240615', loss='MSE', lradj='HalfLR', use_amp=False, use_gpu=True, gpu=0, use_multi_gpu=False, devices='0,1,2,3', p_hidden_dims=[128, 128], p_hidden_layers=2)
+Use GPU: cuda:0
+>>>>>>>start training : omdata1_test1_TransDtSt_Part_custom_ftMS_sl365_ll0_pl15_dm256_nh8_el3_dl1_df1024_fc1_ebtimeF_dtTrue_20240615_0>>>>>>>>>>>>>>>>>>>>>>>>>>
+train 10103
+val 1484
+test 2981
+Patience count starts from 1 epoch
+Using HalfLR learning rate adjustment
+Starting training
+	iters: 100, epoch: 1 | loss: 0.1711967
+	speed: 0.0489s/iter; left time: 149.2751s
+	iters: 200, epoch: 1 | loss: 0.2253166
+	speed: 0.0325s/iter; left time: 95.9509s
+	iters: 300, epoch: 1 | loss: 0.1675593
+	speed: 0.0351s/iter; left time: 100.1324s
+Epoch: 1 cost time: 12.21617078781128
+Epoch: 1, Steps: 315 | Train Loss: 0.2332465 Vali Loss: 0.2037367 Test Loss: 0.1809024
+Validation loss decreased (inf --> 0.203737).  Saving model ...
+Adjusting learning rate to: 0.0000500
+	iters: 100, epoch: 2 | loss: 0.1389660
+	speed: 0.0387s/iter; left time: 105.8401s
+	iters: 200, epoch: 2 | loss: 0.1553764
+	speed: 0.0339s/iter; left time: 89.2731s
+	iters: 300, epoch: 2 | loss: 0.1643273
+	speed: 0.0340s/iter; left time: 86.3198s
+Epoch: 2 cost time: 11.167120456695557
+Epoch: 2, Steps: 315 | Train Loss: 0.1460463 Vali Loss: 0.2417335 Test Loss: 0.2226220
+EarlyStopping counter: 1 out of 3
+Adjusting learning rate to: 0.0000250
+	iters: 100, epoch: 3 | loss: 0.1118139
+	speed: 0.0372s/iter; left time: 90.0033s
+	iters: 200, epoch: 3 | loss: 0.1308125
+	speed: 0.0313s/iter; left time: 72.5850s
+	iters: 300, epoch: 3 | loss: 0.1087499
+	speed: 0.0351s/iter; left time: 78.0415s
+Epoch: 3 cost time: 10.928989171981812
+Epoch: 3, Steps: 315 | Train Loss: 0.1287891 Vali Loss: 0.2028743 Test Loss: 0.2112131
+Validation loss decreased (0.203737 --> 0.202874).  Saving model ...
+Adjusting learning rate to: 0.0000125
+	iters: 100, epoch: 4 | loss: 0.1183422
+	speed: 0.0367s/iter; left time: 77.3142s
+	iters: 200, epoch: 4 | loss: 0.1004302
+	speed: 0.0321s/iter; left time: 64.4770s
+	iters: 300, epoch: 4 | loss: 0.1207694
+	speed: 0.0360s/iter; left time: 68.6541s
+Epoch: 4 cost time: 11.007500648498535
+Epoch: 4, Steps: 315 | Train Loss: 0.1187254 Vali Loss: 0.2235019 Test Loss: 0.2054754
+EarlyStopping counter: 1 out of 3
+Adjusting learning rate to: 0.0000063
+	iters: 100, epoch: 5 | loss: 0.1358227
+	speed: 0.0350s/iter; left time: 62.7662s
+	iters: 200, epoch: 5 | loss: 0.1452571
+	speed: 0.0339s/iter; left time: 57.3750s
+	iters: 300, epoch: 5 | loss: 0.1139066
+	speed: 0.0326s/iter; left time: 51.8302s
+Epoch: 5 cost time: 10.695515155792236
+Epoch: 5, Steps: 315 | Train Loss: 0.1142360 Vali Loss: 0.2142284 Test Loss: 0.2058208
+EarlyStopping counter: 2 out of 3
+Adjusting learning rate to: 0.0000031
+	iters: 100, epoch: 6 | loss: 0.0938871
+	speed: 0.0344s/iter; left time: 50.7597s
+	iters: 200, epoch: 6 | loss: 0.1028318
+	speed: 0.0353s/iter; left time: 48.5104s
+	iters: 300, epoch: 6 | loss: 0.1069669
+	speed: 0.0345s/iter; left time: 44.0698s
+Epoch: 6 cost time: 10.942726135253906
+Epoch: 6, Steps: 315 | Train Loss: 0.1117975 Vali Loss: 0.2308652 Test Loss: 0.2097260
+EarlyStopping counter: 3 out of 3
+Adjusting learning rate to: 0.0000016
+Early stopping
+>>>>>>>testing : omdata1_test1_TransDtSt_Part_custom_ftMS_sl365_ll0_pl15_dm256_nh8_el3_dl1_df1024_fc1_ebtimeF_dtTrue_20240615_0<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+test 2981
+loading supervised model weight
+test shape: (2981, 1, 15, 1) (2981, 1, 15, 1)
+test shape: (2981, 15, 1) (2981, 15, 1)
+mse:0.46478745341300964, mae:0.5274584293365479, rmse:0.6817532181739807, mape:0.019005421549081802, mspe:0.00062119762878865, rse:0.47580626606941223, r2_score:0.754648842633127, acc:0.9809945784509182
+corr: [37.888733 37.876392 37.83154  37.779995 37.735626 37.702778 37.685066
+ 37.667187 37.6342   37.58883  37.533756 37.49035  37.493305 37.53304
+ 37.587864]
+Args in experiment:
+Namespace(is_training=1, model_id='omdata1_test1', model='TransDtSt_Part', data='custom', root_path='./dataset/multivariate/', data_path='oisst_lat_14.0_lon_112.0.csv', features='MS', target='sst', freq='d', model_save_path='/root/autodl-tmp/checkpoints/', results_save_path='/root/autodl-tmp/results/', test_results_save_path='/root/autodl-tmp/test_results/', pretrain=False, pretrain_epochs=10, mask_ratio=0.75, finetune=False, freeze_epochs=3, seq_len=365, label_len=0, pred_len=20, inverse=True, individual=False, max_tokens=30, top_k=5, num_kernels=6, enc_in=11, dec_in=11, c_out=11, d_model=256, n_heads=8, e_layers=3, d_layers=1, d_ff=1024, moving_avg=25, factor=1, distil=True, dropout=0.1, embed='timeF', activation='gelu', output_attention=False, num_workers=10, itr=1, train_epochs=10, batch_size=32, patience=3, learning_rate=0.0001, des='20240615', loss='MSE', lradj='HalfLR', use_amp=False, use_gpu=True, gpu=0, use_multi_gpu=False, devices='0,1,2,3', p_hidden_dims=[128, 128], p_hidden_layers=2)
+Use GPU: cuda:0
+>>>>>>>start training : omdata1_test1_TransDtSt_Part_custom_ftMS_sl365_ll0_pl20_dm256_nh8_el3_dl1_df1024_fc1_ebtimeF_dtTrue_20240615_0>>>>>>>>>>>>>>>>>>>>>>>>>>
+train 10098
+val 1479
+test 2976
+Patience count starts from 1 epoch
+Using HalfLR learning rate adjustment
+Starting training
+	iters: 100, epoch: 1 | loss: 0.2098312
+	speed: 0.0476s/iter; left time: 145.1024s
+	iters: 200, epoch: 1 | loss: 0.1487237
+	speed: 0.0323s/iter; left time: 95.3581s
+	iters: 300, epoch: 1 | loss: 0.1549880
+	speed: 0.0356s/iter; left time: 101.3574s
+Epoch: 1 cost time: 12.11269211769104
+Epoch: 1, Steps: 315 | Train Loss: 0.2363774 Vali Loss: 0.1964260 Test Loss: 0.2388278
+Validation loss decreased (inf --> 0.196426).  Saving model ...
+Adjusting learning rate to: 0.0000500
+	iters: 100, epoch: 2 | loss: 0.1334051
+	speed: 0.0351s/iter; left time: 96.1480s
+	iters: 200, epoch: 2 | loss: 0.1284590
+	speed: 0.0338s/iter; left time: 89.1316s
+	iters: 300, epoch: 2 | loss: 0.1525446
+	speed: 0.0323s/iter; left time: 81.9464s
+Epoch: 2 cost time: 10.667151689529419
+Epoch: 2, Steps: 315 | Train Loss: 0.1490438 Vali Loss: 0.2129042 Test Loss: 0.2233766
+EarlyStopping counter: 1 out of 3
+Adjusting learning rate to: 0.0000250
+	iters: 100, epoch: 3 | loss: 0.1259141
+	speed: 0.0370s/iter; left time: 89.5363s
+	iters: 200, epoch: 3 | loss: 0.1187836
+	speed: 0.0380s/iter; left time: 88.1064s
+	iters: 300, epoch: 3 | loss: 0.1304054
+	speed: 0.0362s/iter; left time: 80.4756s
+Epoch: 3 cost time: 11.636971235275269
+Epoch: 3, Steps: 315 | Train Loss: 0.1297839 Vali Loss: 0.2482368 Test Loss: 0.2273500
+EarlyStopping counter: 2 out of 3
+Adjusting learning rate to: 0.0000125
+	iters: 100, epoch: 4 | loss: 0.1167997
+	speed: 0.0354s/iter; left time: 74.6221s
+	iters: 200, epoch: 4 | loss: 0.1185678
+	speed: 0.0333s/iter; left time: 66.8250s
+	iters: 300, epoch: 4 | loss: 0.1131592
+	speed: 0.0331s/iter; left time: 63.0003s
+Epoch: 4 cost time: 10.722294807434082
+Epoch: 4, Steps: 315 | Train Loss: 0.1209409 Vali Loss: 0.2639203 Test Loss: 0.2410733
+EarlyStopping counter: 3 out of 3
+Adjusting learning rate to: 0.0000063
+Early stopping
+>>>>>>>testing : omdata1_test1_TransDtSt_Part_custom_ftMS_sl365_ll0_pl20_dm256_nh8_el3_dl1_df1024_fc1_ebtimeF_dtTrue_20240615_0<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+test 2976
+loading supervised model weight
+test shape: (2976, 1, 20, 1) (2976, 1, 20, 1)
+test shape: (2976, 20, 1) (2976, 20, 1)
+mse:0.5255554914474487, mae:0.5571168065071106, rmse:0.7249520421028137, mape:0.020041722804307938, mspe:0.0006964636268094182, rse:0.5056790709495544, r2_score:0.7835495451483194, acc:0.9799582771956921
+corr: [37.509735 37.506214 37.46947  37.419277 37.358643 37.304543 37.273926
+ 37.252758 37.230465 37.20242  37.16947  37.143387 37.145798 37.176575
+ 37.223328 37.26389  37.26991  37.234444 37.167297 37.08047 ]
+Args in experiment:
+Namespace(is_training=1, model_id='omdata1_test1', model='TransDtSt_Part', data='custom', root_path='./dataset/multivariate/', data_path='oisst_lat_14.0_lon_112.0.csv', features='MS', target='sst', freq='d', model_save_path='/root/autodl-tmp/checkpoints/', results_save_path='/root/autodl-tmp/results/', test_results_save_path='/root/autodl-tmp/test_results/', pretrain=False, pretrain_epochs=10, mask_ratio=0.75, finetune=False, freeze_epochs=3, seq_len=365, label_len=0, pred_len=25, inverse=True, individual=False, max_tokens=30, top_k=5, num_kernels=6, enc_in=11, dec_in=11, c_out=11, d_model=256, n_heads=8, e_layers=3, d_layers=1, d_ff=1024, moving_avg=25, factor=1, distil=True, dropout=0.1, embed='timeF', activation='gelu', output_attention=False, num_workers=10, itr=1, train_epochs=10, batch_size=32, patience=3, learning_rate=0.0001, des='20240615', loss='MSE', lradj='HalfLR', use_amp=False, use_gpu=True, gpu=0, use_multi_gpu=False, devices='0,1,2,3', p_hidden_dims=[128, 128], p_hidden_layers=2)
+Use GPU: cuda:0
+>>>>>>>start training : omdata1_test1_TransDtSt_Part_custom_ftMS_sl365_ll0_pl25_dm256_nh8_el3_dl1_df1024_fc1_ebtimeF_dtTrue_20240615_0>>>>>>>>>>>>>>>>>>>>>>>>>>
+train 10093
+val 1474
+test 2971
+Patience count starts from 1 epoch
+Using HalfLR learning rate adjustment
+Starting training
+	iters: 100, epoch: 1 | loss: 0.2203014
+	speed: 0.0492s/iter; left time: 149.9866s
+	iters: 200, epoch: 1 | loss: 0.2027647
+	speed: 0.0342s/iter; left time: 100.8905s
+	iters: 300, epoch: 1 | loss: 0.1902408
+	speed: 0.0366s/iter; left time: 104.2140s
+Epoch: 1 cost time: 12.502329111099243
+Epoch: 1, Steps: 315 | Train Loss: 0.2531845 Vali Loss: 0.2154143 Test Loss: 0.2335555
+Validation loss decreased (inf --> 0.215414).  Saving model ...
+Adjusting learning rate to: 0.0000500
+	iters: 100, epoch: 2 | loss: 0.1279202
+	speed: 0.0364s/iter; left time: 99.4564s
+	iters: 200, epoch: 2 | loss: 0.1750760
+	speed: 0.0354s/iter; left time: 93.2657s
+	iters: 300, epoch: 2 | loss: 0.1312903
+	speed: 0.0333s/iter; left time: 84.5167s
+Epoch: 2 cost time: 11.152685403823853
+Epoch: 2, Steps: 315 | Train Loss: 0.1571643 Vali Loss: 0.2459489 Test Loss: 0.2495948
+EarlyStopping counter: 1 out of 3
+Adjusting learning rate to: 0.0000250
+	iters: 100, epoch: 3 | loss: 0.1507365
+	speed: 0.0365s/iter; left time: 88.2906s
+	iters: 200, epoch: 3 | loss: 0.1174461
+	speed: 0.0356s/iter; left time: 82.5315s
+	iters: 300, epoch: 3 | loss: 0.1121003
+	speed: 0.0320s/iter; left time: 71.0814s
+Epoch: 3 cost time: 11.056220531463623
+Epoch: 3, Steps: 315 | Train Loss: 0.1376639 Vali Loss: 0.2651421 Test Loss: 0.2680326
+EarlyStopping counter: 2 out of 3
+Adjusting learning rate to: 0.0000125
+	iters: 100, epoch: 4 | loss: 0.1664079
+	speed: 0.0380s/iter; left time: 79.9581s
+	iters: 200, epoch: 4 | loss: 0.1382786
+	speed: 0.0336s/iter; left time: 67.4531s
+	iters: 300, epoch: 4 | loss: 0.1046717
+	speed: 0.0359s/iter; left time: 68.4974s
+Epoch: 4 cost time: 11.254914045333862
+Epoch: 4, Steps: 315 | Train Loss: 0.1280688 Vali Loss: 0.2523950 Test Loss: 0.2522058
+EarlyStopping counter: 3 out of 3
+Adjusting learning rate to: 0.0000063
+Early stopping
+>>>>>>>testing : omdata1_test1_TransDtSt_Part_custom_ftMS_sl365_ll0_pl25_dm256_nh8_el3_dl1_df1024_fc1_ebtimeF_dtTrue_20240615_0<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+test 2971
+loading supervised model weight
+test shape: (2971, 1, 25, 1) (2971, 1, 25, 1)
+test shape: (2971, 25, 1) (2971, 25, 1)
+mse:0.5139533281326294, mae:0.5500010251998901, rmse:0.7169053554534912, mape:0.019778521731495857, mspe:0.0006828838377259672, rse:0.4997408092021942, r2_score:0.7466035214933266, acc:0.9802214782685041
+corr: [37.45648  37.463318 37.401924 37.325153 37.264473 37.230965 37.21649
+ 37.19693  37.14884  37.080452 37.01813  36.99881  37.03898  37.11505
+ 37.18163  37.206974 37.187786 37.14976  37.1285   37.129707 37.133785
+ 37.14015  37.156876 37.192974 37.253048]
+Args in experiment:
+Namespace(is_training=1, model_id='omdata1_test1', model='TransDtSt_Part', data='custom', root_path='./dataset/multivariate/', data_path='oisst_lat_14.0_lon_112.0.csv', features='MS', target='sst', freq='d', model_save_path='/root/autodl-tmp/checkpoints/', results_save_path='/root/autodl-tmp/results/', test_results_save_path='/root/autodl-tmp/test_results/', pretrain=False, pretrain_epochs=10, mask_ratio=0.75, finetune=False, freeze_epochs=3, seq_len=365, label_len=0, pred_len=30, inverse=True, individual=False, max_tokens=30, top_k=5, num_kernels=6, enc_in=11, dec_in=11, c_out=11, d_model=256, n_heads=8, e_layers=3, d_layers=1, d_ff=1024, moving_avg=25, factor=1, distil=True, dropout=0.1, embed='timeF', activation='gelu', output_attention=False, num_workers=10, itr=1, train_epochs=10, batch_size=32, patience=3, learning_rate=0.0001, des='20240615', loss='MSE', lradj='HalfLR', use_amp=False, use_gpu=True, gpu=0, use_multi_gpu=False, devices='0,1,2,3', p_hidden_dims=[128, 128], p_hidden_layers=2)
+Use GPU: cuda:0
+>>>>>>>start training : omdata1_test1_TransDtSt_Part_custom_ftMS_sl365_ll0_pl30_dm256_nh8_el3_dl1_df1024_fc1_ebtimeF_dtTrue_20240615_0>>>>>>>>>>>>>>>>>>>>>>>>>>
+train 10088
+val 1469
+test 2966
+Patience count starts from 1 epoch
+Using HalfLR learning rate adjustment
+Starting training
+	iters: 100, epoch: 1 | loss: 0.1851071
+	speed: 0.0454s/iter; left time: 138.6209s
+	iters: 200, epoch: 1 | loss: 0.1684563
+	speed: 0.0358s/iter; left time: 105.5039s
+	iters: 300, epoch: 1 | loss: 0.2026262
+	speed: 0.0351s/iter; left time: 100.1193s
+Epoch: 1 cost time: 12.15958857536316
+Epoch: 1, Steps: 315 | Train Loss: 0.2509920 Vali Loss: 0.2202494 Test Loss: 0.2404579
+Validation loss decreased (inf --> 0.220249).  Saving model ...
+Adjusting learning rate to: 0.0000500
+	iters: 100, epoch: 2 | loss: 0.1595809
+	speed: 0.0365s/iter; left time: 99.9057s
+	iters: 200, epoch: 2 | loss: 0.1454215
+	speed: 0.0352s/iter; left time: 92.8462s
+	iters: 300, epoch: 2 | loss: 0.1539762
+	speed: 0.0361s/iter; left time: 91.5558s
+Epoch: 2 cost time: 11.293843030929565
+Epoch: 2, Steps: 315 | Train Loss: 0.1567353 Vali Loss: 0.2820992 Test Loss: 0.2853020
+EarlyStopping counter: 1 out of 3
+Adjusting learning rate to: 0.0000250
+	iters: 100, epoch: 3 | loss: 0.1382917
+	speed: 0.0375s/iter; left time: 90.6878s
+	iters: 200, epoch: 3 | loss: 0.1012791
+	speed: 0.0358s/iter; left time: 83.0370s
+	iters: 300, epoch: 3 | loss: 0.1207103
+	speed: 0.0350s/iter; left time: 77.6944s
+Epoch: 3 cost time: 11.363697528839111
+Epoch: 3, Steps: 315 | Train Loss: 0.1345614 Vali Loss: 0.2176827 Test Loss: 0.2556782
+Validation loss decreased (0.220249 --> 0.217683).  Saving model ...
+Adjusting learning rate to: 0.0000125
+	iters: 100, epoch: 4 | loss: 0.1363162
+	speed: 0.0356s/iter; left time: 75.0099s
+	iters: 200, epoch: 4 | loss: 0.1072856
+	speed: 0.0357s/iter; left time: 71.5268s
+	iters: 300, epoch: 4 | loss: 0.1164809
+	speed: 0.0321s/iter; left time: 61.2704s
+Epoch: 4 cost time: 10.862624883651733
+Epoch: 4, Steps: 315 | Train Loss: 0.1256452 Vali Loss: 0.2482309 Test Loss: 0.2717259
+EarlyStopping counter: 1 out of 3
+Adjusting learning rate to: 0.0000063
+	iters: 100, epoch: 5 | loss: 0.1194934
+	speed: 0.0367s/iter; left time: 65.6779s
+	iters: 200, epoch: 5 | loss: 0.1297515
+	speed: 0.0354s/iter; left time: 59.8722s
+	iters: 300, epoch: 5 | loss: 0.1632562
+	speed: 0.0343s/iter; left time: 54.6186s
+Epoch: 5 cost time: 11.173453092575073
+Epoch: 5, Steps: 315 | Train Loss: 0.1212696 Vali Loss: 0.2664751 Test Loss: 0.2817195
+EarlyStopping counter: 2 out of 3
+Adjusting learning rate to: 0.0000031
+	iters: 100, epoch: 6 | loss: 0.1206691
+	speed: 0.0378s/iter; left time: 55.7637s
+	iters: 200, epoch: 6 | loss: 0.1155126
+	speed: 0.0335s/iter; left time: 46.1263s
+	iters: 300, epoch: 6 | loss: 0.1081903
+	speed: 0.0346s/iter; left time: 44.0956s
+Epoch: 6 cost time: 11.133533954620361
+Epoch: 6, Steps: 315 | Train Loss: 0.1191613 Vali Loss: 0.2547068 Test Loss: 0.2783405
+EarlyStopping counter: 3 out of 3
+Adjusting learning rate to: 0.0000016
+Early stopping
+>>>>>>>testing : omdata1_test1_TransDtSt_Part_custom_ftMS_sl365_ll0_pl30_dm256_nh8_el3_dl1_df1024_fc1_ebtimeF_dtTrue_20240615_0<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+test 2966
+loading supervised model weight
+test shape: (2966, 1, 30, 1) (2966, 1, 30, 1)
+test shape: (2966, 30, 1) (2966, 30, 1)
+mse:0.5626357197761536, mae:0.5741435289382935, rmse:0.750090479850769, mape:0.020605163648724556, mspe:0.0007414782303385437, rse:0.5225009322166443, r2_score:0.7225993031425164, acc:0.9793948363512754
+corr: [37.419746 37.36139  37.249573 37.149208 37.074432 37.009426 36.933777
+ 36.84823  36.764713 36.708363 36.66393  36.621483 36.589626 36.58908
+ 36.627327 36.667786 36.68659  36.696125 36.715137 36.74438  36.790924
+ 36.86706  36.946316 37.006393 37.07037  37.159317 37.276905 37.38376
+ 37.43505  37.41325 ]
+Args in experiment:
+Namespace(is_training=1, model_id='omdata1_test1', model='TransDtSt_Part', data='custom', root_path='./dataset/multivariate/', data_path='oisst_lat_14.0_lon_112.0.csv', features='MS', target='sst', freq='d', model_save_path='/root/autodl-tmp/checkpoints/', results_save_path='/root/autodl-tmp/results/', test_results_save_path='/root/autodl-tmp/test_results/', pretrain=False, pretrain_epochs=10, mask_ratio=0.75, finetune=False, freeze_epochs=3, seq_len=365, label_len=365, pred_len=10, inverse=True, individual=False, max_tokens=30, top_k=5, num_kernels=6, enc_in=11, dec_in=11, c_out=11, d_model=256, n_heads=8, e_layers=3, d_layers=1, d_ff=1024, moving_avg=25, factor=1, distil=True, dropout=0.1, embed='timeF', activation='gelu', output_attention=False, num_workers=10, itr=1, train_epochs=10, batch_size=32, patience=3, learning_rate=0.0001, des='20240615', loss='MSE', lradj='HalfLR', use_amp=False, use_gpu=True, gpu=0, use_multi_gpu=False, devices='0,1,2,3', p_hidden_dims=[128, 128], p_hidden_layers=2)
+Use GPU: cuda:0
+>>>>>>>start training : omdata1_test1_TransDtSt_Part_custom_ftMS_sl365_ll365_pl10_dm256_nh8_el3_dl1_df1024_fc1_ebtimeF_dtTrue_20240615_0>>>>>>>>>>>>>>>>>>>>>>>>>>
+train 10108
+val 1489
+test 2986
+Patience count starts from 1 epoch
+Using HalfLR learning rate adjustment
+Starting training
+	iters: 100, epoch: 1 | loss: 0.1776770
+	speed: 0.0588s/iter; left time: 179.3101s
+	iters: 200, epoch: 1 | loss: 0.1503812
+	speed: 0.0468s/iter; left time: 138.2337s
+	iters: 300, epoch: 1 | loss: 0.1276133
+	speed: 0.0465s/iter; left time: 132.6002s
+Epoch: 1 cost time: 15.934332132339478
+Epoch: 1, Steps: 315 | Train Loss: 0.2124584 Vali Loss: 0.2278343 Test Loss: 0.2014623
+Validation loss decreased (inf --> 0.227834).  Saving model ...
+Adjusting learning rate to: 0.0000500
+	iters: 100, epoch: 2 | loss: 0.1738176
+	speed: 0.0498s/iter; left time: 136.3042s
+	iters: 200, epoch: 2 | loss: 0.1127121
+	speed: 0.0462s/iter; left time: 121.7077s
+	iters: 300, epoch: 2 | loss: 0.1201913
+	speed: 0.0457s/iter; left time: 115.8625s
+Epoch: 2 cost time: 14.895917654037476
+Epoch: 2, Steps: 315 | Train Loss: 0.1342753 Vali Loss: 0.1608981 Test Loss: 0.1424334
+Validation loss decreased (0.227834 --> 0.160898).  Saving model ...
+Adjusting learning rate to: 0.0000250
+	iters: 100, epoch: 3 | loss: 0.1000915
+	speed: 0.0499s/iter; left time: 120.7953s
+	iters: 200, epoch: 3 | loss: 0.1327873
+	speed: 0.0466s/iter; left time: 108.2141s
+	iters: 300, epoch: 3 | loss: 0.0960080
+	speed: 0.0465s/iter; left time: 103.3206s
+Epoch: 3 cost time: 15.065373659133911
+Epoch: 3, Steps: 315 | Train Loss: 0.1165653 Vali Loss: 0.1621902 Test Loss: 0.1476972
+EarlyStopping counter: 1 out of 3
+Adjusting learning rate to: 0.0000125
+	iters: 100, epoch: 4 | loss: 0.0780360
+	speed: 0.0500s/iter; left time: 105.2852s
+	iters: 200, epoch: 4 | loss: 0.1019032
+	speed: 0.0457s/iter; left time: 91.7144s
+	iters: 300, epoch: 4 | loss: 0.0771150
+	speed: 0.0469s/iter; left time: 89.4272s
+Epoch: 4 cost time: 15.000007152557373
+Epoch: 4, Steps: 315 | Train Loss: 0.1084459 Vali Loss: 0.1965118 Test Loss: 0.1634894
+EarlyStopping counter: 2 out of 3
+Adjusting learning rate to: 0.0000063
+	iters: 100, epoch: 5 | loss: 0.1175269
+	speed: 0.0489s/iter; left time: 87.6361s
+	iters: 200, epoch: 5 | loss: 0.0922824
+	speed: 0.0461s/iter; left time: 78.0268s
+	iters: 300, epoch: 5 | loss: 0.1240395
+	speed: 0.0462s/iter; left time: 73.5366s
+Epoch: 5 cost time: 14.861998558044434
+Epoch: 5, Steps: 315 | Train Loss: 0.1042947 Vali Loss: 0.2003588 Test Loss: 0.1700912
+EarlyStopping counter: 3 out of 3
+Adjusting learning rate to: 0.0000031
+Early stopping
+>>>>>>>testing : omdata1_test1_TransDtSt_Part_custom_ftMS_sl365_ll365_pl10_dm256_nh8_el3_dl1_df1024_fc1_ebtimeF_dtTrue_20240615_0<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+test 2986
+loading supervised model weight
+test shape: (2986, 1, 10, 1) (2986, 1, 10, 1)
+test shape: (2986, 10, 1) (2986, 10, 1)
+mse:0.3134334683418274, mae:0.43959879875183105, rmse:0.5598512887954712, mape:0.015751510858535767, mspe:0.00040941499173641205, rse:0.39089861512184143, r2_score:0.8357172080767503, acc:0.9842484891414642
+corr: [37.32137  37.259468 37.300278 37.321285 37.345615 37.37875  37.407436
+ 37.41571  37.414738 37.364033]
+Args in experiment:
+Namespace(is_training=1, model_id='omdata1_test1', model='TransDtSt_Part', data='custom', root_path='./dataset/multivariate/', data_path='oisst_lat_14.0_lon_112.0.csv', features='MS', target='sst', freq='d', model_save_path='/root/autodl-tmp/checkpoints/', results_save_path='/root/autodl-tmp/results/', test_results_save_path='/root/autodl-tmp/test_results/', pretrain=False, pretrain_epochs=10, mask_ratio=0.75, finetune=False, freeze_epochs=3, seq_len=365, label_len=365, pred_len=15, inverse=True, individual=False, max_tokens=30, top_k=5, num_kernels=6, enc_in=11, dec_in=11, c_out=11, d_model=256, n_heads=8, e_layers=3, d_layers=1, d_ff=1024, moving_avg=25, factor=1, distil=True, dropout=0.1, embed='timeF', activation='gelu', output_attention=False, num_workers=10, itr=1, train_epochs=10, batch_size=32, patience=3, learning_rate=0.0001, des='20240615', loss='MSE', lradj='HalfLR', use_amp=False, use_gpu=True, gpu=0, use_multi_gpu=False, devices='0,1,2,3', p_hidden_dims=[128, 128], p_hidden_layers=2)
+Use GPU: cuda:0
+>>>>>>>start training : omdata1_test1_TransDtSt_Part_custom_ftMS_sl365_ll365_pl15_dm256_nh8_el3_dl1_df1024_fc1_ebtimeF_dtTrue_20240615_0>>>>>>>>>>>>>>>>>>>>>>>>>>
+train 10103
+val 1484
+test 2981
+Patience count starts from 1 epoch
+Using HalfLR learning rate adjustment
+Starting training
+	iters: 100, epoch: 1 | loss: 0.1706280
+	speed: 0.0604s/iter; left time: 184.1481s
+	iters: 200, epoch: 1 | loss: 0.1838250
+	speed: 0.0479s/iter; left time: 141.3492s
+	iters: 300, epoch: 1 | loss: 0.1777837
+	speed: 0.0470s/iter; left time: 134.0995s
+Epoch: 1 cost time: 16.261232376098633
+Epoch: 1, Steps: 315 | Train Loss: 0.2292086 Vali Loss: 0.1898449 Test Loss: 0.1811552
+Validation loss decreased (inf --> 0.189845).  Saving model ...
+Adjusting learning rate to: 0.0000500
+	iters: 100, epoch: 2 | loss: 0.1221981
+	speed: 0.0504s/iter; left time: 137.8806s
+	iters: 200, epoch: 2 | loss: 0.1692449
+	speed: 0.0471s/iter; left time: 124.2038s
+	iters: 300, epoch: 2 | loss: 0.1577812
+	speed: 0.0471s/iter; left time: 119.3497s
+Epoch: 2 cost time: 15.218041896820068
+Epoch: 2, Steps: 315 | Train Loss: 0.1465373 Vali Loss: 0.2378253 Test Loss: 0.2175743
+EarlyStopping counter: 1 out of 3
+Adjusting learning rate to: 0.0000250
+	iters: 100, epoch: 3 | loss: 0.1240364
+	speed: 0.0512s/iter; left time: 124.0294s
+	iters: 200, epoch: 3 | loss: 0.1354569
+	speed: 0.0458s/iter; left time: 106.3744s
+	iters: 300, epoch: 3 | loss: 0.1108573
+	speed: 0.0463s/iter; left time: 102.7837s
+Epoch: 3 cost time: 15.074482679367065
+Epoch: 3, Steps: 315 | Train Loss: 0.1288777 Vali Loss: 0.1718740 Test Loss: 0.1975071
+Validation loss decreased (0.189845 --> 0.171874).  Saving model ...
+Adjusting learning rate to: 0.0000125
+	iters: 100, epoch: 4 | loss: 0.1207003
+	speed: 0.0495s/iter; left time: 104.1760s
+	iters: 200, epoch: 4 | loss: 0.0969154
+	speed: 0.0466s/iter; left time: 93.5159s
+	iters: 300, epoch: 4 | loss: 0.1131242
+	speed: 0.0480s/iter; left time: 91.5639s
+Epoch: 4 cost time: 15.203744173049927
+Epoch: 4, Steps: 315 | Train Loss: 0.1183898 Vali Loss: 0.2096494 Test Loss: 0.1956933
+EarlyStopping counter: 1 out of 3
+Adjusting learning rate to: 0.0000063
+	iters: 100, epoch: 5 | loss: 0.1402023
+	speed: 0.0494s/iter; left time: 88.4889s
+	iters: 200, epoch: 5 | loss: 0.1350384
+	speed: 0.0465s/iter; left time: 78.6418s
+	iters: 300, epoch: 5 | loss: 0.1126171
+	speed: 0.0473s/iter; left time: 75.2223s
+Epoch: 5 cost time: 15.05116319656372
+Epoch: 5, Steps: 315 | Train Loss: 0.1134656 Vali Loss: 0.1991741 Test Loss: 0.1938457
+EarlyStopping counter: 2 out of 3
+Adjusting learning rate to: 0.0000031
+	iters: 100, epoch: 6 | loss: 0.0978466
+	speed: 0.0487s/iter; left time: 71.9260s
+	iters: 200, epoch: 6 | loss: 0.1044299
+	speed: 0.0466s/iter; left time: 64.1325s
+	iters: 300, epoch: 6 | loss: 0.1103398
+	speed: 0.0465s/iter; left time: 59.3732s
+Epoch: 6 cost time: 14.944679975509644
+Epoch: 6, Steps: 315 | Train Loss: 0.1109974 Vali Loss: 0.2126625 Test Loss: 0.1991706
+EarlyStopping counter: 3 out of 3
+Adjusting learning rate to: 0.0000016
+Early stopping
+>>>>>>>testing : omdata1_test1_TransDtSt_Part_custom_ftMS_sl365_ll365_pl15_dm256_nh8_el3_dl1_df1024_fc1_ebtimeF_dtTrue_20240615_0<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+test 2981
+loading supervised model weight
+test shape: (2981, 1, 15, 1) (2981, 1, 15, 1)
+test shape: (2981, 15, 1) (2981, 15, 1)
+mse:0.43462666869163513, mae:0.511142373085022, rmse:0.6592622399330139, mape:0.018392199650406837, mspe:0.000578870705794543, rse:0.4601094722747803, r2_score:0.7791200373567883, acc:0.9816078003495932
+corr: [37.487873 37.491383 37.541348 37.539284 37.503506 37.461    37.424603
+ 37.39165  37.36474  37.35645  37.358604 37.36785  37.3866   37.41289
+ 37.35123 ]
+Args in experiment:
+Namespace(is_training=1, model_id='omdata1_test1', model='TransDtSt_Part', data='custom', root_path='./dataset/multivariate/', data_path='oisst_lat_14.0_lon_112.0.csv', features='MS', target='sst', freq='d', model_save_path='/root/autodl-tmp/checkpoints/', results_save_path='/root/autodl-tmp/results/', test_results_save_path='/root/autodl-tmp/test_results/', pretrain=False, pretrain_epochs=10, mask_ratio=0.75, finetune=False, freeze_epochs=3, seq_len=365, label_len=365, pred_len=20, inverse=True, individual=False, max_tokens=30, top_k=5, num_kernels=6, enc_in=11, dec_in=11, c_out=11, d_model=256, n_heads=8, e_layers=3, d_layers=1, d_ff=1024, moving_avg=25, factor=1, distil=True, dropout=0.1, embed='timeF', activation='gelu', output_attention=False, num_workers=10, itr=1, train_epochs=10, batch_size=32, patience=3, learning_rate=0.0001, des='20240615', loss='MSE', lradj='HalfLR', use_amp=False, use_gpu=True, gpu=0, use_multi_gpu=False, devices='0,1,2,3', p_hidden_dims=[128, 128], p_hidden_layers=2)
+Use GPU: cuda:0
+>>>>>>>start training : omdata1_test1_TransDtSt_Part_custom_ftMS_sl365_ll365_pl20_dm256_nh8_el3_dl1_df1024_fc1_ebtimeF_dtTrue_20240615_0>>>>>>>>>>>>>>>>>>>>>>>>>>
+train 10098
+val 1479
+test 2976
+Patience count starts from 1 epoch
+Using HalfLR learning rate adjustment
+Starting training
+	iters: 100, epoch: 1 | loss: 0.1912899
+	speed: 0.0607s/iter; left time: 185.1368s
+	iters: 200, epoch: 1 | loss: 0.1574370
+	speed: 0.0475s/iter; left time: 140.2338s
+	iters: 300, epoch: 1 | loss: 0.1444887
+	speed: 0.0500s/iter; left time: 142.4767s
+Epoch: 1 cost time: 16.56829071044922
+Epoch: 1, Steps: 315 | Train Loss: 0.2331362 Vali Loss: 0.1999089 Test Loss: 0.2325457
+Validation loss decreased (inf --> 0.199909).  Saving model ...
+Adjusting learning rate to: 0.0000500
+	iters: 100, epoch: 2 | loss: 0.1314306
+	speed: 0.0512s/iter; left time: 139.9773s
+	iters: 200, epoch: 2 | loss: 0.1319859
+	speed: 0.0482s/iter; left time: 127.0786s
+	iters: 300, epoch: 2 | loss: 0.1496222
+	speed: 0.0489s/iter; left time: 123.9198s
+Epoch: 2 cost time: 15.596143960952759
+Epoch: 2, Steps: 315 | Train Loss: 0.1501687 Vali Loss: 0.2191927 Test Loss: 0.2263781
+EarlyStopping counter: 1 out of 3
+Adjusting learning rate to: 0.0000250
+	iters: 100, epoch: 3 | loss: 0.1376410
+	speed: 0.0519s/iter; left time: 125.6644s
+	iters: 200, epoch: 3 | loss: 0.1224835
+	speed: 0.0475s/iter; left time: 110.2400s
+	iters: 300, epoch: 3 | loss: 0.1282541
+	speed: 0.0479s/iter; left time: 106.3585s
+Epoch: 3 cost time: 15.482867240905762
+Epoch: 3, Steps: 315 | Train Loss: 0.1298721 Vali Loss: 0.2095423 Test Loss: 0.2259338
+EarlyStopping counter: 2 out of 3
+Adjusting learning rate to: 0.0000125
+	iters: 100, epoch: 4 | loss: 0.1158337
+	speed: 0.0511s/iter; left time: 107.5584s
+	iters: 200, epoch: 4 | loss: 0.1132806
+	speed: 0.0488s/iter; left time: 97.8185s
+	iters: 300, epoch: 4 | loss: 0.1103815
+	speed: 0.0482s/iter; left time: 91.7893s
+Epoch: 4 cost time: 15.561410903930664
+Epoch: 4, Steps: 315 | Train Loss: 0.1205064 Vali Loss: 0.2343146 Test Loss: 0.2584105
+EarlyStopping counter: 3 out of 3
+Adjusting learning rate to: 0.0000063
+Early stopping
+>>>>>>>testing : omdata1_test1_TransDtSt_Part_custom_ftMS_sl365_ll365_pl20_dm256_nh8_el3_dl1_df1024_fc1_ebtimeF_dtTrue_20240615_0<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+test 2976
+loading supervised model weight
+test shape: (2976, 1, 20, 1) (2976, 1, 20, 1)
+test shape: (2976, 20, 1) (2976, 20, 1)
+mse:0.5117313861846924, mae:0.5545428991317749, rmse:0.7153540253639221, mape:0.019933290779590607, mspe:0.0006771979969926178, rse:0.49898409843444824, r2_score:0.7953328553313611, acc:0.9800667092204094
+corr: [37.600872 37.36486  37.40454  37.394524 37.353695 37.32146  37.31958
+ 37.327213 37.320107 37.288555 37.234    37.165764 37.102173 37.064247
+ 37.06147  37.080452 37.099037 37.113834 37.117874 37.00795 ]
+Args in experiment:
+Namespace(is_training=1, model_id='omdata1_test1', model='TransDtSt_Part', data='custom', root_path='./dataset/multivariate/', data_path='oisst_lat_14.0_lon_112.0.csv', features='MS', target='sst', freq='d', model_save_path='/root/autodl-tmp/checkpoints/', results_save_path='/root/autodl-tmp/results/', test_results_save_path='/root/autodl-tmp/test_results/', pretrain=False, pretrain_epochs=10, mask_ratio=0.75, finetune=False, freeze_epochs=3, seq_len=365, label_len=365, pred_len=25, inverse=True, individual=False, max_tokens=30, top_k=5, num_kernels=6, enc_in=11, dec_in=11, c_out=11, d_model=256, n_heads=8, e_layers=3, d_layers=1, d_ff=1024, moving_avg=25, factor=1, distil=True, dropout=0.1, embed='timeF', activation='gelu', output_attention=False, num_workers=10, itr=1, train_epochs=10, batch_size=32, patience=3, learning_rate=0.0001, des='20240615', loss='MSE', lradj='HalfLR', use_amp=False, use_gpu=True, gpu=0, use_multi_gpu=False, devices='0,1,2,3', p_hidden_dims=[128, 128], p_hidden_layers=2)
+Use GPU: cuda:0
+>>>>>>>start training : omdata1_test1_TransDtSt_Part_custom_ftMS_sl365_ll365_pl25_dm256_nh8_el3_dl1_df1024_fc1_ebtimeF_dtTrue_20240615_0>>>>>>>>>>>>>>>>>>>>>>>>>>
+train 10093
+val 1474
+test 2971
+Patience count starts from 1 epoch
+Using HalfLR learning rate adjustment
+Starting training
+	iters: 100, epoch: 1 | loss: 0.2032428
+	speed: 0.0625s/iter; left time: 190.5882s
+	iters: 200, epoch: 1 | loss: 0.2054382
+	speed: 0.0494s/iter; left time: 145.6745s
+	iters: 300, epoch: 1 | loss: 0.1901725
+	speed: 0.0488s/iter; left time: 139.2234s
+Epoch: 1 cost time: 16.82304096221924
+Epoch: 1, Steps: 315 | Train Loss: 0.2466621 Vali Loss: 0.2285791 Test Loss: 0.2218364
+Validation loss decreased (inf --> 0.228579).  Saving model ...
+Adjusting learning rate to: 0.0000500
+	iters: 100, epoch: 2 | loss: 0.1329179
+	speed: 0.0525s/iter; left time: 143.6814s
+	iters: 200, epoch: 2 | loss: 0.1788528
+	speed: 0.0486s/iter; left time: 128.2296s
+	iters: 300, epoch: 2 | loss: 0.1296004
+	speed: 0.0487s/iter; left time: 123.5667s
+Epoch: 2 cost time: 15.782119989395142
+Epoch: 2, Steps: 315 | Train Loss: 0.1542471 Vali Loss: 0.2466851 Test Loss: 0.2264453
+EarlyStopping counter: 1 out of 3
+Adjusting learning rate to: 0.0000250
+	iters: 100, epoch: 3 | loss: 0.1462247
+	speed: 0.0533s/iter; left time: 129.0182s
+	iters: 200, epoch: 3 | loss: 0.1151741
+	speed: 0.0491s/iter; left time: 113.8723s
+	iters: 300, epoch: 3 | loss: 0.1084683
+	speed: 0.0485s/iter; left time: 107.6487s
+Epoch: 3 cost time: 15.83846116065979
+Epoch: 3, Steps: 315 | Train Loss: 0.1346134 Vali Loss: 0.2705327 Test Loss: 0.2382664
+EarlyStopping counter: 2 out of 3
+Adjusting learning rate to: 0.0000125
+	iters: 100, epoch: 4 | loss: 0.1676027
+	speed: 0.0521s/iter; left time: 109.6489s
+	iters: 200, epoch: 4 | loss: 0.1287577
+	speed: 0.0496s/iter; left time: 99.4896s
+	iters: 300, epoch: 4 | loss: 0.1180784
+	speed: 0.0499s/iter; left time: 95.0882s
+Epoch: 4 cost time: 15.943213701248169
+Epoch: 4, Steps: 315 | Train Loss: 0.1246825 Vali Loss: 0.2493681 Test Loss: 0.2266912
+EarlyStopping counter: 3 out of 3
+Adjusting learning rate to: 0.0000063
+Early stopping
+>>>>>>>testing : omdata1_test1_TransDtSt_Part_custom_ftMS_sl365_ll365_pl25_dm256_nh8_el3_dl1_df1024_fc1_ebtimeF_dtTrue_20240615_0<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+test 2971
+loading supervised model weight
+test shape: (2971, 1, 25, 1) (2971, 1, 25, 1)
+test shape: (2971, 25, 1) (2971, 25, 1)
+mse:0.4881648123264313, mae:0.5407142639160156, rmse:0.6986879110336304, mape:0.01939556375145912, mspe:0.0006426479667425156, rse:0.48704177141189575, r2_score:0.7684319163363463, acc:0.9806044362485409
+corr: [37.441555 37.2568   37.31915  37.352715 37.36742  37.381397 37.400875
+ 37.416866 37.417885 37.405426 37.37164  37.313583 37.253456 37.224205
+ 37.234196 37.265125 37.294174 37.31563  37.324623 37.32588  37.332405
+ 37.363335 37.41686  37.478317 37.25345 ]
+Args in experiment:
+Namespace(is_training=1, model_id='omdata1_test1', model='TransDtSt_Part', data='custom', root_path='./dataset/multivariate/', data_path='oisst_lat_14.0_lon_112.0.csv', features='MS', target='sst', freq='d', model_save_path='/root/autodl-tmp/checkpoints/', results_save_path='/root/autodl-tmp/results/', test_results_save_path='/root/autodl-tmp/test_results/', pretrain=False, pretrain_epochs=10, mask_ratio=0.75, finetune=False, freeze_epochs=3, seq_len=365, label_len=365, pred_len=30, inverse=True, individual=False, max_tokens=30, top_k=5, num_kernels=6, enc_in=11, dec_in=11, c_out=11, d_model=256, n_heads=8, e_layers=3, d_layers=1, d_ff=1024, moving_avg=25, factor=1, distil=True, dropout=0.1, embed='timeF', activation='gelu', output_attention=False, num_workers=10, itr=1, train_epochs=10, batch_size=32, patience=3, learning_rate=0.0001, des='20240615', loss='MSE', lradj='HalfLR', use_amp=False, use_gpu=True, gpu=0, use_multi_gpu=False, devices='0,1,2,3', p_hidden_dims=[128, 128], p_hidden_layers=2)
+Use GPU: cuda:0
+>>>>>>>start training : omdata1_test1_TransDtSt_Part_custom_ftMS_sl365_ll365_pl30_dm256_nh8_el3_dl1_df1024_fc1_ebtimeF_dtTrue_20240615_0>>>>>>>>>>>>>>>>>>>>>>>>>>
+train 10088
+val 1469
+test 2966
+Patience count starts from 1 epoch
+Using HalfLR learning rate adjustment
+Starting training
+	iters: 100, epoch: 1 | loss: 0.1931801
+	speed: 0.0642s/iter; left time: 195.8068s
+	iters: 200, epoch: 1 | loss: 0.1735001
+	speed: 0.0495s/iter; left time: 146.2187s
+	iters: 300, epoch: 1 | loss: 0.2137638
+	speed: 0.0494s/iter; left time: 140.7660s
+Epoch: 1 cost time: 17.08171510696411
+Epoch: 1, Steps: 315 | Train Loss: 0.2505189 Vali Loss: 0.2349683 Test Loss: 0.2405243
+Validation loss decreased (inf --> 0.234968).  Saving model ...
+Adjusting learning rate to: 0.0000500
+	iters: 100, epoch: 2 | loss: 0.1525515
+	speed: 0.0522s/iter; left time: 142.8278s
+	iters: 200, epoch: 2 | loss: 0.1413708
+	speed: 0.0492s/iter; left time: 129.7957s
+	iters: 300, epoch: 2 | loss: 0.1515798
+	speed: 0.0499s/iter; left time: 126.5063s
+Epoch: 2 cost time: 15.932938814163208
+Epoch: 2, Steps: 315 | Train Loss: 0.1598856 Vali Loss: 0.2677426 Test Loss: 0.2590667
+EarlyStopping counter: 1 out of 3
+Adjusting learning rate to: 0.0000250
+	iters: 100, epoch: 3 | loss: 0.1469281
+	speed: 0.0513s/iter; left time: 124.1619s
+	iters: 200, epoch: 3 | loss: 0.1061502
+	speed: 0.0496s/iter; left time: 115.2130s
+	iters: 300, epoch: 3 | loss: 0.1288576
+	speed: 0.0493s/iter; left time: 109.5121s
+Epoch: 3 cost time: 15.862073421478271
+Epoch: 3, Steps: 315 | Train Loss: 0.1399767 Vali Loss: 0.2399247 Test Loss: 0.2397553
+EarlyStopping counter: 2 out of 3
+Adjusting learning rate to: 0.0000125
+	iters: 100, epoch: 4 | loss: 0.1464576
+	speed: 0.0537s/iter; left time: 113.0821s
+	iters: 200, epoch: 4 | loss: 0.1064101
+	speed: 0.0489s/iter; left time: 98.0700s
+	iters: 300, epoch: 4 | loss: 0.1299793
+	speed: 0.0492s/iter; left time: 93.7120s
+Epoch: 4 cost time: 15.94561767578125
+Epoch: 4, Steps: 315 | Train Loss: 0.1302055 Vali Loss: 0.2920186 Test Loss: 0.2662618
+EarlyStopping counter: 3 out of 3
+Adjusting learning rate to: 0.0000063
+Early stopping
+>>>>>>>testing : omdata1_test1_TransDtSt_Part_custom_ftMS_sl365_ll365_pl30_dm256_nh8_el3_dl1_df1024_fc1_ebtimeF_dtTrue_20240615_0<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+test 2966
+loading supervised model weight
+test shape: (2966, 1, 30, 1) (2966, 1, 30, 1)
+test shape: (2966, 30, 1) (2966, 30, 1)
+mse:0.529288649559021, mae:0.5711065530776978, rmse:0.7275222539901733, mape:0.02049674466252327, mspe:0.0006946130888536572, rse:0.5067803263664246, r2_score:0.7694498626570229, acc:0.9795032553374767
+corr: [37.57418  37.12491  37.15489  37.157837 37.144917 37.1293   37.12142
+ 37.115707 37.11053  37.112885 37.10978  37.07978  37.0264   36.981686
+ 36.973053 36.995716 37.03414  37.07086  37.09563  37.10477  37.120598
+ 37.16348  37.224472 37.287453 37.341545 37.374744 37.386333 37.39527
+ 37.41772  37.4245  ]
+Args in experiment:
+Namespace(is_training=1, model_id='omdata1_test1', model='TransDtSt_Part', data='custom', root_path='./dataset/multivariate/', data_path='oisst_lat_14.0_lon_112.0.csv', features='MS', target='sst', freq='d', model_save_path='/root/autodl-tmp/checkpoints/', results_save_path='/root/autodl-tmp/results/', test_results_save_path='/root/autodl-tmp/test_results/', pretrain=False, pretrain_epochs=10, mask_ratio=0.75, finetune=False, freeze_epochs=3, seq_len=365, label_len=355, pred_len=10, inverse=True, individual=False, max_tokens=30, top_k=5, num_kernels=6, enc_in=11, dec_in=11, c_out=11, d_model=256, n_heads=8, e_layers=3, d_layers=1, d_ff=1024, moving_avg=25, factor=1, distil=True, dropout=0.1, embed='timeF', activation='gelu', output_attention=False, num_workers=10, itr=1, train_epochs=10, batch_size=32, patience=3, learning_rate=0.0001, des='20240615', loss='MSE', lradj='HalfLR', use_amp=False, use_gpu=True, gpu=0, use_multi_gpu=False, devices='0,1,2,3', p_hidden_dims=[128, 128], p_hidden_layers=2)
+Use GPU: cuda:0
+>>>>>>>start training : omdata1_test1_TransDtSt_Part_custom_ftMS_sl365_ll355_pl10_dm256_nh8_el3_dl1_df1024_fc1_ebtimeF_dtTrue_20240615_0>>>>>>>>>>>>>>>>>>>>>>>>>>
+train 10108
+val 1489
+test 2986
+Patience count starts from 1 epoch
+Using HalfLR learning rate adjustment
+Starting training
+	iters: 100, epoch: 1 | loss: 0.1752377
+	speed: 0.0587s/iter; left time: 179.0873s
+	iters: 200, epoch: 1 | loss: 0.1551209
+	speed: 0.0456s/iter; left time: 134.6753s
+	iters: 300, epoch: 1 | loss: 0.1278580
+	speed: 0.0457s/iter; left time: 130.2180s
+Epoch: 1 cost time: 15.71749758720398
+Epoch: 1, Steps: 315 | Train Loss: 0.2127996 Vali Loss: 0.2522072 Test Loss: 0.2058031
+Validation loss decreased (inf --> 0.252207).  Saving model ...
+Adjusting learning rate to: 0.0000500
+	iters: 100, epoch: 2 | loss: 0.1880930
+	speed: 0.0496s/iter; left time: 135.5697s
+	iters: 200, epoch: 2 | loss: 0.1272158
+	speed: 0.0458s/iter; left time: 120.8475s
+	iters: 300, epoch: 2 | loss: 0.1211078
+	speed: 0.0454s/iter; left time: 115.2132s
+Epoch: 2 cost time: 14.801569938659668
+Epoch: 2, Steps: 315 | Train Loss: 0.1343230 Vali Loss: 0.1715689 Test Loss: 0.1506742
+Validation loss decreased (0.252207 --> 0.171569).  Saving model ...
+Adjusting learning rate to: 0.0000250
+	iters: 100, epoch: 3 | loss: 0.1063301
+	speed: 0.0492s/iter; left time: 119.0702s
+	iters: 200, epoch: 3 | loss: 0.1500236
+	speed: 0.0452s/iter; left time: 104.9597s
+	iters: 300, epoch: 3 | loss: 0.0858139
+	speed: 0.0458s/iter; left time: 101.6905s
+Epoch: 3 cost time: 14.74765658378601
+Epoch: 3, Steps: 315 | Train Loss: 0.1180767 Vali Loss: 0.1638633 Test Loss: 0.1559057
+Validation loss decreased (0.171569 --> 0.163863).  Saving model ...
+Adjusting learning rate to: 0.0000125
+	iters: 100, epoch: 4 | loss: 0.0771497
+	speed: 0.0499s/iter; left time: 104.9885s
+	iters: 200, epoch: 4 | loss: 0.1083071
+	speed: 0.0457s/iter; left time: 91.6834s
+	iters: 300, epoch: 4 | loss: 0.0861911
+	speed: 0.0458s/iter; left time: 87.2975s
+Epoch: 4 cost time: 14.860014915466309
+Epoch: 4, Steps: 315 | Train Loss: 0.1093299 Vali Loss: 0.1896868 Test Loss: 0.1666307
+EarlyStopping counter: 1 out of 3
+Adjusting learning rate to: 0.0000063
+	iters: 100, epoch: 5 | loss: 0.1315288
+	speed: 0.0487s/iter; left time: 87.2579s
+	iters: 200, epoch: 5 | loss: 0.0928940
+	speed: 0.0453s/iter; left time: 76.6767s
+	iters: 300, epoch: 5 | loss: 0.1393532
+	speed: 0.0453s/iter; left time: 72.1213s
+Epoch: 5 cost time: 14.709758520126343
+Epoch: 5, Steps: 315 | Train Loss: 0.1053544 Vali Loss: 0.1936973 Test Loss: 0.1714139
+EarlyStopping counter: 2 out of 3
+Adjusting learning rate to: 0.0000031
+	iters: 100, epoch: 6 | loss: 0.0949869
+	speed: 0.0481s/iter; left time: 71.0066s
+	iters: 200, epoch: 6 | loss: 0.0989322
+	speed: 0.0461s/iter; left time: 63.3812s
+	iters: 300, epoch: 6 | loss: 0.1196274
+	speed: 0.0452s/iter; left time: 57.6840s
+Epoch: 6 cost time: 14.655081987380981
+Epoch: 6, Steps: 315 | Train Loss: 0.1024919 Vali Loss: 0.1915806 Test Loss: 0.1720634
+EarlyStopping counter: 3 out of 3
+Adjusting learning rate to: 0.0000016
+Early stopping
+>>>>>>>testing : omdata1_test1_TransDtSt_Part_custom_ftMS_sl365_ll355_pl10_dm256_nh8_el3_dl1_df1024_fc1_ebtimeF_dtTrue_20240615_0<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+test 2986
+loading supervised model weight
+test shape: (2986, 1, 10, 1) (2986, 1, 10, 1)
+test shape: (2986, 10, 1) (2986, 10, 1)
+mse:0.343080073595047, mae:0.459339439868927, rmse:0.5857303738594055, mape:0.016470737755298615, mspe:0.0004482203221414238, rse:0.40896785259246826, r2_score:0.8217117246882634, acc:0.9835292622447014
+corr: [37.72125  37.647095 37.68648  37.705154 37.710728 37.7051   37.698105
+ 37.677902 37.65115  37.70352 ]
+Args in experiment:
+Namespace(is_training=1, model_id='omdata1_test1', model='TransDtSt_Part', data='custom', root_path='./dataset/multivariate/', data_path='oisst_lat_14.0_lon_112.0.csv', features='MS', target='sst', freq='d', model_save_path='/root/autodl-tmp/checkpoints/', results_save_path='/root/autodl-tmp/results/', test_results_save_path='/root/autodl-tmp/test_results/', pretrain=False, pretrain_epochs=10, mask_ratio=0.75, finetune=False, freeze_epochs=3, seq_len=365, label_len=350, pred_len=15, inverse=True, individual=False, max_tokens=30, top_k=5, num_kernels=6, enc_in=11, dec_in=11, c_out=11, d_model=256, n_heads=8, e_layers=3, d_layers=1, d_ff=1024, moving_avg=25, factor=1, distil=True, dropout=0.1, embed='timeF', activation='gelu', output_attention=False, num_workers=10, itr=1, train_epochs=10, batch_size=32, patience=3, learning_rate=0.0001, des='20240615', loss='MSE', lradj='HalfLR', use_amp=False, use_gpu=True, gpu=0, use_multi_gpu=False, devices='0,1,2,3', p_hidden_dims=[128, 128], p_hidden_layers=2)
+Use GPU: cuda:0
+>>>>>>>start training : omdata1_test1_TransDtSt_Part_custom_ftMS_sl365_ll350_pl15_dm256_nh8_el3_dl1_df1024_fc1_ebtimeF_dtTrue_20240615_0>>>>>>>>>>>>>>>>>>>>>>>>>>
+train 10103
+val 1484
+test 2981
+Patience count starts from 1 epoch
+Using HalfLR learning rate adjustment
+Starting training
+	iters: 100, epoch: 1 | loss: 0.1688649
+	speed: 0.0590s/iter; left time: 180.0580s
+	iters: 200, epoch: 1 | loss: 0.1904337
+	speed: 0.0456s/iter; left time: 134.4200s
+	iters: 300, epoch: 1 | loss: 0.1657927
+	speed: 0.0457s/iter; left time: 130.1551s
+Epoch: 1 cost time: 15.73684048652649
+Epoch: 1, Steps: 315 | Train Loss: 0.2265178 Vali Loss: 0.1957991 Test Loss: 0.1913926
+Validation loss decreased (inf --> 0.195799).  Saving model ...
+Adjusting learning rate to: 0.0000500
+	iters: 100, epoch: 2 | loss: 0.1412983
+	speed: 0.0498s/iter; left time: 136.1805s
+	iters: 200, epoch: 2 | loss: 0.1544790
+	speed: 0.0466s/iter; left time: 122.7525s
+	iters: 300, epoch: 2 | loss: 0.1528061
+	speed: 0.0459s/iter; left time: 116.3371s
+Epoch: 2 cost time: 14.948599576950073
+Epoch: 2, Steps: 315 | Train Loss: 0.1457322 Vali Loss: 0.2313443 Test Loss: 0.2395311
+EarlyStopping counter: 1 out of 3
+Adjusting learning rate to: 0.0000250
+	iters: 100, epoch: 3 | loss: 0.1229710
+	speed: 0.0497s/iter; left time: 120.3267s
+	iters: 200, epoch: 3 | loss: 0.1378202
+	speed: 0.0467s/iter; left time: 108.3878s
+	iters: 300, epoch: 3 | loss: 0.1056495
+	speed: 0.0461s/iter; left time: 102.4043s
+Epoch: 3 cost time: 14.97856879234314
+Epoch: 3, Steps: 315 | Train Loss: 0.1274370 Vali Loss: 0.1724854 Test Loss: 0.2050826
+Validation loss decreased (0.195799 --> 0.172485).  Saving model ...
+Adjusting learning rate to: 0.0000125
+	iters: 100, epoch: 4 | loss: 0.1209018
+	speed: 0.0495s/iter; left time: 104.3496s
+	iters: 200, epoch: 4 | loss: 0.1028731
+	speed: 0.0456s/iter; left time: 91.3895s
+	iters: 300, epoch: 4 | loss: 0.1329904
+	speed: 0.0473s/iter; left time: 90.1006s
+Epoch: 4 cost time: 15.003231763839722
+Epoch: 4, Steps: 315 | Train Loss: 0.1180874 Vali Loss: 0.2028175 Test Loss: 0.2158437
+EarlyStopping counter: 1 out of 3
+Adjusting learning rate to: 0.0000063
+	iters: 100, epoch: 5 | loss: 0.1308573
+	speed: 0.0490s/iter; left time: 87.6961s
+	iters: 200, epoch: 5 | loss: 0.1400318
+	speed: 0.0462s/iter; left time: 78.0633s
+	iters: 300, epoch: 5 | loss: 0.1201389
+	speed: 0.0465s/iter; left time: 74.0466s
+Epoch: 5 cost time: 14.892784595489502
+Epoch: 5, Steps: 315 | Train Loss: 0.1126545 Vali Loss: 0.1916105 Test Loss: 0.2087521
+EarlyStopping counter: 2 out of 3
+Adjusting learning rate to: 0.0000031
+	iters: 100, epoch: 6 | loss: 0.0981135
+	speed: 0.0501s/iter; left time: 73.9617s
+	iters: 200, epoch: 6 | loss: 0.1088388
+	speed: 0.0469s/iter; left time: 64.5345s
+	iters: 300, epoch: 6 | loss: 0.1034411
+	speed: 0.0469s/iter; left time: 59.8795s
+Epoch: 6 cost time: 15.12665057182312
+Epoch: 6, Steps: 315 | Train Loss: 0.1100641 Vali Loss: 0.2002852 Test Loss: 0.2143156
+EarlyStopping counter: 3 out of 3
+Adjusting learning rate to: 0.0000016
+Early stopping
+>>>>>>>testing : omdata1_test1_TransDtSt_Part_custom_ftMS_sl365_ll350_pl15_dm256_nh8_el3_dl1_df1024_fc1_ebtimeF_dtTrue_20240615_0<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+test 2981
+loading supervised model weight
+test shape: (2981, 1, 15, 1) (2981, 1, 15, 1)
+test shape: (2981, 15, 1) (2981, 15, 1)
+mse:0.45129698514938354, mae:0.5151429772377014, rmse:0.6717864274978638, mape:0.018529456108808517, mspe:0.0006005461909808218, rse:0.4688502550125122, r2_score:0.7684512576105202, acc:0.9814705438911915
+corr: [37.70036  37.571396 37.51381  37.43282  37.36309  37.324123 37.314762
+ 37.31949  37.326546 37.331112 37.32308  37.308155 37.299976 37.285954
+ 37.426197]
+Args in experiment:
+Namespace(is_training=1, model_id='omdata1_test1', model='TransDtSt_Part', data='custom', root_path='./dataset/multivariate/', data_path='oisst_lat_14.0_lon_112.0.csv', features='MS', target='sst', freq='d', model_save_path='/root/autodl-tmp/checkpoints/', results_save_path='/root/autodl-tmp/results/', test_results_save_path='/root/autodl-tmp/test_results/', pretrain=False, pretrain_epochs=10, mask_ratio=0.75, finetune=False, freeze_epochs=3, seq_len=365, label_len=345, pred_len=20, inverse=True, individual=False, max_tokens=30, top_k=5, num_kernels=6, enc_in=11, dec_in=11, c_out=11, d_model=256, n_heads=8, e_layers=3, d_layers=1, d_ff=1024, moving_avg=25, factor=1, distil=True, dropout=0.1, embed='timeF', activation='gelu', output_attention=False, num_workers=10, itr=1, train_epochs=10, batch_size=32, patience=3, learning_rate=0.0001, des='20240615', loss='MSE', lradj='HalfLR', use_amp=False, use_gpu=True, gpu=0, use_multi_gpu=False, devices='0,1,2,3', p_hidden_dims=[128, 128], p_hidden_layers=2)
+Use GPU: cuda:0
+>>>>>>>start training : omdata1_test1_TransDtSt_Part_custom_ftMS_sl365_ll345_pl20_dm256_nh8_el3_dl1_df1024_fc1_ebtimeF_dtTrue_20240615_0>>>>>>>>>>>>>>>>>>>>>>>>>>
+train 10098
+val 1479
+test 2976
+Patience count starts from 1 epoch
+Using HalfLR learning rate adjustment
+Starting training
+	iters: 100, epoch: 1 | loss: 0.2060296
+	speed: 0.0583s/iter; left time: 177.9993s
+	iters: 200, epoch: 1 | loss: 0.1685007
+	speed: 0.0461s/iter; left time: 136.1501s
+	iters: 300, epoch: 1 | loss: 0.1447868
+	speed: 0.0469s/iter; left time: 133.7976s
+Epoch: 1 cost time: 15.856823921203613
+Epoch: 1, Steps: 315 | Train Loss: 0.2234498 Vali Loss: 0.1878012 Test Loss: 0.2229776
+Validation loss decreased (inf --> 0.187801).  Saving model ...
+Adjusting learning rate to: 0.0000500
+	iters: 100, epoch: 2 | loss: 0.1232033
+	speed: 0.0509s/iter; left time: 139.3029s
+	iters: 200, epoch: 2 | loss: 0.1237196
+	speed: 0.0487s/iter; left time: 128.4775s
+	iters: 300, epoch: 2 | loss: 0.1470229
+	speed: 0.0463s/iter; left time: 117.4414s
+Epoch: 2 cost time: 15.332364320755005
+Epoch: 2, Steps: 315 | Train Loss: 0.1476440 Vali Loss: 0.2107684 Test Loss: 0.2256104
+EarlyStopping counter: 1 out of 3
+Adjusting learning rate to: 0.0000250
+	iters: 100, epoch: 3 | loss: 0.1364774
+	speed: 0.0488s/iter; left time: 118.1751s
+	iters: 200, epoch: 3 | loss: 0.1237124
+	speed: 0.0458s/iter; left time: 106.2599s
+	iters: 300, epoch: 3 | loss: 0.1354620
+	speed: 0.0477s/iter; left time: 105.8991s
+Epoch: 3 cost time: 14.958383321762085
+Epoch: 3, Steps: 315 | Train Loss: 0.1265687 Vali Loss: 0.2051675 Test Loss: 0.2294461
+EarlyStopping counter: 2 out of 3
+Adjusting learning rate to: 0.0000125
+	iters: 100, epoch: 4 | loss: 0.1048599
+	speed: 0.0497s/iter; left time: 104.7653s
+	iters: 200, epoch: 4 | loss: 0.1134514
+	speed: 0.0459s/iter; left time: 92.1610s
+	iters: 300, epoch: 4 | loss: 0.1098520
+	speed: 0.0468s/iter; left time: 89.1198s
+Epoch: 4 cost time: 14.977317810058594
+Epoch: 4, Steps: 315 | Train Loss: 0.1172860 Vali Loss: 0.2416268 Test Loss: 0.2818931
+EarlyStopping counter: 3 out of 3
+Adjusting learning rate to: 0.0000063
+Early stopping
+>>>>>>>testing : omdata1_test1_TransDtSt_Part_custom_ftMS_sl365_ll345_pl20_dm256_nh8_el3_dl1_df1024_fc1_ebtimeF_dtTrue_20240615_0<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+test 2976
+loading supervised model weight
+test shape: (2976, 1, 20, 1) (2976, 1, 20, 1)
+test shape: (2976, 20, 1) (2976, 20, 1)
+mse:0.49067604541778564, mae:0.5395660996437073, rmse:0.7004827260971069, mape:0.019399913027882576, mspe:0.0006507002981379628, rse:0.4886108636856079, r2_score:0.7889774938493536, acc:0.9806000869721174
+corr: [37.499012 37.137646 37.093678 37.028214 36.965042 36.91434  36.864414
+ 36.796257 36.71898  36.655926 36.620396 36.627792 36.67246  36.71729
+ 36.741707 36.74764  36.742912 36.739437 36.74114  37.158638]
+Args in experiment:
+Namespace(is_training=1, model_id='omdata1_test1', model='TransDtSt_Part', data='custom', root_path='./dataset/multivariate/', data_path='oisst_lat_14.0_lon_112.0.csv', features='MS', target='sst', freq='d', model_save_path='/root/autodl-tmp/checkpoints/', results_save_path='/root/autodl-tmp/results/', test_results_save_path='/root/autodl-tmp/test_results/', pretrain=False, pretrain_epochs=10, mask_ratio=0.75, finetune=False, freeze_epochs=3, seq_len=365, label_len=340, pred_len=25, inverse=True, individual=False, max_tokens=30, top_k=5, num_kernels=6, enc_in=11, dec_in=11, c_out=11, d_model=256, n_heads=8, e_layers=3, d_layers=1, d_ff=1024, moving_avg=25, factor=1, distil=True, dropout=0.1, embed='timeF', activation='gelu', output_attention=False, num_workers=10, itr=1, train_epochs=10, batch_size=32, patience=3, learning_rate=0.0001, des='20240615', loss='MSE', lradj='HalfLR', use_amp=False, use_gpu=True, gpu=0, use_multi_gpu=False, devices='0,1,2,3', p_hidden_dims=[128, 128], p_hidden_layers=2)
+Use GPU: cuda:0
+>>>>>>>start training : omdata1_test1_TransDtSt_Part_custom_ftMS_sl365_ll340_pl25_dm256_nh8_el3_dl1_df1024_fc1_ebtimeF_dtTrue_20240615_0>>>>>>>>>>>>>>>>>>>>>>>>>>
+train 10093
+val 1474
+test 2971
+Patience count starts from 1 epoch
+Using HalfLR learning rate adjustment
+Starting training
+	iters: 100, epoch: 1 | loss: 0.2102557
+	speed: 0.0579s/iter; left time: 176.5544s
+	iters: 200, epoch: 1 | loss: 0.1914394
+	speed: 0.0463s/iter; left time: 136.5452s
+	iters: 300, epoch: 1 | loss: 0.2037909
+	speed: 0.0471s/iter; left time: 134.1547s
+Epoch: 1 cost time: 15.875413656234741
+Epoch: 1, Steps: 315 | Train Loss: 0.2359319 Vali Loss: 0.2137704 Test Loss: 0.2297025
+Validation loss decreased (inf --> 0.213770).  Saving model ...
+Adjusting learning rate to: 0.0000500
+	iters: 100, epoch: 2 | loss: 0.1324737
+	speed: 0.0484s/iter; left time: 132.3122s
+	iters: 200, epoch: 2 | loss: 0.1449016
+	speed: 0.0459s/iter; left time: 121.0183s
+	iters: 300, epoch: 2 | loss: 0.1352194
+	speed: 0.0464s/iter; left time: 117.5512s
+Epoch: 2 cost time: 14.787147045135498
+Epoch: 2, Steps: 315 | Train Loss: 0.1524121 Vali Loss: 0.2054058 Test Loss: 0.2540224
+Validation loss decreased (0.213770 --> 0.205406).  Saving model ...
+Adjusting learning rate to: 0.0000250
+	iters: 100, epoch: 3 | loss: 0.1419620
+	speed: 0.0496s/iter; left time: 119.9818s
+	iters: 200, epoch: 3 | loss: 0.1133464
+	speed: 0.0466s/iter; left time: 108.0598s
+	iters: 300, epoch: 3 | loss: 0.1110622
+	speed: 0.0458s/iter; left time: 101.6638s
+Epoch: 3 cost time: 14.914906740188599
+Epoch: 3, Steps: 315 | Train Loss: 0.1326676 Vali Loss: 0.2392824 Test Loss: 0.2732355
+EarlyStopping counter: 1 out of 3
+Adjusting learning rate to: 0.0000125
+	iters: 100, epoch: 4 | loss: 0.1462009
+	speed: 0.0495s/iter; left time: 104.3110s
+	iters: 200, epoch: 4 | loss: 0.1243425
+	speed: 0.0475s/iter; left time: 95.2514s
+	iters: 300, epoch: 4 | loss: 0.1114948
+	speed: 0.0460s/iter; left time: 87.7083s
+Epoch: 4 cost time: 15.048554420471191
+Epoch: 4, Steps: 315 | Train Loss: 0.1220427 Vali Loss: 0.2037325 Test Loss: 0.2573075
+Validation loss decreased (0.205406 --> 0.203732).  Saving model ...
+Adjusting learning rate to: 0.0000063
+	iters: 100, epoch: 5 | loss: 0.1067942
+	speed: 0.0487s/iter; left time: 87.2776s
+	iters: 200, epoch: 5 | loss: 0.1207157
+	speed: 0.0460s/iter; left time: 77.8344s
+	iters: 300, epoch: 5 | loss: 0.1245226
+	speed: 0.0469s/iter; left time: 74.6449s
+Epoch: 5 cost time: 14.895395994186401
+Epoch: 5, Steps: 315 | Train Loss: 0.1174344 Vali Loss: 0.2100854 Test Loss: 0.2698571
+EarlyStopping counter: 1 out of 3
+Adjusting learning rate to: 0.0000031
+	iters: 100, epoch: 6 | loss: 0.1146072
+	speed: 0.0485s/iter; left time: 71.6202s
+	iters: 200, epoch: 6 | loss: 0.1188446
+	speed: 0.0458s/iter; left time: 62.9606s
+	iters: 300, epoch: 6 | loss: 0.1141532
+	speed: 0.0462s/iter; left time: 58.9599s
+Epoch: 6 cost time: 14.790293455123901
+Epoch: 6, Steps: 315 | Train Loss: 0.1156043 Vali Loss: 0.2110955 Test Loss: 0.2689656
+EarlyStopping counter: 2 out of 3
+Adjusting learning rate to: 0.0000016
+	iters: 100, epoch: 7 | loss: 0.1178286
+	speed: 0.0488s/iter; left time: 56.6431s
+	iters: 200, epoch: 7 | loss: 0.1042080
+	speed: 0.0453s/iter; left time: 48.0708s
+	iters: 300, epoch: 7 | loss: 0.1021833
+	speed: 0.0462s/iter; left time: 44.3985s
+Epoch: 7 cost time: 14.75789499282837
+Epoch: 7, Steps: 315 | Train Loss: 0.1141424 Vali Loss: 0.2191115 Test Loss: 0.2728479
+EarlyStopping counter: 3 out of 3
+Adjusting learning rate to: 0.0000008
+Early stopping
+>>>>>>>testing : omdata1_test1_TransDtSt_Part_custom_ftMS_sl365_ll340_pl25_dm256_nh8_el3_dl1_df1024_fc1_ebtimeF_dtTrue_20240615_0<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+test 2971
+loading supervised model weight
+test shape: (2971, 1, 25, 1) (2971, 1, 25, 1)
+test shape: (2971, 25, 1) (2971, 25, 1)
+mse:0.5662211179733276, mae:0.5802609324455261, rmse:0.7524766325950623, mape:0.020820656791329384, mspe:0.0007460666238330305, rse:0.5245368480682373, r2_score:0.7299289608873122, acc:0.9791793432086706
+corr: [37.635403 37.463165 37.53213  37.5094   37.410175 37.29294  37.209972
+ 37.163902 37.122337 37.06353  36.986553 36.91071  36.84578  36.788307
+ 36.744556 36.728214 36.753387 36.82511  36.9289   37.02224  37.07654
+ 37.091576 37.089294 37.09641  37.34462 ]
+Args in experiment:
+Namespace(is_training=1, model_id='omdata1_test1', model='TransDtSt_Part', data='custom', root_path='./dataset/multivariate/', data_path='oisst_lat_14.0_lon_112.0.csv', features='MS', target='sst', freq='d', model_save_path='/root/autodl-tmp/checkpoints/', results_save_path='/root/autodl-tmp/results/', test_results_save_path='/root/autodl-tmp/test_results/', pretrain=False, pretrain_epochs=10, mask_ratio=0.75, finetune=False, freeze_epochs=3, seq_len=365, label_len=335, pred_len=30, inverse=True, individual=False, max_tokens=30, top_k=5, num_kernels=6, enc_in=11, dec_in=11, c_out=11, d_model=256, n_heads=8, e_layers=3, d_layers=1, d_ff=1024, moving_avg=25, factor=1, distil=True, dropout=0.1, embed='timeF', activation='gelu', output_attention=False, num_workers=10, itr=1, train_epochs=10, batch_size=32, patience=3, learning_rate=0.0001, des='20240615', loss='MSE', lradj='HalfLR', use_amp=False, use_gpu=True, gpu=0, use_multi_gpu=False, devices='0,1,2,3', p_hidden_dims=[128, 128], p_hidden_layers=2)
+Use GPU: cuda:0
+>>>>>>>start training : omdata1_test1_TransDtSt_Part_custom_ftMS_sl365_ll335_pl30_dm256_nh8_el3_dl1_df1024_fc1_ebtimeF_dtTrue_20240615_0>>>>>>>>>>>>>>>>>>>>>>>>>>
+train 10088
+val 1469
+test 2966
+Patience count starts from 1 epoch
+Using HalfLR learning rate adjustment
+Starting training
+	iters: 100, epoch: 1 | loss: 0.1847168
+	speed: 0.0606s/iter; left time: 184.7869s
+	iters: 200, epoch: 1 | loss: 0.1637890
+	speed: 0.0468s/iter; left time: 138.1554s
+	iters: 300, epoch: 1 | loss: 0.2127393
+	speed: 0.0466s/iter; left time: 132.9498s
+Epoch: 1 cost time: 16.12257218360901
+Epoch: 1, Steps: 315 | Train Loss: 0.2433135 Vali Loss: 0.2183867 Test Loss: 0.2402393
+Validation loss decreased (inf --> 0.218387).  Saving model ...
+Adjusting learning rate to: 0.0000500
+	iters: 100, epoch: 2 | loss: 0.1449962
+	speed: 0.0485s/iter; left time: 132.7160s
+	iters: 200, epoch: 2 | loss: 0.1480109
+	speed: 0.0452s/iter; left time: 119.0534s
+	iters: 300, epoch: 2 | loss: 0.1587709
+	speed: 0.0466s/iter; left time: 118.2614s
+Epoch: 2 cost time: 14.75810956954956
+Epoch: 2, Steps: 315 | Train Loss: 0.1576218 Vali Loss: 0.2835831 Test Loss: 0.2633804
+EarlyStopping counter: 1 out of 3
+Adjusting learning rate to: 0.0000250
+	iters: 100, epoch: 3 | loss: 0.1422144
+	speed: 0.0492s/iter; left time: 119.1167s
+	iters: 200, epoch: 3 | loss: 0.1074361
+	speed: 0.0469s/iter; left time: 108.8883s
+	iters: 300, epoch: 3 | loss: 0.1250765
+	speed: 0.0468s/iter; left time: 104.0523s
+Epoch: 3 cost time: 15.024880647659302
+Epoch: 3, Steps: 315 | Train Loss: 0.1363901 Vali Loss: 0.2203272 Test Loss: 0.2392835
+EarlyStopping counter: 2 out of 3
+Adjusting learning rate to: 0.0000125
+	iters: 100, epoch: 4 | loss: 0.1412973
+	speed: 0.0504s/iter; left time: 106.0642s
+	iters: 200, epoch: 4 | loss: 0.1150004
+	speed: 0.0468s/iter; left time: 93.8142s
+	iters: 300, epoch: 4 | loss: 0.1212732
+	speed: 0.0458s/iter; left time: 87.3749s
+Epoch: 4 cost time: 15.032495975494385
+Epoch: 4, Steps: 315 | Train Loss: 0.1271391 Vali Loss: 0.2723054 Test Loss: 0.2728560
+EarlyStopping counter: 3 out of 3
+Adjusting learning rate to: 0.0000063
+Early stopping
+>>>>>>>testing : omdata1_test1_TransDtSt_Part_custom_ftMS_sl365_ll335_pl30_dm256_nh8_el3_dl1_df1024_fc1_ebtimeF_dtTrue_20240615_0<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+test 2966
+loading supervised model weight
+test shape: (2966, 1, 30, 1) (2966, 1, 30, 1)
+test shape: (2966, 30, 1) (2966, 30, 1)
+mse:0.5286614894866943, mae:0.5688022971153259, rmse:0.7270911335945129, mape:0.020436709746718407, mspe:0.0006967033259570599, rse:0.5064799785614014, r2_score:0.762140201347842, acc:0.9795632902532816
+corr: [37.53633  37.225098 37.175915 37.0716   36.972816 36.921543 36.926502
+ 36.971893 37.024258 37.04924  37.041748 37.024075 37.012104 37.009144
+ 37.023323 37.046513 37.060413 37.06205  37.057777 37.049408 37.055573
+ 37.10453  37.18931  37.282566 37.35603  37.404835 37.434433 37.454296
+ 37.46839  37.712315]
+Args in experiment:
+Namespace(is_training=1, model_id='omdata1_test1', model='TransDtSt_Part', data='custom', root_path='./dataset/multivariate/', data_path='oisst_lat_14.0_lon_112.0.csv', features='MS', target='sst', freq='d', model_save_path='/root/autodl-tmp/checkpoints/', results_save_path='/root/autodl-tmp/results/', test_results_save_path='/root/autodl-tmp/test_results/', pretrain=False, pretrain_epochs=10, mask_ratio=0.75, finetune=False, freeze_epochs=3, seq_len=365, label_len=355, pred_len=10, inverse=True, individual=False, max_tokens=30, top_k=5, num_kernels=6, enc_in=11, dec_in=11, c_out=11, d_model=256, n_heads=8, e_layers=3, d_layers=1, d_ff=1024, moving_avg=25, factor=1, distil=True, dropout=0.1, embed='timeF', activation='gelu', output_attention=False, num_workers=10, itr=1, train_epochs=10, batch_size=32, patience=3, learning_rate=0.0001, des='20240615', loss='MSE', lradj='HalfLR', use_amp=False, use_gpu=True, gpu=0, use_multi_gpu=False, devices='0,1,2,3', p_hidden_dims=[128, 128], p_hidden_layers=2)
+Use GPU: cuda:0
+>>>>>>>start training : omdata1_test1_TransDtSt_Part_custom_ftMS_sl365_ll355_pl10_dm256_nh8_el3_dl1_df1024_fc1_ebtimeF_dtTrue_20240615_0>>>>>>>>>>>>>>>>>>>>>>>>>>
+train 10108
+val 1489
+test 2986
+Patience count starts from 1 epoch
+Using HalfLR learning rate adjustment
+Starting training
+	iters: 100, epoch: 1 | loss: 0.1752377
+	speed: 0.0582s/iter; left time: 177.5726s
+	iters: 200, epoch: 1 | loss: 0.1551209
+	speed: 0.0455s/iter; left time: 134.3831s
+	iters: 300, epoch: 1 | loss: 0.1278580
+	speed: 0.0453s/iter; left time: 129.2079s
+Epoch: 1 cost time: 15.635370016098022
+Epoch: 1, Steps: 315 | Train Loss: 0.2127996 Vali Loss: 0.2522072 Test Loss: 0.2058031
+Validation loss decreased (inf --> 0.252207).  Saving model ...
+Adjusting learning rate to: 0.0000500
+	iters: 100, epoch: 2 | loss: 0.1880930
+	speed: 0.0491s/iter; left time: 134.2937s
+	iters: 200, epoch: 2 | loss: 0.1272158
+	speed: 0.0480s/iter; left time: 126.5089s
+	iters: 300, epoch: 2 | loss: 0.1211078
+	speed: 0.0465s/iter; left time: 118.0009s
+Epoch: 2 cost time: 15.088351964950562
+Epoch: 2, Steps: 315 | Train Loss: 0.1343230 Vali Loss: 0.1715689 Test Loss: 0.1506742
+Validation loss decreased (0.252207 --> 0.171569).  Saving model ...
+Adjusting learning rate to: 0.0000250
+	iters: 100, epoch: 3 | loss: 0.1063301
+	speed: 0.0491s/iter; left time: 118.7894s
+	iters: 200, epoch: 3 | loss: 0.1500236
+	speed: 0.0477s/iter; left time: 110.7358s
+	iters: 300, epoch: 3 | loss: 0.0858139
+	speed: 0.0468s/iter; left time: 104.0146s
+Epoch: 3 cost time: 15.114645957946777
+Epoch: 3, Steps: 315 | Train Loss: 0.1180767 Vali Loss: 0.1638633 Test Loss: 0.1559057
+Validation loss decreased (0.171569 --> 0.163863).  Saving model ...
+Adjusting learning rate to: 0.0000125
+	iters: 100, epoch: 4 | loss: 0.0771497
+	speed: 0.0505s/iter; left time: 106.3646s
+	iters: 200, epoch: 4 | loss: 0.1083071
+	speed: 0.0470s/iter; left time: 94.2669s
+	iters: 300, epoch: 4 | loss: 0.0861911
+	speed: 0.0454s/iter; left time: 86.5429s
+Epoch: 4 cost time: 15.013368844985962
+Epoch: 4, Steps: 315 | Train Loss: 0.1093299 Vali Loss: 0.1896868 Test Loss: 0.1666307
+EarlyStopping counter: 1 out of 3
+Adjusting learning rate to: 0.0000063
+	iters: 100, epoch: 5 | loss: 0.1315288
+	speed: 0.0500s/iter; left time: 89.4752s
+	iters: 200, epoch: 5 | loss: 0.0928940
+	speed: 0.0465s/iter; left time: 78.5483s
+	iters: 300, epoch: 5 | loss: 0.1393532
+	speed: 0.0469s/iter; left time: 74.6329s
+Epoch: 5 cost time: 15.066475868225098
+Epoch: 5, Steps: 315 | Train Loss: 0.1053544 Vali Loss: 0.1936973 Test Loss: 0.1714139
+EarlyStopping counter: 2 out of 3
+Adjusting learning rate to: 0.0000031
+	iters: 100, epoch: 6 | loss: 0.0949869
+	speed: 0.0498s/iter; left time: 73.5476s
+	iters: 200, epoch: 6 | loss: 0.0989322
+	speed: 0.0458s/iter; left time: 63.0795s
+	iters: 300, epoch: 6 | loss: 0.1196274
+	speed: 0.0464s/iter; left time: 59.2441s
+Epoch: 6 cost time: 14.943738222122192
+Epoch: 6, Steps: 315 | Train Loss: 0.1024919 Vali Loss: 0.1915806 Test Loss: 0.1720634
+EarlyStopping counter: 3 out of 3
+Adjusting learning rate to: 0.0000016
+Early stopping
+>>>>>>>testing : omdata1_test1_TransDtSt_Part_custom_ftMS_sl365_ll355_pl10_dm256_nh8_el3_dl1_df1024_fc1_ebtimeF_dtTrue_20240615_0<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+test 2986
+loading supervised model weight
+test shape: (2986, 1, 10, 1) (2986, 1, 10, 1)
+test shape: (2986, 10, 1) (2986, 10, 1)
+mse:0.343080073595047, mae:0.459339439868927, rmse:0.5857303738594055, mape:0.016470737755298615, mspe:0.0004482203221414238, rse:0.40896785259246826, r2_score:0.8217117246882634, acc:0.9835292622447014
+corr: [37.72125  37.647095 37.68648  37.705154 37.710728 37.7051   37.698105
+ 37.677902 37.65115  37.70352 ]
+Args in experiment:
+Namespace(is_training=1, model_id='omdata1_test1', model='TransDtSt_Part', data='custom', root_path='./dataset/multivariate/', data_path='oisst_lat_14.0_lon_112.0.csv', features='MS', target='sst', freq='d', model_save_path='/root/autodl-tmp/checkpoints/', results_save_path='/root/autodl-tmp/results/', test_results_save_path='/root/autodl-tmp/test_results/', pretrain=False, pretrain_epochs=10, mask_ratio=0.75, finetune=False, freeze_epochs=3, seq_len=365, label_len=350, pred_len=15, inverse=True, individual=False, max_tokens=30, top_k=5, num_kernels=6, enc_in=11, dec_in=11, c_out=11, d_model=256, n_heads=8, e_layers=3, d_layers=1, d_ff=1024, moving_avg=25, factor=1, distil=True, dropout=0.1, embed='timeF', activation='gelu', output_attention=False, num_workers=10, itr=1, train_epochs=10, batch_size=32, patience=3, learning_rate=0.0001, des='20240615', loss='MSE', lradj='HalfLR', use_amp=False, use_gpu=True, gpu=0, use_multi_gpu=False, devices='0,1,2,3', p_hidden_dims=[128, 128], p_hidden_layers=2)
+Use GPU: cuda:0
+>>>>>>>start training : omdata1_test1_TransDtSt_Part_custom_ftMS_sl365_ll350_pl15_dm256_nh8_el3_dl1_df1024_fc1_ebtimeF_dtTrue_20240615_0>>>>>>>>>>>>>>>>>>>>>>>>>>
+train 10103
+val 1484
+test 2981
+Patience count starts from 1 epoch
+Using HalfLR learning rate adjustment
+Starting training
+	iters: 100, epoch: 1 | loss: 0.1688649
+	speed: 0.0592s/iter; left time: 180.4865s
+	iters: 200, epoch: 1 | loss: 0.1904337
+	speed: 0.0496s/iter; left time: 146.3969s
+	iters: 300, epoch: 1 | loss: 0.1657927
+	speed: 0.0472s/iter; left time: 134.4858s
+Epoch: 1 cost time: 16.35053539276123
+Epoch: 1, Steps: 315 | Train Loss: 0.2265178 Vali Loss: 0.1957991 Test Loss: 0.1913926
+Validation loss decreased (inf --> 0.195799).  Saving model ...
+Adjusting learning rate to: 0.0000500
+	iters: 100, epoch: 2 | loss: 0.1412983
+	speed: 0.0494s/iter; left time: 135.1635s
+	iters: 200, epoch: 2 | loss: 0.1544790
+	speed: 0.0460s/iter; left time: 121.1462s
+	iters: 300, epoch: 2 | loss: 0.1528061
+	speed: 0.0471s/iter; left time: 119.5121s
+Epoch: 2 cost time: 14.977829217910767
+Epoch: 2, Steps: 315 | Train Loss: 0.1457322 Vali Loss: 0.2313443 Test Loss: 0.2395311
+EarlyStopping counter: 1 out of 3
+Adjusting learning rate to: 0.0000250
+	iters: 100, epoch: 3 | loss: 0.1229710
+	speed: 0.0486s/iter; left time: 117.7671s
+	iters: 200, epoch: 3 | loss: 0.1378202
+	speed: 0.0454s/iter; left time: 105.3383s
+	iters: 300, epoch: 3 | loss: 0.1056495
+	speed: 0.0474s/iter; left time: 105.2619s
+Epoch: 3 cost time: 14.875974178314209
+Epoch: 3, Steps: 315 | Train Loss: 0.1274370 Vali Loss: 0.1724854 Test Loss: 0.2050826
+Validation loss decreased (0.195799 --> 0.172485).  Saving model ...
+Adjusting learning rate to: 0.0000125
+	iters: 100, epoch: 4 | loss: 0.1209018
+	speed: 0.0483s/iter; left time: 101.6399s
+	iters: 200, epoch: 4 | loss: 0.1028731
+	speed: 0.0466s/iter; left time: 93.5695s
+	iters: 300, epoch: 4 | loss: 0.1329904
+	speed: 0.0457s/iter; left time: 87.1937s
+Epoch: 4 cost time: 14.791622877120972
+Epoch: 4, Steps: 315 | Train Loss: 0.1180874 Vali Loss: 0.2028175 Test Loss: 0.2158437
+EarlyStopping counter: 1 out of 3
+Adjusting learning rate to: 0.0000063
+	iters: 100, epoch: 5 | loss: 0.1308573
+	speed: 0.0499s/iter; left time: 89.3089s
+	iters: 200, epoch: 5 | loss: 0.1400318
+	speed: 0.0454s/iter; left time: 76.7646s
+	iters: 300, epoch: 5 | loss: 0.1201389
+	speed: 0.0464s/iter; left time: 73.8589s
+Epoch: 5 cost time: 14.90324354171753
+Epoch: 5, Steps: 315 | Train Loss: 0.1126545 Vali Loss: 0.1916105 Test Loss: 0.2087521
+EarlyStopping counter: 2 out of 3
+Adjusting learning rate to: 0.0000031
+	iters: 100, epoch: 6 | loss: 0.0981135
+	speed: 0.0491s/iter; left time: 72.4359s
+	iters: 200, epoch: 6 | loss: 0.1088388
+	speed: 0.0456s/iter; left time: 62.7890s
+	iters: 300, epoch: 6 | loss: 0.1034411
+	speed: 0.0455s/iter; left time: 58.0546s
+Epoch: 6 cost time: 14.749970436096191
+Epoch: 6, Steps: 315 | Train Loss: 0.1100641 Vali Loss: 0.2002852 Test Loss: 0.2143156
+EarlyStopping counter: 3 out of 3
+Adjusting learning rate to: 0.0000016
+Early stopping
+>>>>>>>testing : omdata1_test1_TransDtSt_Part_custom_ftMS_sl365_ll350_pl15_dm256_nh8_el3_dl1_df1024_fc1_ebtimeF_dtTrue_20240615_0<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+test 2981
+loading supervised model weight
+test shape: (2981, 1, 15, 1) (2981, 1, 15, 1)
+test shape: (2981, 15, 1) (2981, 15, 1)
+mse:0.45129698514938354, mae:0.5151429772377014, rmse:0.6717864274978638, mape:0.018529456108808517, mspe:0.0006005461909808218, rse:0.4688502550125122, r2_score:0.7684512576105202, acc:0.9814705438911915
+corr: [37.70036  37.571396 37.51381  37.43282  37.36309  37.324123 37.314762
+ 37.31949  37.326546 37.331112 37.32308  37.308155 37.299976 37.285954
+ 37.426197]
+Args in experiment:
+Namespace(is_training=1, model_id='omdata1_test1', model='TransDtSt_Part', data='custom', root_path='./dataset/multivariate/', data_path='oisst_lat_14.0_lon_112.0.csv', features='MS', target='sst', freq='d', model_save_path='/root/autodl-tmp/checkpoints/', results_save_path='/root/autodl-tmp/results/', test_results_save_path='/root/autodl-tmp/test_results/', pretrain=False, pretrain_epochs=10, mask_ratio=0.75, finetune=False, freeze_epochs=3, seq_len=365, label_len=345, pred_len=20, inverse=True, individual=False, max_tokens=30, top_k=5, num_kernels=6, enc_in=11, dec_in=11, c_out=11, d_model=256, n_heads=8, e_layers=3, d_layers=1, d_ff=1024, moving_avg=25, factor=1, distil=True, dropout=0.1, embed='timeF', activation='gelu', output_attention=False, num_workers=10, itr=1, train_epochs=10, batch_size=32, patience=3, learning_rate=0.0001, des='20240615', loss='MSE', lradj='HalfLR', use_amp=False, use_gpu=True, gpu=0, use_multi_gpu=False, devices='0,1,2,3', p_hidden_dims=[128, 128], p_hidden_layers=2)
+Use GPU: cuda:0
+>>>>>>>start training : omdata1_test1_TransDtSt_Part_custom_ftMS_sl365_ll345_pl20_dm256_nh8_el3_dl1_df1024_fc1_ebtimeF_dtTrue_20240615_0>>>>>>>>>>>>>>>>>>>>>>>>>>
+train 10098
+val 1479
+test 2976
+Patience count starts from 1 epoch
+Using HalfLR learning rate adjustment
+Starting training
+	iters: 100, epoch: 1 | loss: 0.2060296
+	speed: 0.0586s/iter; left time: 178.7408s
+	iters: 200, epoch: 1 | loss: 0.1685007
+	speed: 0.0459s/iter; left time: 135.3091s
+	iters: 300, epoch: 1 | loss: 0.1447868
+	speed: 0.0476s/iter; left time: 135.8078s
+Epoch: 1 cost time: 15.919925212860107
+Epoch: 1, Steps: 315 | Train Loss: 0.2234498 Vali Loss: 0.1878012 Test Loss: 0.2229776
+Validation loss decreased (inf --> 0.187801).  Saving model ...
+Adjusting learning rate to: 0.0000500
+	iters: 100, epoch: 2 | loss: 0.1232033
+	speed: 0.0502s/iter; left time: 137.3851s
+	iters: 200, epoch: 2 | loss: 0.1237196
+	speed: 0.0459s/iter; left time: 120.9132s
+	iters: 300, epoch: 2 | loss: 0.1470229
+	speed: 0.0469s/iter; left time: 118.9123s
+Epoch: 2 cost time: 15.016408205032349
+Epoch: 2, Steps: 315 | Train Loss: 0.1476440 Vali Loss: 0.2107684 Test Loss: 0.2256104
+EarlyStopping counter: 1 out of 3
+Adjusting learning rate to: 0.0000250
+	iters: 100, epoch: 3 | loss: 0.1364774
+	speed: 0.0504s/iter; left time: 121.9803s
+	iters: 200, epoch: 3 | loss: 0.1237124
+	speed: 0.0477s/iter; left time: 110.6061s
+	iters: 300, epoch: 3 | loss: 0.1354620
+	speed: 0.0465s/iter; left time: 103.2187s
+Epoch: 3 cost time: 15.18495488166809
+Epoch: 3, Steps: 315 | Train Loss: 0.1265687 Vali Loss: 0.2051675 Test Loss: 0.2294461
+EarlyStopping counter: 2 out of 3
+Adjusting learning rate to: 0.0000125
+	iters: 100, epoch: 4 | loss: 0.1048599
+	speed: 0.0496s/iter; left time: 104.3644s
+	iters: 200, epoch: 4 | loss: 0.1134514
+	speed: 0.0461s/iter; left time: 92.5544s
+	iters: 300, epoch: 4 | loss: 0.1098520
+	speed: 0.0471s/iter; left time: 89.7525s
+Epoch: 4 cost time: 15.002980709075928
+Epoch: 4, Steps: 315 | Train Loss: 0.1172860 Vali Loss: 0.2416268 Test Loss: 0.2818931
+EarlyStopping counter: 3 out of 3
+Adjusting learning rate to: 0.0000063
+Early stopping
+>>>>>>>testing : omdata1_test1_TransDtSt_Part_custom_ftMS_sl365_ll345_pl20_dm256_nh8_el3_dl1_df1024_fc1_ebtimeF_dtTrue_20240615_0<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+test 2976
+loading supervised model weight
+test shape: (2976, 1, 20, 1) (2976, 1, 20, 1)
+test shape: (2976, 20, 1) (2976, 20, 1)
+mse:0.49067604541778564, mae:0.5395660996437073, rmse:0.7004827260971069, mape:0.019399913027882576, mspe:0.0006507002981379628, rse:0.4886108636856079, r2_score:0.7889774938493536, acc:0.9806000869721174
+corr: [37.499012 37.137646 37.093678 37.028214 36.965042 36.91434  36.864414
+ 36.796257 36.71898  36.655926 36.620396 36.627792 36.67246  36.71729
+ 36.741707 36.74764  36.742912 36.739437 36.74114  37.158638]
+Args in experiment:
+Namespace(is_training=1, model_id='omdata1_test1', model='TransDtSt_Part', data='custom', root_path='./dataset/multivariate/', data_path='oisst_lat_14.0_lon_112.0.csv', features='MS', target='sst', freq='d', model_save_path='/root/autodl-tmp/checkpoints/', results_save_path='/root/autodl-tmp/results/', test_results_save_path='/root/autodl-tmp/test_results/', pretrain=False, pretrain_epochs=10, mask_ratio=0.75, finetune=False, freeze_epochs=3, seq_len=365, label_len=340, pred_len=25, inverse=True, individual=False, max_tokens=30, top_k=5, num_kernels=6, enc_in=11, dec_in=11, c_out=11, d_model=256, n_heads=8, e_layers=3, d_layers=1, d_ff=1024, moving_avg=25, factor=1, distil=True, dropout=0.1, embed='timeF', activation='gelu', output_attention=False, num_workers=10, itr=1, train_epochs=10, batch_size=32, patience=3, learning_rate=0.0001, des='20240615', loss='MSE', lradj='HalfLR', use_amp=False, use_gpu=True, gpu=0, use_multi_gpu=False, devices='0,1,2,3', p_hidden_dims=[128, 128], p_hidden_layers=2)
+Use GPU: cuda:0
+>>>>>>>start training : omdata1_test1_TransDtSt_Part_custom_ftMS_sl365_ll340_pl25_dm256_nh8_el3_dl1_df1024_fc1_ebtimeF_dtTrue_20240615_0>>>>>>>>>>>>>>>>>>>>>>>>>>
+train 10093
+val 1474
+test 2971
+Patience count starts from 1 epoch
+Using HalfLR learning rate adjustment
+Starting training
+	iters: 100, epoch: 1 | loss: 0.2102557
+	speed: 0.0594s/iter; left time: 181.2157s
+	iters: 200, epoch: 1 | loss: 0.1914394
+	speed: 0.0453s/iter; left time: 133.6891s
+	iters: 300, epoch: 1 | loss: 0.2037909
+	speed: 0.0464s/iter; left time: 132.1870s
+Epoch: 1 cost time: 15.816476821899414
+Epoch: 1, Steps: 315 | Train Loss: 0.2359319 Vali Loss: 0.2137704 Test Loss: 0.2297025
+Validation loss decreased (inf --> 0.213770).  Saving model ...
+Adjusting learning rate to: 0.0000500
+	iters: 100, epoch: 2 | loss: 0.1324737
+	speed: 0.0486s/iter; left time: 133.0536s
+	iters: 200, epoch: 2 | loss: 0.1449016
+	speed: 0.0455s/iter; left time: 119.8185s
+	iters: 300, epoch: 2 | loss: 0.1352194
+	speed: 0.0465s/iter; left time: 117.9255s
+Epoch: 2 cost time: 14.783940315246582
+Epoch: 2, Steps: 315 | Train Loss: 0.1524121 Vali Loss: 0.2054058 Test Loss: 0.2540224
+Validation loss decreased (0.213770 --> 0.205406).  Saving model ...
+Adjusting learning rate to: 0.0000250
+	iters: 100, epoch: 3 | loss: 0.1419620
+	speed: 0.0489s/iter; left time: 118.3129s
+	iters: 200, epoch: 3 | loss: 0.1133464
+	speed: 0.0461s/iter; left time: 107.0581s
+	iters: 300, epoch: 3 | loss: 0.1110622
+	speed: 0.0458s/iter; left time: 101.7420s
+Epoch: 3 cost time: 14.805981874465942
+Epoch: 3, Steps: 315 | Train Loss: 0.1326676 Vali Loss: 0.2392824 Test Loss: 0.2732355
+EarlyStopping counter: 1 out of 3
+Adjusting learning rate to: 0.0000125
+	iters: 100, epoch: 4 | loss: 0.1462009
+	speed: 0.0497s/iter; left time: 104.6676s
+	iters: 200, epoch: 4 | loss: 0.1243425
+	speed: 0.0465s/iter; left time: 93.2896s
+	iters: 300, epoch: 4 | loss: 0.1114948
+	speed: 0.0460s/iter; left time: 87.6106s
+Epoch: 4 cost time: 14.946112871170044
+Epoch: 4, Steps: 315 | Train Loss: 0.1220427 Vali Loss: 0.2037325 Test Loss: 0.2573075
+Validation loss decreased (0.205406 --> 0.203732).  Saving model ...
+Adjusting learning rate to: 0.0000063
+	iters: 100, epoch: 5 | loss: 0.1067942
+	speed: 0.0490s/iter; left time: 87.7417s
+	iters: 200, epoch: 5 | loss: 0.1207157
+	speed: 0.0473s/iter; left time: 79.9758s
+	iters: 300, epoch: 5 | loss: 0.1245226
+	speed: 0.0463s/iter; left time: 73.7198s
+Epoch: 5 cost time: 15.094887256622314
+Epoch: 5, Steps: 315 | Train Loss: 0.1174344 Vali Loss: 0.2100854 Test Loss: 0.2698571
+EarlyStopping counter: 1 out of 3
+Adjusting learning rate to: 0.0000031
+	iters: 100, epoch: 6 | loss: 0.1146072
+	speed: 0.0505s/iter; left time: 74.5062s
+	iters: 200, epoch: 6 | loss: 0.1188446
+	speed: 0.0468s/iter; left time: 64.3593s
+	iters: 300, epoch: 6 | loss: 0.1141532
+	speed: 0.0486s/iter; left time: 62.0039s
+Epoch: 6 cost time: 15.325262069702148
+Epoch: 6, Steps: 315 | Train Loss: 0.1156043 Vali Loss: 0.2110955 Test Loss: 0.2689656
+EarlyStopping counter: 2 out of 3
+Adjusting learning rate to: 0.0000016
+	iters: 100, epoch: 7 | loss: 0.1178286
+	speed: 0.0487s/iter; left time: 56.5593s
+	iters: 200, epoch: 7 | loss: 0.1042080
+	speed: 0.0464s/iter; left time: 49.2663s
+	iters: 300, epoch: 7 | loss: 0.1021833
+	speed: 0.0461s/iter; left time: 44.2914s
+Epoch: 7 cost time: 14.864302396774292
+Epoch: 7, Steps: 315 | Train Loss: 0.1141424 Vali Loss: 0.2191115 Test Loss: 0.2728479
+EarlyStopping counter: 3 out of 3
+Adjusting learning rate to: 0.0000008
+Early stopping
+>>>>>>>testing : omdata1_test1_TransDtSt_Part_custom_ftMS_sl365_ll340_pl25_dm256_nh8_el3_dl1_df1024_fc1_ebtimeF_dtTrue_20240615_0<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+test 2971
+loading supervised model weight
+test shape: (2971, 1, 25, 1) (2971, 1, 25, 1)
+test shape: (2971, 25, 1) (2971, 25, 1)
+mse:0.5662211179733276, mae:0.5802609324455261, rmse:0.7524766325950623, mape:0.020820656791329384, mspe:0.0007460666238330305, rse:0.5245368480682373, r2_score:0.7299289608873122, acc:0.9791793432086706
+corr: [37.635403 37.463165 37.53213  37.5094   37.410175 37.29294  37.209972
+ 37.163902 37.122337 37.06353  36.986553 36.91071  36.84578  36.788307
+ 36.744556 36.728214 36.753387 36.82511  36.9289   37.02224  37.07654
+ 37.091576 37.089294 37.09641  37.34462 ]
+Args in experiment:
+Namespace(is_training=1, model_id='omdata1_test1', model='TransDtSt_Part', data='custom', root_path='./dataset/multivariate/', data_path='oisst_lat_14.0_lon_112.0.csv', features='MS', target='sst', freq='d', model_save_path='/root/autodl-tmp/checkpoints/', results_save_path='/root/autodl-tmp/results/', test_results_save_path='/root/autodl-tmp/test_results/', pretrain=False, pretrain_epochs=10, mask_ratio=0.75, finetune=False, freeze_epochs=3, seq_len=365, label_len=335, pred_len=30, inverse=True, individual=False, max_tokens=30, top_k=5, num_kernels=6, enc_in=11, dec_in=11, c_out=11, d_model=256, n_heads=8, e_layers=3, d_layers=1, d_ff=1024, moving_avg=25, factor=1, distil=True, dropout=0.1, embed='timeF', activation='gelu', output_attention=False, num_workers=10, itr=1, train_epochs=10, batch_size=32, patience=3, learning_rate=0.0001, des='20240615', loss='MSE', lradj='HalfLR', use_amp=False, use_gpu=True, gpu=0, use_multi_gpu=False, devices='0,1,2,3', p_hidden_dims=[128, 128], p_hidden_layers=2)
+Use GPU: cuda:0
+>>>>>>>start training : omdata1_test1_TransDtSt_Part_custom_ftMS_sl365_ll335_pl30_dm256_nh8_el3_dl1_df1024_fc1_ebtimeF_dtTrue_20240615_0>>>>>>>>>>>>>>>>>>>>>>>>>>
+train 10088
+val 1469
+test 2966
+Patience count starts from 1 epoch
+Using HalfLR learning rate adjustment
+Starting training
+	iters: 100, epoch: 1 | loss: 0.1847168
+	speed: 0.0582s/iter; left time: 177.6778s
+	iters: 200, epoch: 1 | loss: 0.1637890
+	speed: 0.0475s/iter; left time: 140.3156s
+	iters: 300, epoch: 1 | loss: 0.2127393
+	speed: 0.0468s/iter; left time: 133.2882s
+Epoch: 1 cost time: 15.97268795967102
+Epoch: 1, Steps: 315 | Train Loss: 0.2433135 Vali Loss: 0.2183867 Test Loss: 0.2402393
+Validation loss decreased (inf --> 0.218387).  Saving model ...
+Adjusting learning rate to: 0.0000500
+	iters: 100, epoch: 2 | loss: 0.1449962
+	speed: 0.0488s/iter; left time: 133.4334s
+	iters: 200, epoch: 2 | loss: 0.1480109
+	speed: 0.0454s/iter; left time: 119.5499s
+	iters: 300, epoch: 2 | loss: 0.1587709
+	speed: 0.0459s/iter; left time: 116.3996s
+Epoch: 2 cost time: 14.734004020690918
+Epoch: 2, Steps: 315 | Train Loss: 0.1576218 Vali Loss: 0.2835831 Test Loss: 0.2633804
+EarlyStopping counter: 1 out of 3
+Adjusting learning rate to: 0.0000250
+	iters: 100, epoch: 3 | loss: 0.1422144
+	speed: 0.0487s/iter; left time: 117.7843s
+	iters: 200, epoch: 3 | loss: 0.1074361
+	speed: 0.0479s/iter; left time: 111.0836s
+	iters: 300, epoch: 3 | loss: 0.1250765
+	speed: 0.0459s/iter; left time: 102.0151s
+Epoch: 3 cost time: 14.965664863586426
+Epoch: 3, Steps: 315 | Train Loss: 0.1363901 Vali Loss: 0.2203272 Test Loss: 0.2392835
+EarlyStopping counter: 2 out of 3
+Adjusting learning rate to: 0.0000125
+	iters: 100, epoch: 4 | loss: 0.1412973
+	speed: 0.0497s/iter; left time: 104.6814s
+	iters: 200, epoch: 4 | loss: 0.1150004
+	speed: 0.0467s/iter; left time: 93.5865s
+	iters: 300, epoch: 4 | loss: 0.1212732
+	speed: 0.0464s/iter; left time: 88.4477s
+Epoch: 4 cost time: 15.016075849533081
+Epoch: 4, Steps: 315 | Train Loss: 0.1271391 Vali Loss: 0.2723054 Test Loss: 0.2728560
+EarlyStopping counter: 3 out of 3
+Adjusting learning rate to: 0.0000063
+Early stopping
+>>>>>>>testing : omdata1_test1_TransDtSt_Part_custom_ftMS_sl365_ll335_pl30_dm256_nh8_el3_dl1_df1024_fc1_ebtimeF_dtTrue_20240615_0<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+test 2966
+loading supervised model weight
+test shape: (2966, 1, 30, 1) (2966, 1, 30, 1)
+test shape: (2966, 30, 1) (2966, 30, 1)
+mse:0.5286614894866943, mae:0.5688022971153259, rmse:0.7270911335945129, mape:0.020436709746718407, mspe:0.0006967033259570599, rse:0.5064799785614014, r2_score:0.762140201347842, acc:0.9795632902532816
+corr: [37.53633  37.225098 37.175915 37.0716   36.972816 36.921543 36.926502
+ 36.971893 37.024258 37.04924  37.041748 37.024075 37.012104 37.009144
+ 37.023323 37.046513 37.060413 37.06205  37.057777 37.049408 37.055573
+ 37.10453  37.18931  37.282566 37.35603  37.404835 37.434433 37.454296
+ 37.46839  37.712315]
+Args in experiment:
+Namespace(is_training=1, model_id='omdata2_test1', model='TransDtSt_Part', data='custom', root_path='./dataset/multivariate/', data_path='oisst_lat_14.0_lon_118.0.csv', features='MS', target='sst', freq='d', model_save_path='/root/autodl-tmp/checkpoints/', results_save_path='/root/autodl-tmp/results/', test_results_save_path='/root/autodl-tmp/test_results/', pretrain=False, pretrain_epochs=10, mask_ratio=0.75, finetune=False, freeze_epochs=3, seq_len=365, label_len=355, pred_len=10, inverse=True, individual=False, max_tokens=30, top_k=5, num_kernels=6, enc_in=11, dec_in=11, c_out=11, d_model=256, n_heads=8, e_layers=3, d_layers=1, d_ff=1024, moving_avg=25, factor=1, distil=True, dropout=0.1, embed='timeF', activation='gelu', output_attention=False, num_workers=10, itr=1, train_epochs=10, batch_size=32, patience=3, learning_rate=0.0001, des='20240615', loss='MSE', lradj='HalfLR', use_amp=False, use_gpu=True, gpu=0, use_multi_gpu=False, devices='0,1,2,3', p_hidden_dims=[128, 128], p_hidden_layers=2)
+Use GPU: cuda:0
+>>>>>>>start training : omdata2_test1_TransDtSt_Part_custom_ftMS_sl365_ll355_pl10_dm256_nh8_el3_dl1_df1024_fc1_ebtimeF_dtTrue_20240615_0>>>>>>>>>>>>>>>>>>>>>>>>>>
+train 10108
+val 1489
+test 2986
+Patience count starts from 1 epoch
+Using HalfLR learning rate adjustment
+Starting training
+	iters: 100, epoch: 1 | loss: 0.2224075
+	speed: 0.0583s/iter; left time: 177.9279s
+	iters: 200, epoch: 1 | loss: 0.2159078
+	speed: 0.0455s/iter; left time: 134.3454s
+	iters: 300, epoch: 1 | loss: 0.1747614
+	speed: 0.0463s/iter; left time: 132.0822s
+Epoch: 1 cost time: 15.727046966552734
+Epoch: 1, Steps: 315 | Train Loss: 0.2853208 Vali Loss: 0.2004616 Test Loss: 0.1511511
+Validation loss decreased (inf --> 0.200462).  Saving model ...
+Adjusting learning rate to: 0.0000500
+	iters: 100, epoch: 2 | loss: 0.2120746
+	speed: 0.0487s/iter; left time: 133.2514s
+	iters: 200, epoch: 2 | loss: 0.1909267
+	speed: 0.0462s/iter; left time: 121.7710s
+	iters: 300, epoch: 2 | loss: 0.1931229
+	speed: 0.0458s/iter; left time: 116.1931s
+Epoch: 2 cost time: 14.799092292785645
+Epoch: 2, Steps: 315 | Train Loss: 0.1944172 Vali Loss: 0.1942696 Test Loss: 0.1879084
+Validation loss decreased (0.200462 --> 0.194270).  Saving model ...
+Adjusting learning rate to: 0.0000250
+	iters: 100, epoch: 3 | loss: 0.1683031
+	speed: 0.0496s/iter; left time: 120.0002s
+	iters: 200, epoch: 3 | loss: 0.1431733
+	speed: 0.0461s/iter; left time: 107.0462s
+	iters: 300, epoch: 3 | loss: 0.1485315
+	speed: 0.0455s/iter; left time: 101.0375s
+Epoch: 3 cost time: 14.846967458724976
+Epoch: 3, Steps: 315 | Train Loss: 0.1728884 Vali Loss: 0.2033505 Test Loss: 0.2319248
+EarlyStopping counter: 1 out of 3
+Adjusting learning rate to: 0.0000125
+	iters: 100, epoch: 4 | loss: 0.1299446
+	speed: 0.0500s/iter; left time: 105.3143s
+	iters: 200, epoch: 4 | loss: 0.1784389
+	speed: 0.0469s/iter; left time: 94.0624s
+	iters: 300, epoch: 4 | loss: 0.1350764
+	speed: 0.0472s/iter; left time: 89.9791s
+Epoch: 4 cost time: 15.139575958251953
+Epoch: 4, Steps: 315 | Train Loss: 0.1606600 Vali Loss: 0.1986043 Test Loss: 0.2219150
+EarlyStopping counter: 2 out of 3
+Adjusting learning rate to: 0.0000063
+	iters: 100, epoch: 5 | loss: 0.2001282
+	speed: 0.0485s/iter; left time: 86.7958s
+	iters: 200, epoch: 5 | loss: 0.1567002
+	speed: 0.0466s/iter; left time: 78.8694s
+	iters: 300, epoch: 5 | loss: 0.1521102
+	speed: 0.0466s/iter; left time: 74.1196s
+Epoch: 5 cost time: 14.903036832809448
+Epoch: 5, Steps: 315 | Train Loss: 0.1554708 Vali Loss: 0.2115116 Test Loss: 0.2245138
+EarlyStopping counter: 3 out of 3
+Adjusting learning rate to: 0.0000031
+Early stopping
+>>>>>>>testing : omdata2_test1_TransDtSt_Part_custom_ftMS_sl365_ll355_pl10_dm256_nh8_el3_dl1_df1024_fc1_ebtimeF_dtTrue_20240615_0<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+test 2986
+loading supervised model weight
+test shape: (2986, 1, 10, 1) (2986, 1, 10, 1)
+test shape: (2986, 10, 1) (2986, 10, 1)
+mse:0.2673206925392151, mae:0.39849376678466797, rmse:0.517030656337738, mape:0.013940873555839062, mspe:0.000335005548549816, rse:0.44488096237182617, r2_score:0.7420588614976036, acc:0.9860591264441609
+corr: [35.61523  35.2019   35.23936  35.227657 35.178123 35.12459  35.078747
+ 35.03594  34.980602 34.875114]
+Args in experiment:
+Namespace(is_training=1, model_id='omdata2_test1', model='TransDtSt_Part', data='custom', root_path='./dataset/multivariate/', data_path='oisst_lat_14.0_lon_118.0.csv', features='MS', target='sst', freq='d', model_save_path='/root/autodl-tmp/checkpoints/', results_save_path='/root/autodl-tmp/results/', test_results_save_path='/root/autodl-tmp/test_results/', pretrain=False, pretrain_epochs=10, mask_ratio=0.75, finetune=False, freeze_epochs=3, seq_len=365, label_len=350, pred_len=15, inverse=True, individual=False, max_tokens=30, top_k=5, num_kernels=6, enc_in=11, dec_in=11, c_out=11, d_model=256, n_heads=8, e_layers=3, d_layers=1, d_ff=1024, moving_avg=25, factor=1, distil=True, dropout=0.1, embed='timeF', activation='gelu', output_attention=False, num_workers=10, itr=1, train_epochs=10, batch_size=32, patience=3, learning_rate=0.0001, des='20240615', loss='MSE', lradj='HalfLR', use_amp=False, use_gpu=True, gpu=0, use_multi_gpu=False, devices='0,1,2,3', p_hidden_dims=[128, 128], p_hidden_layers=2)
+Use GPU: cuda:0
+>>>>>>>start training : omdata2_test1_TransDtSt_Part_custom_ftMS_sl365_ll350_pl15_dm256_nh8_el3_dl1_df1024_fc1_ebtimeF_dtTrue_20240615_0>>>>>>>>>>>>>>>>>>>>>>>>>>
+train 10103
+val 1484
+test 2981
+Patience count starts from 1 epoch
+Using HalfLR learning rate adjustment
+Starting training
+	iters: 100, epoch: 1 | loss: 0.1934581
+	speed: 0.0591s/iter; left time: 180.1887s
+	iters: 200, epoch: 1 | loss: 0.2427862
+	speed: 0.0472s/iter; left time: 139.3232s
+	iters: 300, epoch: 1 | loss: 0.2278949
+	speed: 0.0460s/iter; left time: 131.1414s
+Epoch: 1 cost time: 15.941438913345337
+Epoch: 1, Steps: 315 | Train Loss: 0.2953426 Vali Loss: 0.1995840 Test Loss: 0.2615907
+Validation loss decreased (inf --> 0.199584).  Saving model ...
+Adjusting learning rate to: 0.0000500
+	iters: 100, epoch: 2 | loss: 0.1893518
+	speed: 0.0489s/iter; left time: 133.7900s
+	iters: 200, epoch: 2 | loss: 0.1850007
+	speed: 0.0465s/iter; left time: 122.5160s
+	iters: 300, epoch: 2 | loss: 0.2223942
+	speed: 0.0456s/iter; left time: 115.5359s
+Epoch: 2 cost time: 14.820169925689697
+Epoch: 2, Steps: 315 | Train Loss: 0.2088765 Vali Loss: 0.2663623 Test Loss: 0.2087510
+EarlyStopping counter: 1 out of 3
+Adjusting learning rate to: 0.0000250
+	iters: 100, epoch: 3 | loss: 0.2173034
+	speed: 0.0501s/iter; left time: 121.2612s
+	iters: 200, epoch: 3 | loss: 0.2007878
+	speed: 0.0463s/iter; left time: 107.4813s
+	iters: 300, epoch: 3 | loss: 0.1597749
+	speed: 0.0476s/iter; left time: 105.6303s
+Epoch: 3 cost time: 15.118271589279175
+Epoch: 3, Steps: 315 | Train Loss: 0.1849983 Vali Loss: 0.2364356 Test Loss: 0.2574076
+EarlyStopping counter: 2 out of 3
+Adjusting learning rate to: 0.0000125
+	iters: 100, epoch: 4 | loss: 0.1682523
+	speed: 0.0489s/iter; left time: 102.8945s
+	iters: 200, epoch: 4 | loss: 0.1692735
+	speed: 0.0454s/iter; left time: 91.0915s
+	iters: 300, epoch: 4 | loss: 0.2013538
+	speed: 0.0461s/iter; left time: 87.7934s
+Epoch: 4 cost time: 14.758991241455078
+Epoch: 4, Steps: 315 | Train Loss: 0.1730786 Vali Loss: 0.2749974 Test Loss: 0.2272920
+EarlyStopping counter: 3 out of 3
+Adjusting learning rate to: 0.0000063
+Early stopping
+>>>>>>>testing : omdata2_test1_TransDtSt_Part_custom_ftMS_sl365_ll350_pl15_dm256_nh8_el3_dl1_df1024_fc1_ebtimeF_dtTrue_20240615_0<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+test 2981
+loading supervised model weight
+test shape: (2981, 1, 15, 1) (2981, 1, 15, 1)
+test shape: (2981, 15, 1) (2981, 15, 1)
+mse:0.37214186787605286, mae:0.4780093729496002, rmse:0.6100343465805054, mape:0.016760189086198807, mspe:0.0004690538626164198, rse:0.524551510810852, r2_score:0.6417214736426397, acc:0.9832398109138012
+corr: [35.79299  35.513123 35.51896  35.51473  35.492153 35.45259  35.398506
+ 35.328724 35.246635 35.15977  35.09393  35.05481  35.026726 34.99237
+ 34.985058]
+Args in experiment:
+Namespace(is_training=1, model_id='omdata2_test1', model='TransDtSt_Part', data='custom', root_path='./dataset/multivariate/', data_path='oisst_lat_14.0_lon_118.0.csv', features='MS', target='sst', freq='d', model_save_path='/root/autodl-tmp/checkpoints/', results_save_path='/root/autodl-tmp/results/', test_results_save_path='/root/autodl-tmp/test_results/', pretrain=False, pretrain_epochs=10, mask_ratio=0.75, finetune=False, freeze_epochs=3, seq_len=365, label_len=345, pred_len=20, inverse=True, individual=False, max_tokens=30, top_k=5, num_kernels=6, enc_in=11, dec_in=11, c_out=11, d_model=256, n_heads=8, e_layers=3, d_layers=1, d_ff=1024, moving_avg=25, factor=1, distil=True, dropout=0.1, embed='timeF', activation='gelu', output_attention=False, num_workers=10, itr=1, train_epochs=10, batch_size=32, patience=3, learning_rate=0.0001, des='20240615', loss='MSE', lradj='HalfLR', use_amp=False, use_gpu=True, gpu=0, use_multi_gpu=False, devices='0,1,2,3', p_hidden_dims=[128, 128], p_hidden_layers=2)
+Use GPU: cuda:0
+>>>>>>>start training : omdata2_test1_TransDtSt_Part_custom_ftMS_sl365_ll345_pl20_dm256_nh8_el3_dl1_df1024_fc1_ebtimeF_dtTrue_20240615_0>>>>>>>>>>>>>>>>>>>>>>>>>>
+train 10098
+val 1479
+test 2976
+Patience count starts from 1 epoch
+Using HalfLR learning rate adjustment
+Starting training
+	iters: 100, epoch: 1 | loss: 0.3288375
+	speed: 0.0582s/iter; left time: 177.6738s
+	iters: 200, epoch: 1 | loss: 0.1871679
+	speed: 0.0457s/iter; left time: 134.9804s
+	iters: 300, epoch: 1 | loss: 0.1870478
+	speed: 0.0459s/iter; left time: 130.7646s
+Epoch: 1 cost time: 15.694178104400635
+Epoch: 1, Steps: 315 | Train Loss: 0.3077741 Vali Loss: 0.2560360 Test Loss: 0.3100687
+Validation loss decreased (inf --> 0.256036).  Saving model ...
+Adjusting learning rate to: 0.0000500
+	iters: 100, epoch: 2 | loss: 0.2150255
+	speed: 0.0503s/iter; left time: 137.5116s
+	iters: 200, epoch: 2 | loss: 0.1510481
+	speed: 0.0474s/iter; left time: 125.0654s
+	iters: 300, epoch: 2 | loss: 0.1515433
+	speed: 0.0456s/iter; left time: 115.5630s
+Epoch: 2 cost time: 15.058488607406616
+Epoch: 2, Steps: 315 | Train Loss: 0.2159815 Vali Loss: 0.2617712 Test Loss: 0.3023079
+EarlyStopping counter: 1 out of 3
+Adjusting learning rate to: 0.0000250
+	iters: 100, epoch: 3 | loss: 0.1928149
+	speed: 0.0510s/iter; left time: 123.5556s
+	iters: 200, epoch: 3 | loss: 0.1694324
+	speed: 0.0470s/iter; left time: 108.9797s
+	iters: 300, epoch: 3 | loss: 0.2021271
+	speed: 0.0457s/iter; left time: 101.5022s
+Epoch: 3 cost time: 15.09700059890747
+Epoch: 3, Steps: 315 | Train Loss: 0.1923429 Vali Loss: 0.2519826 Test Loss: 0.3275634
+Validation loss decreased (0.256036 --> 0.251983).  Saving model ...
+Adjusting learning rate to: 0.0000125
+	iters: 100, epoch: 4 | loss: 0.1617489
+	speed: 0.0491s/iter; left time: 103.4562s
+	iters: 200, epoch: 4 | loss: 0.1817441
+	speed: 0.0461s/iter; left time: 92.5012s
+	iters: 300, epoch: 4 | loss: 0.1694964
+	speed: 0.0466s/iter; left time: 88.7369s
+Epoch: 4 cost time: 14.909147262573242
+Epoch: 4, Steps: 315 | Train Loss: 0.1791039 Vali Loss: 0.2675050 Test Loss: 0.2985429
+EarlyStopping counter: 1 out of 3
+Adjusting learning rate to: 0.0000063
+	iters: 100, epoch: 5 | loss: 0.1712527
+	speed: 0.0501s/iter; left time: 89.7831s
+	iters: 200, epoch: 5 | loss: 0.1791356
+	speed: 0.0473s/iter; left time: 80.0330s
+	iters: 300, epoch: 5 | loss: 0.1587373
+	speed: 0.0454s/iter; left time: 72.2436s
+Epoch: 5 cost time: 15.0134437084198
+Epoch: 5, Steps: 315 | Train Loss: 0.1739180 Vali Loss: 0.2609128 Test Loss: 0.2816286
+EarlyStopping counter: 2 out of 3
+Adjusting learning rate to: 0.0000031
+	iters: 100, epoch: 6 | loss: 0.1807418
+	speed: 0.0495s/iter; left time: 73.0294s
+	iters: 200, epoch: 6 | loss: 0.1689646
+	speed: 0.0454s/iter; left time: 62.4967s
+	iters: 300, epoch: 6 | loss: 0.1254614
+	speed: 0.0470s/iter; left time: 59.9199s
+Epoch: 6 cost time: 14.918505430221558
+Epoch: 6, Steps: 315 | Train Loss: 0.1703410 Vali Loss: 0.2638011 Test Loss: 0.2830911
+EarlyStopping counter: 3 out of 3
+Adjusting learning rate to: 0.0000016
+Early stopping
+>>>>>>>testing : omdata2_test1_TransDtSt_Part_custom_ftMS_sl365_ll345_pl20_dm256_nh8_el3_dl1_df1024_fc1_ebtimeF_dtTrue_20240615_0<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+test 2976
+loading supervised model weight
+test shape: (2976, 1, 20, 1) (2976, 1, 20, 1)
+test shape: (2976, 20, 1) (2976, 20, 1)
+mse:0.4659954011440277, mae:0.5334300994873047, rmse:0.6826385855674744, mape:0.018759049475193024, mspe:0.0005923046264797449, rse:0.5865504741668701, r2_score:0.4857185975124428, acc:0.981240950524807
+corr: [35.36124  35.303    35.396152 35.391247 35.27745  35.097576 34.90656
+ 34.752773 34.62749  34.52214  34.4161   34.296272 34.161266 34.0413
+ 33.93703  33.832245 33.721725 33.622128 33.557594 33.76333 ]
+Args in experiment:
+Namespace(is_training=1, model_id='omdata2_test1', model='TransDtSt_Part', data='custom', root_path='./dataset/multivariate/', data_path='oisst_lat_14.0_lon_118.0.csv', features='MS', target='sst', freq='d', model_save_path='/root/autodl-tmp/checkpoints/', results_save_path='/root/autodl-tmp/results/', test_results_save_path='/root/autodl-tmp/test_results/', pretrain=False, pretrain_epochs=10, mask_ratio=0.75, finetune=False, freeze_epochs=3, seq_len=365, label_len=340, pred_len=25, inverse=True, individual=False, max_tokens=30, top_k=5, num_kernels=6, enc_in=11, dec_in=11, c_out=11, d_model=256, n_heads=8, e_layers=3, d_layers=1, d_ff=1024, moving_avg=25, factor=1, distil=True, dropout=0.1, embed='timeF', activation='gelu', output_attention=False, num_workers=10, itr=1, train_epochs=10, batch_size=32, patience=3, learning_rate=0.0001, des='20240615', loss='MSE', lradj='HalfLR', use_amp=False, use_gpu=True, gpu=0, use_multi_gpu=False, devices='0,1,2,3', p_hidden_dims=[128, 128], p_hidden_layers=2)
+Use GPU: cuda:0
+>>>>>>>start training : omdata2_test1_TransDtSt_Part_custom_ftMS_sl365_ll340_pl25_dm256_nh8_el3_dl1_df1024_fc1_ebtimeF_dtTrue_20240615_0>>>>>>>>>>>>>>>>>>>>>>>>>>
+train 10093
+val 1474
+test 2971
+Patience count starts from 1 epoch
+Using HalfLR learning rate adjustment
+Starting training
+	iters: 100, epoch: 1 | loss: 0.3565733
+	speed: 0.0590s/iter; left time: 180.0050s
+	iters: 200, epoch: 1 | loss: 0.2583145
+	speed: 0.0468s/iter; left time: 138.2331s
+	iters: 300, epoch: 1 | loss: 0.2187025
+	speed: 0.0458s/iter; left time: 130.6895s
+Epoch: 1 cost time: 15.88725471496582
+Epoch: 1, Steps: 315 | Train Loss: 0.3181326 Vali Loss: 0.2733138 Test Loss: 0.3501981
+Validation loss decreased (inf --> 0.273314).  Saving model ...
+Adjusting learning rate to: 0.0000500
+	iters: 100, epoch: 2 | loss: 0.2105633
+	speed: 0.0488s/iter; left time: 133.4888s
+	iters: 200, epoch: 2 | loss: 0.1829771
+	speed: 0.0453s/iter; left time: 119.3712s
+	iters: 300, epoch: 2 | loss: 0.1933623
+	speed: 0.0453s/iter; left time: 114.9974s
+Epoch: 2 cost time: 14.664882898330688
+Epoch: 2, Steps: 315 | Train Loss: 0.2208427 Vali Loss: 0.3049166 Test Loss: 0.4068955
+EarlyStopping counter: 1 out of 3
+Adjusting learning rate to: 0.0000250
+	iters: 100, epoch: 3 | loss: 0.1847874
+	speed: 0.0492s/iter; left time: 119.2163s
+	iters: 200, epoch: 3 | loss: 0.2072941
+	speed: 0.0453s/iter; left time: 105.1232s
+	iters: 300, epoch: 3 | loss: 0.1794917
+	speed: 0.0457s/iter; left time: 101.5777s
+Epoch: 3 cost time: 14.750926733016968
+Epoch: 3, Steps: 315 | Train Loss: 0.1924126 Vali Loss: 0.3441605 Test Loss: 0.4721097
+EarlyStopping counter: 2 out of 3
+Adjusting learning rate to: 0.0000125
+	iters: 100, epoch: 4 | loss: 0.2235382
+	speed: 0.0484s/iter; left time: 102.0131s
+	iters: 200, epoch: 4 | loss: 0.1456006
+	speed: 0.0460s/iter; left time: 92.3249s
+	iters: 300, epoch: 4 | loss: 0.1630382
+	speed: 0.0453s/iter; left time: 86.3420s
+Epoch: 4 cost time: 14.700803279876709
+Epoch: 4, Steps: 315 | Train Loss: 0.1801736 Vali Loss: 0.3855222 Test Loss: 0.4389779
+EarlyStopping counter: 3 out of 3
+Adjusting learning rate to: 0.0000063
+Early stopping
+>>>>>>>testing : omdata2_test1_TransDtSt_Part_custom_ftMS_sl365_ll340_pl25_dm256_nh8_el3_dl1_df1024_fc1_ebtimeF_dtTrue_20240615_0<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+test 2971
+loading supervised model weight
+test shape: (2971, 1, 25, 1) (2971, 1, 25, 1)
+test shape: (2971, 25, 1) (2971, 25, 1)
+mse:0.4981957972049713, mae:0.5534477829933167, rmse:0.7058298587799072, mape:0.019465340301394463, mspe:0.00063426757697016, rse:0.6060255765914917, r2_score:0.41915896978915357, acc:0.9805346596986055
+corr: [35.628376 35.33529  35.367878 35.33827  35.247383 35.147404 35.087948
+ 35.068394 35.029453 34.92672  34.764545 34.591637 34.451355 34.36259
+ 34.308    34.244797 34.142403 34.008255 33.883255 33.790527 33.73047
+ 33.69634  33.676384 33.668022 33.911495]
+Args in experiment:
+Namespace(is_training=1, model_id='omdata2_test1', model='TransDtSt_Part', data='custom', root_path='./dataset/multivariate/', data_path='oisst_lat_14.0_lon_118.0.csv', features='MS', target='sst', freq='d', model_save_path='/root/autodl-tmp/checkpoints/', results_save_path='/root/autodl-tmp/results/', test_results_save_path='/root/autodl-tmp/test_results/', pretrain=False, pretrain_epochs=10, mask_ratio=0.75, finetune=False, freeze_epochs=3, seq_len=365, label_len=335, pred_len=30, inverse=True, individual=False, max_tokens=30, top_k=5, num_kernels=6, enc_in=11, dec_in=11, c_out=11, d_model=256, n_heads=8, e_layers=3, d_layers=1, d_ff=1024, moving_avg=25, factor=1, distil=True, dropout=0.1, embed='timeF', activation='gelu', output_attention=False, num_workers=10, itr=1, train_epochs=10, batch_size=32, patience=3, learning_rate=0.0001, des='20240615', loss='MSE', lradj='HalfLR', use_amp=False, use_gpu=True, gpu=0, use_multi_gpu=False, devices='0,1,2,3', p_hidden_dims=[128, 128], p_hidden_layers=2)
+Use GPU: cuda:0
+>>>>>>>start training : omdata2_test1_TransDtSt_Part_custom_ftMS_sl365_ll335_pl30_dm256_nh8_el3_dl1_df1024_fc1_ebtimeF_dtTrue_20240615_0>>>>>>>>>>>>>>>>>>>>>>>>>>
+train 10088
+val 1469
+test 2966
+Patience count starts from 1 epoch
+Using HalfLR learning rate adjustment
+Starting training
+	iters: 100, epoch: 1 | loss: 0.3237034
+	speed: 0.0589s/iter; left time: 179.6690s
+	iters: 200, epoch: 1 | loss: 0.2640228
+	speed: 0.0468s/iter; left time: 138.0384s
+	iters: 300, epoch: 1 | loss: 0.2218921
+	speed: 0.0468s/iter; left time: 133.4393s
+Epoch: 1 cost time: 15.96395206451416
+Epoch: 1, Steps: 315 | Train Loss: 0.3268950 Vali Loss: 0.2820574 Test Loss: 0.4206186
+Validation loss decreased (inf --> 0.282057).  Saving model ...
+Adjusting learning rate to: 0.0000500
+	iters: 100, epoch: 2 | loss: 0.2145497
+	speed: 0.0494s/iter; left time: 135.1944s
+	iters: 200, epoch: 2 | loss: 0.2301039
+	speed: 0.0470s/iter; left time: 123.8664s
+	iters: 300, epoch: 2 | loss: 0.2221553
+	speed: 0.0467s/iter; left time: 118.3696s
+Epoch: 2 cost time: 15.03274393081665
+Epoch: 2, Steps: 315 | Train Loss: 0.2232069 Vali Loss: 0.3379215 Test Loss: 0.4439154
+EarlyStopping counter: 1 out of 3
+Adjusting learning rate to: 0.0000250
+	iters: 100, epoch: 3 | loss: 0.1865382
+	speed: 0.0487s/iter; left time: 117.9613s
+	iters: 200, epoch: 3 | loss: 0.1641449
+	speed: 0.0496s/iter; left time: 115.1766s
+	iters: 300, epoch: 3 | loss: 0.1720324
+	speed: 0.0468s/iter; left time: 103.9284s
+Epoch: 3 cost time: 15.249185562133789
+Epoch: 3, Steps: 315 | Train Loss: 0.1970757 Vali Loss: 0.3418458 Test Loss: 0.4521549
+EarlyStopping counter: 2 out of 3
+Adjusting learning rate to: 0.0000125
+	iters: 100, epoch: 4 | loss: 0.1883254
+	speed: 0.0491s/iter; left time: 103.3000s
+	iters: 200, epoch: 4 | loss: 0.1880133
+	speed: 0.0482s/iter; left time: 96.6501s
+	iters: 300, epoch: 4 | loss: 0.1615513
+	speed: 0.0476s/iter; left time: 90.6573s
+Epoch: 4 cost time: 15.202375411987305
+Epoch: 4, Steps: 315 | Train Loss: 0.1859078 Vali Loss: 0.3842440 Test Loss: 0.3946324
+EarlyStopping counter: 3 out of 3
+Adjusting learning rate to: 0.0000063
+Early stopping
+>>>>>>>testing : omdata2_test1_TransDtSt_Part_custom_ftMS_sl365_ll335_pl30_dm256_nh8_el3_dl1_df1024_fc1_ebtimeF_dtTrue_20240615_0<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+test 2966
+loading supervised model weight
+test shape: (2966, 1, 30, 1) (2966, 1, 30, 1)
+test shape: (2966, 30, 1) (2966, 30, 1)
+mse:0.5983768701553345, mae:0.6124473214149475, rmse:0.7735482454299927, mape:0.021596523001790047, mspe:0.000766335055232048, rse:0.6636709570884705, r2_score:0.26552896640122176, acc:0.97840347699821
+corr: [35.280815 34.91295  34.910248 34.84784  34.75894  34.68803  34.65004
+ 34.63523  34.599117 34.523033 34.432903 34.37525  34.362965 34.368782
+ 34.345375 34.28109  34.19565  34.11663  34.064335 34.040318 34.014763
+ 33.968563 33.90081  33.83754  33.79361  33.78744  33.806038 33.825016
+ 33.817482 33.739037]
+Args in experiment:
+Namespace(is_training=1, model_id='omdata3_test1', model='TransDtSt_Part', data='custom', root_path='./dataset/multivariate/', data_path='oisst_lat_20.0_lon_112.0.csv', features='MS', target='sst', freq='d', model_save_path='/root/autodl-tmp/checkpoints/', results_save_path='/root/autodl-tmp/results/', test_results_save_path='/root/autodl-tmp/test_results/', pretrain=False, pretrain_epochs=10, mask_ratio=0.75, finetune=False, freeze_epochs=3, seq_len=365, label_len=355, pred_len=10, inverse=True, individual=False, max_tokens=30, top_k=5, num_kernels=6, enc_in=11, dec_in=11, c_out=11, d_model=256, n_heads=8, e_layers=3, d_layers=1, d_ff=1024, moving_avg=25, factor=1, distil=True, dropout=0.1, embed='timeF', activation='gelu', output_attention=False, num_workers=10, itr=1, train_epochs=10, batch_size=32, patience=3, learning_rate=0.0001, des='20240615', loss='MSE', lradj='HalfLR', use_amp=False, use_gpu=True, gpu=0, use_multi_gpu=False, devices='0,1,2,3', p_hidden_dims=[128, 128], p_hidden_layers=2)
+Use GPU: cuda:0
+>>>>>>>start training : omdata3_test1_TransDtSt_Part_custom_ftMS_sl365_ll355_pl10_dm256_nh8_el3_dl1_df1024_fc1_ebtimeF_dtTrue_20240615_0>>>>>>>>>>>>>>>>>>>>>>>>>>
+train 10108
+val 1489
+test 2986
+Patience count starts from 1 epoch
+Using HalfLR learning rate adjustment
+Starting training
+	iters: 100, epoch: 1 | loss: 0.1075841
+	speed: 0.0607s/iter; left time: 185.1410s
+	iters: 200, epoch: 1 | loss: 0.0943692
+	speed: 0.0457s/iter; left time: 134.8827s
+	iters: 300, epoch: 1 | loss: 0.0824407
+	speed: 0.0462s/iter; left time: 131.5929s
+Epoch: 1 cost time: 15.974245548248291
+Epoch: 1, Steps: 315 | Train Loss: 0.1234458 Vali Loss: 0.0910515 Test Loss: 0.1050915
+Validation loss decreased (inf --> 0.091052).  Saving model ...
+Adjusting learning rate to: 0.0000500
+	iters: 100, epoch: 2 | loss: 0.0813908
+	speed: 0.0493s/iter; left time: 134.9947s
+	iters: 200, epoch: 2 | loss: 0.0827067
+	speed: 0.0452s/iter; left time: 119.2014s
+	iters: 300, epoch: 2 | loss: 0.0637038
+	speed: 0.0453s/iter; left time: 114.9849s
+Epoch: 2 cost time: 14.718910932540894
+Epoch: 2, Steps: 315 | Train Loss: 0.0731149 Vali Loss: 0.0886240 Test Loss: 0.1062001
+Validation loss decreased (0.091052 --> 0.088624).  Saving model ...
+Adjusting learning rate to: 0.0000250
+	iters: 100, epoch: 3 | loss: 0.0639197
+	speed: 0.0490s/iter; left time: 118.6071s
+	iters: 200, epoch: 3 | loss: 0.0634831
+	speed: 0.0455s/iter; left time: 105.5189s
+	iters: 300, epoch: 3 | loss: 0.0521221
+	speed: 0.0473s/iter; left time: 105.0972s
+Epoch: 3 cost time: 14.90392518043518
+Epoch: 3, Steps: 315 | Train Loss: 0.0636929 Vali Loss: 0.0887576 Test Loss: 0.0869447
+EarlyStopping counter: 1 out of 3
+Adjusting learning rate to: 0.0000125
+	iters: 100, epoch: 4 | loss: 0.0602879
+	speed: 0.0499s/iter; left time: 105.0342s
+	iters: 200, epoch: 4 | loss: 0.0571382
+	speed: 0.0455s/iter; left time: 91.3505s
+	iters: 300, epoch: 4 | loss: 0.0628844
+	speed: 0.0463s/iter; left time: 88.2870s
+Epoch: 4 cost time: 14.89886212348938
+Epoch: 4, Steps: 315 | Train Loss: 0.0591169 Vali Loss: 0.0966980 Test Loss: 0.1167628
+EarlyStopping counter: 2 out of 3
+Adjusting learning rate to: 0.0000063
+	iters: 100, epoch: 5 | loss: 0.0468325
+	speed: 0.0493s/iter; left time: 88.3807s
+	iters: 200, epoch: 5 | loss: 0.0453911
+	speed: 0.0452s/iter; left time: 76.4947s
+	iters: 300, epoch: 5 | loss: 0.0487140
+	speed: 0.0453s/iter; left time: 72.0099s
+Epoch: 5 cost time: 14.70973253250122
+Epoch: 5, Steps: 315 | Train Loss: 0.0567908 Vali Loss: 0.0961680 Test Loss: 0.1108193
+EarlyStopping counter: 3 out of 3
+Adjusting learning rate to: 0.0000031
+Early stopping
+>>>>>>>testing : omdata3_test1_TransDtSt_Part_custom_ftMS_sl365_ll355_pl10_dm256_nh8_el3_dl1_df1024_fc1_ebtimeF_dtTrue_20240615_0<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+test 2986
+loading supervised model weight
+test shape: (2986, 1, 10, 1) (2986, 1, 10, 1)
+test shape: (2986, 10, 1) (2986, 10, 1)
+mse:0.6819766759872437, mae:0.6626453399658203, rmse:0.8258187770843506, mape:0.024624746292829514, mspe:0.0009328562300652266, rse:0.3194390833377838, r2_score:0.8535113991177331, acc:0.9753752537071705
+corr: [40.59508  40.610207 40.658176 40.70947  40.75103  40.79672  40.86144
+ 40.946747 41.0291   41.099125]
+Args in experiment:
+Namespace(is_training=1, model_id='omdata3_test1', model='TransDtSt_Part', data='custom', root_path='./dataset/multivariate/', data_path='oisst_lat_20.0_lon_112.0.csv', features='MS', target='sst', freq='d', model_save_path='/root/autodl-tmp/checkpoints/', results_save_path='/root/autodl-tmp/results/', test_results_save_path='/root/autodl-tmp/test_results/', pretrain=False, pretrain_epochs=10, mask_ratio=0.75, finetune=False, freeze_epochs=3, seq_len=365, label_len=350, pred_len=15, inverse=True, individual=False, max_tokens=30, top_k=5, num_kernels=6, enc_in=11, dec_in=11, c_out=11, d_model=256, n_heads=8, e_layers=3, d_layers=1, d_ff=1024, moving_avg=25, factor=1, distil=True, dropout=0.1, embed='timeF', activation='gelu', output_attention=False, num_workers=10, itr=1, train_epochs=10, batch_size=32, patience=3, learning_rate=0.0001, des='20240615', loss='MSE', lradj='HalfLR', use_amp=False, use_gpu=True, gpu=0, use_multi_gpu=False, devices='0,1,2,3', p_hidden_dims=[128, 128], p_hidden_layers=2)
+Use GPU: cuda:0
+>>>>>>>start training : omdata3_test1_TransDtSt_Part_custom_ftMS_sl365_ll350_pl15_dm256_nh8_el3_dl1_df1024_fc1_ebtimeF_dtTrue_20240615_0>>>>>>>>>>>>>>>>>>>>>>>>>>
+train 10103
+val 1484
+test 2981
+Patience count starts from 1 epoch
+Using HalfLR learning rate adjustment
+Starting training
+	iters: 100, epoch: 1 | loss: 0.1422807
+	speed: 0.0587s/iter; left time: 179.0724s
+	iters: 200, epoch: 1 | loss: 0.1015549
+	speed: 0.0456s/iter; left time: 134.4401s
+	iters: 300, epoch: 1 | loss: 0.1210726
+	speed: 0.0459s/iter; left time: 130.8090s
+Epoch: 1 cost time: 15.741493940353394
+Epoch: 1, Steps: 315 | Train Loss: 0.1322504 Vali Loss: 0.0965452 Test Loss: 0.1113844
+Validation loss decreased (inf --> 0.096545).  Saving model ...
+Adjusting learning rate to: 0.0000500
+	iters: 100, epoch: 2 | loss: 0.1021672
+	speed: 0.0492s/iter; left time: 134.5465s
+	iters: 200, epoch: 2 | loss: 0.0723180
+	speed: 0.0456s/iter; left time: 120.1448s
+	iters: 300, epoch: 2 | loss: 0.0827811
+	speed: 0.0455s/iter; left time: 115.2811s
+Epoch: 2 cost time: 14.792408466339111
+Epoch: 2, Steps: 315 | Train Loss: 0.0805704 Vali Loss: 0.1254957 Test Loss: 0.1224695
+EarlyStopping counter: 1 out of 3
+Adjusting learning rate to: 0.0000250
+	iters: 100, epoch: 3 | loss: 0.0798112
+	speed: 0.0492s/iter; left time: 119.2185s
+	iters: 200, epoch: 3 | loss: 0.0506749
+	speed: 0.0465s/iter; left time: 107.8716s
+	iters: 300, epoch: 3 | loss: 0.0815548
+	speed: 0.0468s/iter; left time: 103.9016s
+Epoch: 3 cost time: 14.97846794128418
+Epoch: 3, Steps: 315 | Train Loss: 0.0693106 Vali Loss: 0.1142163 Test Loss: 0.1174682
+EarlyStopping counter: 2 out of 3
+Adjusting learning rate to: 0.0000125
+	iters: 100, epoch: 4 | loss: 0.0597180
+	speed: 0.0490s/iter; left time: 103.1717s
+	iters: 200, epoch: 4 | loss: 0.0718527
+	speed: 0.0462s/iter; left time: 92.7691s
+	iters: 300, epoch: 4 | loss: 0.0712029
+	speed: 0.0461s/iter; left time: 87.8989s
+Epoch: 4 cost time: 14.859392881393433
+Epoch: 4, Steps: 315 | Train Loss: 0.0634437 Vali Loss: 0.1121704 Test Loss: 0.1246043
+EarlyStopping counter: 3 out of 3
+Adjusting learning rate to: 0.0000063
+Early stopping
+>>>>>>>testing : omdata3_test1_TransDtSt_Part_custom_ftMS_sl365_ll350_pl15_dm256_nh8_el3_dl1_df1024_fc1_ebtimeF_dtTrue_20240615_0<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+test 2981
+loading supervised model weight
+test shape: (2981, 1, 15, 1) (2981, 1, 15, 1)
+test shape: (2981, 15, 1) (2981, 15, 1)
+mse:0.7152682542800903, mae:0.673557698726654, rmse:0.8457353115081787, mape:0.025252679362893105, mspe:0.001008166465908289, rse:0.3270127475261688, r2_score:0.8674721666292515, acc:0.9747473206371069
+corr: [41.459328 41.34322  41.31593  41.305107 41.33147  41.387184 41.457832
+ 41.531647 41.589832 41.629707 41.661472 41.690517 41.710636 41.71467
+ 41.551857]
+Args in experiment:
+Namespace(is_training=1, model_id='omdata3_test1', model='TransDtSt_Part', data='custom', root_path='./dataset/multivariate/', data_path='oisst_lat_20.0_lon_112.0.csv', features='MS', target='sst', freq='d', model_save_path='/root/autodl-tmp/checkpoints/', results_save_path='/root/autodl-tmp/results/', test_results_save_path='/root/autodl-tmp/test_results/', pretrain=False, pretrain_epochs=10, mask_ratio=0.75, finetune=False, freeze_epochs=3, seq_len=365, label_len=345, pred_len=20, inverse=True, individual=False, max_tokens=30, top_k=5, num_kernels=6, enc_in=11, dec_in=11, c_out=11, d_model=256, n_heads=8, e_layers=3, d_layers=1, d_ff=1024, moving_avg=25, factor=1, distil=True, dropout=0.1, embed='timeF', activation='gelu', output_attention=False, num_workers=10, itr=1, train_epochs=10, batch_size=32, patience=3, learning_rate=0.0001, des='20240615', loss='MSE', lradj='HalfLR', use_amp=False, use_gpu=True, gpu=0, use_multi_gpu=False, devices='0,1,2,3', p_hidden_dims=[128, 128], p_hidden_layers=2)
+Use GPU: cuda:0
+>>>>>>>start training : omdata3_test1_TransDtSt_Part_custom_ftMS_sl365_ll345_pl20_dm256_nh8_el3_dl1_df1024_fc1_ebtimeF_dtTrue_20240615_0>>>>>>>>>>>>>>>>>>>>>>>>>>
+train 10098
+val 1479
+test 2976
+Patience count starts from 1 epoch
+Using HalfLR learning rate adjustment
+Starting training
+	iters: 100, epoch: 1 | loss: 0.1157341
+	speed: 0.0579s/iter; left time: 176.6187s
+	iters: 200, epoch: 1 | loss: 0.1190598
+	speed: 0.0458s/iter; left time: 135.2373s
+	iters: 300, epoch: 1 | loss: 0.0882675
+	speed: 0.0460s/iter; left time: 131.2081s
+Epoch: 1 cost time: 15.747457265853882
+Epoch: 1, Steps: 315 | Train Loss: 0.1328234 Vali Loss: 0.1172914 Test Loss: 0.1547085
+Validation loss decreased (inf --> 0.117291).  Saving model ...
+Adjusting learning rate to: 0.0000500
+	iters: 100, epoch: 2 | loss: 0.0816338
+	speed: 0.0493s/iter; left time: 134.7861s
+	iters: 200, epoch: 2 | loss: 0.0907177
+	speed: 0.0463s/iter; left time: 122.1468s
+	iters: 300, epoch: 2 | loss: 0.0680889
+	speed: 0.0467s/iter; left time: 118.4775s
+Epoch: 2 cost time: 14.961881637573242
+Epoch: 2, Steps: 315 | Train Loss: 0.0832473 Vali Loss: 0.1079196 Test Loss: 0.1027276
+Validation loss decreased (0.117291 --> 0.107920).  Saving model ...
+Adjusting learning rate to: 0.0000250
+	iters: 100, epoch: 3 | loss: 0.0756070
+	speed: 0.0495s/iter; left time: 119.7750s
+	iters: 200, epoch: 3 | loss: 0.0541712
+	speed: 0.0454s/iter; left time: 105.3338s
+	iters: 300, epoch: 3 | loss: 0.0690509
+	speed: 0.0452s/iter; left time: 100.4367s
+Epoch: 3 cost time: 14.728247880935669
+Epoch: 3, Steps: 315 | Train Loss: 0.0697095 Vali Loss: 0.1221868 Test Loss: 0.1208561
+EarlyStopping counter: 1 out of 3
+Adjusting learning rate to: 0.0000125
+	iters: 100, epoch: 4 | loss: 0.0750281
+	speed: 0.0489s/iter; left time: 102.9398s
+	iters: 200, epoch: 4 | loss: 0.0584714
+	speed: 0.0455s/iter; left time: 91.1963s
+	iters: 300, epoch: 4 | loss: 0.0693203
+	speed: 0.0456s/iter; left time: 86.9488s
+Epoch: 4 cost time: 14.724523305892944
+Epoch: 4, Steps: 315 | Train Loss: 0.0644658 Vali Loss: 0.1236756 Test Loss: 0.1228386
+EarlyStopping counter: 2 out of 3
+Adjusting learning rate to: 0.0000063
+	iters: 100, epoch: 5 | loss: 0.0634748
+	speed: 0.0485s/iter; left time: 86.8385s
+	iters: 200, epoch: 5 | loss: 0.0683660
+	speed: 0.0464s/iter; left time: 78.5038s
+	iters: 300, epoch: 5 | loss: 0.0610505
+	speed: 0.0458s/iter; left time: 72.9087s
+Epoch: 5 cost time: 14.793281555175781
+Epoch: 5, Steps: 315 | Train Loss: 0.0618579 Vali Loss: 0.1225314 Test Loss: 0.1172887
+EarlyStopping counter: 3 out of 3
+Adjusting learning rate to: 0.0000031
+Early stopping
+>>>>>>>testing : omdata3_test1_TransDtSt_Part_custom_ftMS_sl365_ll345_pl20_dm256_nh8_el3_dl1_df1024_fc1_ebtimeF_dtTrue_20240615_0<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+test 2976
+loading supervised model weight
+test shape: (2976, 1, 20, 1) (2976, 1, 20, 1)
+test shape: (2976, 20, 1) (2976, 20, 1)
+mse:0.6596775054931641, mae:0.645879328250885, rmse:0.8122053146362305, mape:0.024340759962797165, mspe:0.0009506830829195678, rse:0.3138849139213562, r2_score:0.8703905959866779, acc:0.9756592400372028
+corr: [40.90736  40.848686 40.80453  40.83718  40.921017 41.012894 41.070187
+ 41.091278 41.099274 41.1165   41.14014  41.16684  41.20186  41.243862
+ 41.287163 41.333508 41.377823 41.414684 41.432487 41.29265 ]
+Args in experiment:
+Namespace(is_training=1, model_id='omdata3_test1', model='TransDtSt_Part', data='custom', root_path='./dataset/multivariate/', data_path='oisst_lat_20.0_lon_112.0.csv', features='MS', target='sst', freq='d', model_save_path='/root/autodl-tmp/checkpoints/', results_save_path='/root/autodl-tmp/results/', test_results_save_path='/root/autodl-tmp/test_results/', pretrain=False, pretrain_epochs=10, mask_ratio=0.75, finetune=False, freeze_epochs=3, seq_len=365, label_len=340, pred_len=25, inverse=True, individual=False, max_tokens=30, top_k=5, num_kernels=6, enc_in=11, dec_in=11, c_out=11, d_model=256, n_heads=8, e_layers=3, d_layers=1, d_ff=1024, moving_avg=25, factor=1, distil=True, dropout=0.1, embed='timeF', activation='gelu', output_attention=False, num_workers=10, itr=1, train_epochs=10, batch_size=32, patience=3, learning_rate=0.0001, des='20240615', loss='MSE', lradj='HalfLR', use_amp=False, use_gpu=True, gpu=0, use_multi_gpu=False, devices='0,1,2,3', p_hidden_dims=[128, 128], p_hidden_layers=2)
+Use GPU: cuda:0
+>>>>>>>start training : omdata3_test1_TransDtSt_Part_custom_ftMS_sl365_ll340_pl25_dm256_nh8_el3_dl1_df1024_fc1_ebtimeF_dtTrue_20240615_0>>>>>>>>>>>>>>>>>>>>>>>>>>
+train 10093
+val 1474
+test 2971
+Patience count starts from 1 epoch
+Using HalfLR learning rate adjustment
+Starting training
+	iters: 100, epoch: 1 | loss: 0.1278727
+	speed: 0.0581s/iter; left time: 177.1673s
+	iters: 200, epoch: 1 | loss: 0.1149599
+	speed: 0.0456s/iter; left time: 134.4852s
+	iters: 300, epoch: 1 | loss: 0.0833925
+	speed: 0.0456s/iter; left time: 129.9158s
+Epoch: 1 cost time: 15.639530181884766
+Epoch: 1, Steps: 315 | Train Loss: 0.1357878 Vali Loss: 0.1140872 Test Loss: 0.1096432
+Validation loss decreased (inf --> 0.114087).  Saving model ...
+Adjusting learning rate to: 0.0000500
+	iters: 100, epoch: 2 | loss: 0.0853631
+	speed: 0.0485s/iter; left time: 132.6900s
+	iters: 200, epoch: 2 | loss: 0.0725485
+	speed: 0.0469s/iter; left time: 123.5018s
+	iters: 300, epoch: 2 | loss: 0.0789916
+	speed: 0.0455s/iter; left time: 115.2926s
+Epoch: 2 cost time: 14.803404569625854
+Epoch: 2, Steps: 315 | Train Loss: 0.0839907 Vali Loss: 0.1140257 Test Loss: 0.1269563
+Validation loss decreased (0.114087 --> 0.114026).  Saving model ...
+Adjusting learning rate to: 0.0000250
+	iters: 100, epoch: 3 | loss: 0.0923308
+	speed: 0.0502s/iter; left time: 121.4425s
+	iters: 200, epoch: 3 | loss: 0.0631903
+	speed: 0.0466s/iter; left time: 108.2580s
+	iters: 300, epoch: 3 | loss: 0.0634398
+	speed: 0.0464s/iter; left time: 103.0898s
+Epoch: 3 cost time: 15.059813261032104
+Epoch: 3, Steps: 315 | Train Loss: 0.0737559 Vali Loss: 0.1195655 Test Loss: 0.1490585
+EarlyStopping counter: 1 out of 3
+Adjusting learning rate to: 0.0000125
+	iters: 100, epoch: 4 | loss: 0.0702383
+	speed: 0.0491s/iter; left time: 103.5037s
+	iters: 200, epoch: 4 | loss: 0.0571879
+	speed: 0.0455s/iter; left time: 91.3384s
+	iters: 300, epoch: 4 | loss: 0.0569496
+	speed: 0.0459s/iter; left time: 87.5104s
+Epoch: 4 cost time: 14.790865421295166
+Epoch: 4, Steps: 315 | Train Loss: 0.0676829 Vali Loss: 0.1188774 Test Loss: 0.1464186
+EarlyStopping counter: 2 out of 3
+Adjusting learning rate to: 0.0000063
+	iters: 100, epoch: 5 | loss: 0.0573428
+	speed: 0.0504s/iter; left time: 90.2991s
+	iters: 200, epoch: 5 | loss: 0.0733011
+	speed: 0.0458s/iter; left time: 77.3649s
+	iters: 300, epoch: 5 | loss: 0.0624365
+	speed: 0.0470s/iter; left time: 74.8407s
+Epoch: 5 cost time: 15.156130313873291
+Epoch: 5, Steps: 315 | Train Loss: 0.0649650 Vali Loss: 0.1231568 Test Loss: 0.1380237
+EarlyStopping counter: 3 out of 3
+Adjusting learning rate to: 0.0000031
+Early stopping
+>>>>>>>testing : omdata3_test1_TransDtSt_Part_custom_ftMS_sl365_ll340_pl25_dm256_nh8_el3_dl1_df1024_fc1_ebtimeF_dtTrue_20240615_0<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+test 2971
+loading supervised model weight
+test shape: (2971, 1, 25, 1) (2971, 1, 25, 1)
+test shape: (2971, 25, 1) (2971, 25, 1)
+mse:0.8152651190757751, mae:0.7233112454414368, rmse:0.9029203057289124, mape:0.0272811371833086, mspe:0.0011746232630684972, rse:0.3487241566181183, r2_score:0.8509300252417543, acc:0.9727188628166914
+corr: [41.054165 40.928867 41.019405 41.09337  41.120674 41.1144   41.101265
+ 41.106388 41.136307 41.18521  41.238308 41.271927 41.284054 41.28839
+ 41.301125 41.323868 41.35062  41.380573 41.407623 41.431477 41.46589
+ 41.515503 41.57282  41.62491  41.52793 ]
+Args in experiment:
+Namespace(is_training=1, model_id='omdata3_test1', model='TransDtSt_Part', data='custom', root_path='./dataset/multivariate/', data_path='oisst_lat_20.0_lon_112.0.csv', features='MS', target='sst', freq='d', model_save_path='/root/autodl-tmp/checkpoints/', results_save_path='/root/autodl-tmp/results/', test_results_save_path='/root/autodl-tmp/test_results/', pretrain=False, pretrain_epochs=10, mask_ratio=0.75, finetune=False, freeze_epochs=3, seq_len=365, label_len=335, pred_len=30, inverse=True, individual=False, max_tokens=30, top_k=5, num_kernels=6, enc_in=11, dec_in=11, c_out=11, d_model=256, n_heads=8, e_layers=3, d_layers=1, d_ff=1024, moving_avg=25, factor=1, distil=True, dropout=0.1, embed='timeF', activation='gelu', output_attention=False, num_workers=10, itr=1, train_epochs=10, batch_size=32, patience=3, learning_rate=0.0001, des='20240615', loss='MSE', lradj='HalfLR', use_amp=False, use_gpu=True, gpu=0, use_multi_gpu=False, devices='0,1,2,3', p_hidden_dims=[128, 128], p_hidden_layers=2)
+Use GPU: cuda:0
+>>>>>>>start training : omdata3_test1_TransDtSt_Part_custom_ftMS_sl365_ll335_pl30_dm256_nh8_el3_dl1_df1024_fc1_ebtimeF_dtTrue_20240615_0>>>>>>>>>>>>>>>>>>>>>>>>>>
+train 10088
+val 1469
+test 2966
+Patience count starts from 1 epoch
+Using HalfLR learning rate adjustment
+Starting training
+	iters: 100, epoch: 1 | loss: 0.1146940
+	speed: 0.0588s/iter; left time: 179.3537s
+	iters: 200, epoch: 1 | loss: 0.0982278
+	speed: 0.0478s/iter; left time: 141.1474s
+	iters: 300, epoch: 1 | loss: 0.1008150
+	speed: 0.0467s/iter; left time: 133.2781s
+Epoch: 1 cost time: 16.061784982681274
+Epoch: 1, Steps: 315 | Train Loss: 0.1300375 Vali Loss: 0.1335798 Test Loss: 0.2204832
+Validation loss decreased (inf --> 0.133580).  Saving model ...
+Adjusting learning rate to: 0.0000500
+	iters: 100, epoch: 2 | loss: 0.0729612
+	speed: 0.0504s/iter; left time: 137.9697s
+	iters: 200, epoch: 2 | loss: 0.0801731
+	speed: 0.0458s/iter; left time: 120.7170s
+	iters: 300, epoch: 2 | loss: 0.0737674
+	speed: 0.0459s/iter; left time: 116.3524s
+Epoch: 2 cost time: 14.936458110809326
+Epoch: 2, Steps: 315 | Train Loss: 0.0841164 Vali Loss: 0.1102307 Test Loss: 0.1412883
+Validation loss decreased (0.133580 --> 0.110231).  Saving model ...
+Adjusting learning rate to: 0.0000250
+	iters: 100, epoch: 3 | loss: 0.0678478
+	speed: 0.0501s/iter; left time: 121.2080s
+	iters: 200, epoch: 3 | loss: 0.0754710
+	speed: 0.0453s/iter; left time: 105.2540s
+	iters: 300, epoch: 3 | loss: 0.0747517
+	speed: 0.0461s/iter; left time: 102.3982s
+Epoch: 3 cost time: 14.87429690361023
+Epoch: 3, Steps: 315 | Train Loss: 0.0722434 Vali Loss: 0.1256827 Test Loss: 0.1293570
+EarlyStopping counter: 1 out of 3
+Adjusting learning rate to: 0.0000125
+	iters: 100, epoch: 4 | loss: 0.0695131
+	speed: 0.0486s/iter; left time: 102.4339s
+	iters: 200, epoch: 4 | loss: 0.0609016
+	speed: 0.0455s/iter; left time: 91.2881s
+	iters: 300, epoch: 4 | loss: 0.0651473
+	speed: 0.0457s/iter; left time: 87.0264s
+Epoch: 4 cost time: 14.704779863357544
+Epoch: 4, Steps: 315 | Train Loss: 0.0671593 Vali Loss: 0.1187001 Test Loss: 0.1433415
+EarlyStopping counter: 2 out of 3
+Adjusting learning rate to: 0.0000063
+	iters: 100, epoch: 5 | loss: 0.0552669
+	speed: 0.0505s/iter; left time: 90.4134s
+	iters: 200, epoch: 5 | loss: 0.0632846
+	speed: 0.0469s/iter; left time: 79.2506s
+	iters: 300, epoch: 5 | loss: 0.0633156
+	speed: 0.0467s/iter; left time: 74.2709s
+Epoch: 5 cost time: 15.12934947013855
+Epoch: 5, Steps: 315 | Train Loss: 0.0652636 Vali Loss: 0.1217052 Test Loss: 0.1402059
+EarlyStopping counter: 3 out of 3
+Adjusting learning rate to: 0.0000031
+Early stopping
+>>>>>>>testing : omdata3_test1_TransDtSt_Part_custom_ftMS_sl365_ll335_pl30_dm256_nh8_el3_dl1_df1024_fc1_ebtimeF_dtTrue_20240615_0<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+test 2966
+loading supervised model weight
+test shape: (2966, 1, 30, 1) (2966, 1, 30, 1)
+test shape: (2966, 30, 1) (2966, 30, 1)
+mse:0.9072995781898499, mae:0.7633047699928284, rmse:0.9525227546691895, mape:0.028552882373332977, mspe:0.0012673839228227735, rse:0.36763209104537964, r2_score:0.8322648373844307, acc:0.971447117626667
+corr: [41.36234  41.235386 41.23061  41.208122 41.18394  41.178516 41.21006
+ 41.266834 41.30787  41.3092   41.276047 41.229855 41.20118  41.21495
+ 41.272617 41.350838 41.410435 41.432095 41.42303  41.404694 41.394344
+ 41.40388  41.439583 41.494545 41.548786 41.59588  41.637768 41.67281
+ 41.70034  41.5825  ]
+Args in experiment:
+Namespace(is_training=1, model_id='omdata4_test1', model='TransDtSt_Part', data='custom', root_path='./dataset/multivariate/', data_path='oisst_lat_20.0_lon_118.0.csv', features='MS', target='sst', freq='d', model_save_path='/root/autodl-tmp/checkpoints/', results_save_path='/root/autodl-tmp/results/', test_results_save_path='/root/autodl-tmp/test_results/', pretrain=False, pretrain_epochs=10, mask_ratio=0.75, finetune=False, freeze_epochs=3, seq_len=365, label_len=355, pred_len=10, inverse=True, individual=False, max_tokens=30, top_k=5, num_kernels=6, enc_in=11, dec_in=11, c_out=11, d_model=256, n_heads=8, e_layers=3, d_layers=1, d_ff=1024, moving_avg=25, factor=1, distil=True, dropout=0.1, embed='timeF', activation='gelu', output_attention=False, num_workers=10, itr=1, train_epochs=10, batch_size=32, patience=3, learning_rate=0.0001, des='20240615', loss='MSE', lradj='HalfLR', use_amp=False, use_gpu=True, gpu=0, use_multi_gpu=False, devices='0,1,2,3', p_hidden_dims=[128, 128], p_hidden_layers=2)
+Use GPU: cuda:0
+>>>>>>>start training : omdata4_test1_TransDtSt_Part_custom_ftMS_sl365_ll355_pl10_dm256_nh8_el3_dl1_df1024_fc1_ebtimeF_dtTrue_20240615_0>>>>>>>>>>>>>>>>>>>>>>>>>>
+train 10108
+val 1489
+test 2986
+Patience count starts from 1 epoch
+Using HalfLR learning rate adjustment
+Starting training
+	iters: 100, epoch: 1 | loss: 0.1065194
+	speed: 0.0587s/iter; left time: 179.0943s
+	iters: 200, epoch: 1 | loss: 0.1045878
+	speed: 0.0472s/iter; left time: 139.2806s
+	iters: 300, epoch: 1 | loss: 0.0839037
+	speed: 0.0464s/iter; left time: 132.4278s
+Epoch: 1 cost time: 15.955817937850952
+Epoch: 1, Steps: 315 | Train Loss: 0.1366166 Vali Loss: 0.1105999 Test Loss: 0.1136676
+Validation loss decreased (inf --> 0.110600).  Saving model ...
+Adjusting learning rate to: 0.0000500
+	iters: 100, epoch: 2 | loss: 0.0981060
+	speed: 0.0485s/iter; left time: 132.7735s
+	iters: 200, epoch: 2 | loss: 0.0897987
+	speed: 0.0476s/iter; left time: 125.3480s
+	iters: 300, epoch: 2 | loss: 0.0606084
+	speed: 0.0465s/iter; left time: 117.9144s
+Epoch: 2 cost time: 14.980750322341919
+Epoch: 2, Steps: 315 | Train Loss: 0.0853345 Vali Loss: 0.0997342 Test Loss: 0.1006500
+Validation loss decreased (0.110600 --> 0.099734).  Saving model ...
+Adjusting learning rate to: 0.0000250
+	iters: 100, epoch: 3 | loss: 0.0574091
+	speed: 0.0513s/iter; left time: 124.1175s
+	iters: 200, epoch: 3 | loss: 0.0506199
+	speed: 0.0462s/iter; left time: 107.2169s
+	iters: 300, epoch: 3 | loss: 0.0778642
+	speed: 0.0459s/iter; left time: 102.0492s
+Epoch: 3 cost time: 15.077637434005737
+Epoch: 3, Steps: 315 | Train Loss: 0.0758399 Vali Loss: 0.0988454 Test Loss: 0.1070464
+Validation loss decreased (0.099734 --> 0.098845).  Saving model ...
+Adjusting learning rate to: 0.0000125
+	iters: 100, epoch: 4 | loss: 0.0759129
+	speed: 0.0486s/iter; left time: 102.2703s
+	iters: 200, epoch: 4 | loss: 0.0724334
+	speed: 0.0463s/iter; left time: 92.7987s
+	iters: 300, epoch: 4 | loss: 0.0679111
+	speed: 0.0457s/iter; left time: 87.1719s
+Epoch: 4 cost time: 14.790289402008057
+Epoch: 4, Steps: 315 | Train Loss: 0.0705446 Vali Loss: 0.0955947 Test Loss: 0.1041722
+Validation loss decreased (0.098845 --> 0.095595).  Saving model ...
+Adjusting learning rate to: 0.0000063
+	iters: 100, epoch: 5 | loss: 0.0588545
+	speed: 0.0498s/iter; left time: 89.2126s
+	iters: 200, epoch: 5 | loss: 0.0554364
+	speed: 0.0466s/iter; left time: 78.8383s
+	iters: 300, epoch: 5 | loss: 0.0823767
+	speed: 0.0458s/iter; left time: 72.8713s
+Epoch: 5 cost time: 14.943110942840576
+Epoch: 5, Steps: 315 | Train Loss: 0.0680285 Vali Loss: 0.0949623 Test Loss: 0.1051295
+Validation loss decreased (0.095595 --> 0.094962).  Saving model ...
+Adjusting learning rate to: 0.0000031
+	iters: 100, epoch: 6 | loss: 0.0644732
+	speed: 0.0488s/iter; left time: 72.0038s
+	iters: 200, epoch: 6 | loss: 0.0769117
+	speed: 0.0460s/iter; left time: 63.3213s
+	iters: 300, epoch: 6 | loss: 0.0950614
+	speed: 0.0461s/iter; left time: 58.8546s
+Epoch: 6 cost time: 14.821019649505615
+Epoch: 6, Steps: 315 | Train Loss: 0.0669792 Vali Loss: 0.0949266 Test Loss: 0.1041650
+Validation loss decreased (0.094962 --> 0.094927).  Saving model ...
+Adjusting learning rate to: 0.0000016
+	iters: 100, epoch: 7 | loss: 0.0681437
+	speed: 0.0499s/iter; left time: 57.9591s
+	iters: 200, epoch: 7 | loss: 0.0767655
+	speed: 0.0455s/iter; left time: 48.2518s
+	iters: 300, epoch: 7 | loss: 0.0526210
+	speed: 0.0455s/iter; left time: 43.7046s
+Epoch: 7 cost time: 14.873717069625854
+Epoch: 7, Steps: 315 | Train Loss: 0.0658892 Vali Loss: 0.0979630 Test Loss: 0.1057153
+EarlyStopping counter: 1 out of 3
+Adjusting learning rate to: 0.0000008
+	iters: 100, epoch: 8 | loss: 0.0585490
+	speed: 0.0496s/iter; left time: 41.9291s
+	iters: 200, epoch: 8 | loss: 0.1021479
+	speed: 0.0463s/iter; left time: 34.5620s
+	iters: 300, epoch: 8 | loss: 0.0678467
+	speed: 0.0459s/iter; left time: 29.6578s
+Epoch: 8 cost time: 14.91315770149231
+Epoch: 8, Steps: 315 | Train Loss: 0.0656095 Vali Loss: 0.0965506 Test Loss: 0.1051067
+EarlyStopping counter: 2 out of 3
+Adjusting learning rate to: 0.0000004
+	iters: 100, epoch: 9 | loss: 0.0742878
+	speed: 0.0491s/iter; left time: 26.0591s
+	iters: 200, epoch: 9 | loss: 0.0665543
+	speed: 0.0476s/iter; left time: 20.4944s
+	iters: 300, epoch: 9 | loss: 0.0652697
+	speed: 0.0462s/iter; left time: 15.2843s
+Epoch: 9 cost time: 15.01460337638855
+Epoch: 9, Steps: 315 | Train Loss: 0.0651842 Vali Loss: 0.0969855 Test Loss: 0.1055845
+EarlyStopping counter: 3 out of 3
+Adjusting learning rate to: 0.0000002
+Early stopping
+>>>>>>>testing : omdata4_test1_TransDtSt_Part_custom_ftMS_sl365_ll355_pl10_dm256_nh8_el3_dl1_df1024_fc1_ebtimeF_dtTrue_20240615_0<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+test 2986
+loading supervised model weight
+test shape: (2986, 1, 10, 1) (2986, 1, 10, 1)
+test shape: (2986, 10, 1) (2986, 10, 1)
+mse:0.5354269742965698, mae:0.5720089077949524, rmse:0.731728732585907, mape:0.021322906017303467, mspe:0.000753890722990036, rse:0.3246815800666809, r2_score:0.9070976516410445, acc:0.9786770939826965
+corr: [41.285908 41.33525  41.35647  41.40383  41.452698 41.50803  41.56896
+ 41.6394   41.703144 41.794716]
+Args in experiment:
+Namespace(is_training=1, model_id='omdata4_test1', model='TransDtSt_Part', data='custom', root_path='./dataset/multivariate/', data_path='oisst_lat_20.0_lon_118.0.csv', features='MS', target='sst', freq='d', model_save_path='/root/autodl-tmp/checkpoints/', results_save_path='/root/autodl-tmp/results/', test_results_save_path='/root/autodl-tmp/test_results/', pretrain=False, pretrain_epochs=10, mask_ratio=0.75, finetune=False, freeze_epochs=3, seq_len=365, label_len=350, pred_len=15, inverse=True, individual=False, max_tokens=30, top_k=5, num_kernels=6, enc_in=11, dec_in=11, c_out=11, d_model=256, n_heads=8, e_layers=3, d_layers=1, d_ff=1024, moving_avg=25, factor=1, distil=True, dropout=0.1, embed='timeF', activation='gelu', output_attention=False, num_workers=10, itr=1, train_epochs=10, batch_size=32, patience=3, learning_rate=0.0001, des='20240615', loss='MSE', lradj='HalfLR', use_amp=False, use_gpu=True, gpu=0, use_multi_gpu=False, devices='0,1,2,3', p_hidden_dims=[128, 128], p_hidden_layers=2)
+Use GPU: cuda:0
+>>>>>>>start training : omdata4_test1_TransDtSt_Part_custom_ftMS_sl365_ll350_pl15_dm256_nh8_el3_dl1_df1024_fc1_ebtimeF_dtTrue_20240615_0>>>>>>>>>>>>>>>>>>>>>>>>>>
+train 10103
+val 1484
+test 2981
+Patience count starts from 1 epoch
+Using HalfLR learning rate adjustment
+Starting training
+	iters: 100, epoch: 1 | loss: 0.1178391
+	speed: 0.0585s/iter; left time: 178.4613s
+	iters: 200, epoch: 1 | loss: 0.1029910
+	speed: 0.0458s/iter; left time: 135.1079s
+	iters: 300, epoch: 1 | loss: 0.0908756
+	speed: 0.0467s/iter; left time: 133.1508s
+Epoch: 1 cost time: 15.816214561462402
+Epoch: 1, Steps: 315 | Train Loss: 0.1423690 Vali Loss: 0.1167083 Test Loss: 0.1177597
+Validation loss decreased (inf --> 0.116708).  Saving model ...
+Adjusting learning rate to: 0.0000500
+	iters: 100, epoch: 2 | loss: 0.1019390
+	speed: 0.0511s/iter; left time: 139.8259s
+	iters: 200, epoch: 2 | loss: 0.1119099
+	speed: 0.0472s/iter; left time: 124.4234s
+	iters: 300, epoch: 2 | loss: 0.1128467
+	speed: 0.0459s/iter; left time: 116.3043s
+Epoch: 2 cost time: 15.151211023330688
+Epoch: 2, Steps: 315 | Train Loss: 0.0935278 Vali Loss: 0.1180589 Test Loss: 0.1211725
+EarlyStopping counter: 1 out of 3
+Adjusting learning rate to: 0.0000250
+	iters: 100, epoch: 3 | loss: 0.0846874
+	speed: 0.0517s/iter; left time: 125.0619s
+	iters: 200, epoch: 3 | loss: 0.0817341
+	speed: 0.0469s/iter; left time: 108.8048s
+	iters: 300, epoch: 3 | loss: 0.0924900
+	speed: 0.0473s/iter; left time: 105.1552s
+Epoch: 3 cost time: 15.316121578216553
+Epoch: 3, Steps: 315 | Train Loss: 0.0824856 Vali Loss: 0.1191791 Test Loss: 0.1285848
+EarlyStopping counter: 2 out of 3
+Adjusting learning rate to: 0.0000125
+	iters: 100, epoch: 4 | loss: 0.0758793
+	speed: 0.0500s/iter; left time: 105.2553s
+	iters: 200, epoch: 4 | loss: 0.0831792
+	speed: 0.0472s/iter; left time: 94.7314s
+	iters: 300, epoch: 4 | loss: 0.0748794
+	speed: 0.0472s/iter; left time: 90.0271s
+Epoch: 4 cost time: 15.17481517791748
+Epoch: 4, Steps: 315 | Train Loss: 0.0754314 Vali Loss: 0.1092410 Test Loss: 0.1315986
+Validation loss decreased (0.116708 --> 0.109241).  Saving model ...
+Adjusting learning rate to: 0.0000063
+	iters: 100, epoch: 5 | loss: 0.0794752
+	speed: 0.0496s/iter; left time: 88.8109s
+	iters: 200, epoch: 5 | loss: 0.0716767
+	speed: 0.0466s/iter; left time: 78.8548s
+	iters: 300, epoch: 5 | loss: 0.0720027
+	speed: 0.0461s/iter; left time: 73.3540s
+Epoch: 5 cost time: 14.96374225616455
+Epoch: 5, Steps: 315 | Train Loss: 0.0728664 Vali Loss: 0.1108266 Test Loss: 0.1332894
+EarlyStopping counter: 1 out of 3
+Adjusting learning rate to: 0.0000031
+	iters: 100, epoch: 6 | loss: 0.0722714
+	speed: 0.0508s/iter; left time: 74.9128s
+	iters: 200, epoch: 6 | loss: 0.0633709
+	speed: 0.0465s/iter; left time: 63.9330s
+	iters: 300, epoch: 6 | loss: 0.0780014
+	speed: 0.0465s/iter; left time: 59.2910s
+Epoch: 6 cost time: 15.098332405090332
+Epoch: 6, Steps: 315 | Train Loss: 0.0712748 Vali Loss: 0.1130845 Test Loss: 0.1421354
+EarlyStopping counter: 2 out of 3
+Adjusting learning rate to: 0.0000016
+	iters: 100, epoch: 7 | loss: 0.0695185
+	speed: 0.0500s/iter; left time: 58.0446s
+	iters: 200, epoch: 7 | loss: 0.0862928
+	speed: 0.0472s/iter; left time: 50.1201s
+	iters: 300, epoch: 7 | loss: 0.0617597
+	speed: 0.0463s/iter; left time: 44.4717s
+Epoch: 7 cost time: 15.112394571304321
+Epoch: 7, Steps: 315 | Train Loss: 0.0704538 Vali Loss: 0.1104778 Test Loss: 0.1386675
+EarlyStopping counter: 3 out of 3
+Adjusting learning rate to: 0.0000008
+Early stopping
+>>>>>>>testing : omdata4_test1_TransDtSt_Part_custom_ftMS_sl365_ll350_pl15_dm256_nh8_el3_dl1_df1024_fc1_ebtimeF_dtTrue_20240615_0<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+test 2981
+loading supervised model weight
+test shape: (2981, 1, 15, 1) (2981, 1, 15, 1)
+test shape: (2981, 15, 1) (2981, 15, 1)
+mse:0.6764407753944397, mae:0.6497747302055359, rmse:0.8224601745605469, mape:0.024179160594940186, mspe:0.0009441890870220959, rse:0.36470726132392883, r2_score:0.8908579540939218, acc:0.9758208394050598
+corr: [41.5363   41.727734 41.740417 41.743427 41.75115  41.77486  41.80903
+ 41.84619  41.873497 41.901012 41.939167 41.993427 42.04682  42.0843
+ 42.014828]
+Args in experiment:
+Namespace(is_training=1, model_id='omdata4_test1', model='TransDtSt_Part', data='custom', root_path='./dataset/multivariate/', data_path='oisst_lat_20.0_lon_118.0.csv', features='MS', target='sst', freq='d', model_save_path='/root/autodl-tmp/checkpoints/', results_save_path='/root/autodl-tmp/results/', test_results_save_path='/root/autodl-tmp/test_results/', pretrain=False, pretrain_epochs=10, mask_ratio=0.75, finetune=False, freeze_epochs=3, seq_len=365, label_len=345, pred_len=20, inverse=True, individual=False, max_tokens=30, top_k=5, num_kernels=6, enc_in=11, dec_in=11, c_out=11, d_model=256, n_heads=8, e_layers=3, d_layers=1, d_ff=1024, moving_avg=25, factor=1, distil=True, dropout=0.1, embed='timeF', activation='gelu', output_attention=False, num_workers=10, itr=1, train_epochs=10, batch_size=32, patience=3, learning_rate=0.0001, des='20240615', loss='MSE', lradj='HalfLR', use_amp=False, use_gpu=True, gpu=0, use_multi_gpu=False, devices='0,1,2,3', p_hidden_dims=[128, 128], p_hidden_layers=2)
+Use GPU: cuda:0
+>>>>>>>start training : omdata4_test1_TransDtSt_Part_custom_ftMS_sl365_ll345_pl20_dm256_nh8_el3_dl1_df1024_fc1_ebtimeF_dtTrue_20240615_0>>>>>>>>>>>>>>>>>>>>>>>>>>
+train 10098
+val 1479
+test 2976
+Patience count starts from 1 epoch
+Using HalfLR learning rate adjustment
+Starting training
+	iters: 100, epoch: 1 | loss: 0.1699729
+	speed: 0.0591s/iter; left time: 180.2628s
+	iters: 200, epoch: 1 | loss: 0.1079070
+	speed: 0.0456s/iter; left time: 134.5294s
+	iters: 300, epoch: 1 | loss: 0.1165257
+	speed: 0.0463s/iter; left time: 131.9501s
+Epoch: 1 cost time: 15.818618059158325
+Epoch: 1, Steps: 315 | Train Loss: 0.1449053 Vali Loss: 0.1524301 Test Loss: 0.1475768
+Validation loss decreased (inf --> 0.152430).  Saving model ...
+Adjusting learning rate to: 0.0000500
+	iters: 100, epoch: 2 | loss: 0.1013556
+	speed: 0.0493s/iter; left time: 134.8858s
+	iters: 200, epoch: 2 | loss: 0.0874685
+	speed: 0.0454s/iter; left time: 119.8003s
+	iters: 300, epoch: 2 | loss: 0.0806086
+	speed: 0.0458s/iter; left time: 116.2453s
+Epoch: 2 cost time: 14.786603927612305
+Epoch: 2, Steps: 315 | Train Loss: 0.0978645 Vali Loss: 0.1314580 Test Loss: 0.1195936
+Validation loss decreased (0.152430 --> 0.131458).  Saving model ...
+Adjusting learning rate to: 0.0000250
+	iters: 100, epoch: 3 | loss: 0.0803938
+	speed: 0.0492s/iter; left time: 119.1295s
+	iters: 200, epoch: 3 | loss: 0.0817012
+	speed: 0.0455s/iter; left time: 105.6312s
+	iters: 300, epoch: 3 | loss: 0.0668770
+	speed: 0.0462s/iter; left time: 102.5537s
+Epoch: 3 cost time: 14.818535327911377
+Epoch: 3, Steps: 315 | Train Loss: 0.0845272 Vali Loss: 0.1323833 Test Loss: 0.1357511
+EarlyStopping counter: 1 out of 3
+Adjusting learning rate to: 0.0000125
+	iters: 100, epoch: 4 | loss: 0.0706990
+	speed: 0.0495s/iter; left time: 104.2049s
+	iters: 200, epoch: 4 | loss: 0.0655020
+	speed: 0.0474s/iter; left time: 95.1354s
+	iters: 300, epoch: 4 | loss: 0.0705196
+	speed: 0.0482s/iter; left time: 91.8578s
+Epoch: 4 cost time: 15.236308574676514
+Epoch: 4, Steps: 315 | Train Loss: 0.0771357 Vali Loss: 0.1386064 Test Loss: 0.1206988
+EarlyStopping counter: 2 out of 3
+Adjusting learning rate to: 0.0000063
+	iters: 100, epoch: 5 | loss: 0.0811931
+	speed: 0.0498s/iter; left time: 89.1562s
+	iters: 200, epoch: 5 | loss: 0.0595275
+	speed: 0.0454s/iter; left time: 76.7830s
+	iters: 300, epoch: 5 | loss: 0.0634866
+	speed: 0.0455s/iter; left time: 72.4131s
+Epoch: 5 cost time: 14.800097703933716
+Epoch: 5, Steps: 315 | Train Loss: 0.0741358 Vali Loss: 0.1398578 Test Loss: 0.1430407
+EarlyStopping counter: 3 out of 3
+Adjusting learning rate to: 0.0000031
+Early stopping
+>>>>>>>testing : omdata4_test1_TransDtSt_Part_custom_ftMS_sl365_ll345_pl20_dm256_nh8_el3_dl1_df1024_fc1_ebtimeF_dtTrue_20240615_0<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+test 2976
+loading supervised model weight
+test shape: (2976, 1, 20, 1) (2976, 1, 20, 1)
+test shape: (2976, 20, 1) (2976, 20, 1)
+mse:0.6147329211235046, mae:0.6269538402557373, rmse:0.7840490341186523, mape:0.023297550156712532, mspe:0.0008531992207281291, rse:0.34742972254753113, r2_score:0.8932592884279968, acc:0.9767024498432875
+corr: [41.60772  41.776783 41.722363 41.744854 41.824215 41.912994 41.96587
+ 41.974815 41.961884 41.9606   41.981438 42.025578 42.082287 42.13979
+ 42.196594 42.256207 42.30795  42.340054 42.34887  42.249557]
+Args in experiment:
+Namespace(is_training=1, model_id='omdata4_test1', model='TransDtSt_Part', data='custom', root_path='./dataset/multivariate/', data_path='oisst_lat_20.0_lon_118.0.csv', features='MS', target='sst', freq='d', model_save_path='/root/autodl-tmp/checkpoints/', results_save_path='/root/autodl-tmp/results/', test_results_save_path='/root/autodl-tmp/test_results/', pretrain=False, pretrain_epochs=10, mask_ratio=0.75, finetune=False, freeze_epochs=3, seq_len=365, label_len=340, pred_len=25, inverse=True, individual=False, max_tokens=30, top_k=5, num_kernels=6, enc_in=11, dec_in=11, c_out=11, d_model=256, n_heads=8, e_layers=3, d_layers=1, d_ff=1024, moving_avg=25, factor=1, distil=True, dropout=0.1, embed='timeF', activation='gelu', output_attention=False, num_workers=10, itr=1, train_epochs=10, batch_size=32, patience=3, learning_rate=0.0001, des='20240615', loss='MSE', lradj='HalfLR', use_amp=False, use_gpu=True, gpu=0, use_multi_gpu=False, devices='0,1,2,3', p_hidden_dims=[128, 128], p_hidden_layers=2)
+Use GPU: cuda:0
+>>>>>>>start training : omdata4_test1_TransDtSt_Part_custom_ftMS_sl365_ll340_pl25_dm256_nh8_el3_dl1_df1024_fc1_ebtimeF_dtTrue_20240615_0>>>>>>>>>>>>>>>>>>>>>>>>>>
+train 10093
+val 1474
+test 2971
+Patience count starts from 1 epoch
+Using HalfLR learning rate adjustment
+Starting training
+	iters: 100, epoch: 1 | loss: 0.1490277
+	speed: 0.0596s/iter; left time: 181.7109s
+	iters: 200, epoch: 1 | loss: 0.1005956
+	speed: 0.0464s/iter; left time: 136.8461s
+	iters: 300, epoch: 1 | loss: 0.1087975
+	speed: 0.0472s/iter; left time: 134.4568s
+Epoch: 1 cost time: 16.023682355880737
+Epoch: 1, Steps: 315 | Train Loss: 0.1475585 Vali Loss: 0.1373494 Test Loss: 0.1341802
+Validation loss decreased (inf --> 0.137349).  Saving model ...
+Adjusting learning rate to: 0.0000500
+	iters: 100, epoch: 2 | loss: 0.1005061
+	speed: 0.0488s/iter; left time: 133.4715s
+	iters: 200, epoch: 2 | loss: 0.0843535
+	speed: 0.0469s/iter; left time: 123.7529s
+	iters: 300, epoch: 2 | loss: 0.1083375
+	speed: 0.0460s/iter; left time: 116.5751s
+Epoch: 2 cost time: 14.932138204574585
+Epoch: 2, Steps: 315 | Train Loss: 0.0993318 Vali Loss: 0.1390632 Test Loss: 0.1325906
+EarlyStopping counter: 1 out of 3
+Adjusting learning rate to: 0.0000250
+	iters: 100, epoch: 3 | loss: 0.0679028
+	speed: 0.0491s/iter; left time: 118.7698s
+	iters: 200, epoch: 3 | loss: 0.0687582
+	speed: 0.0455s/iter; left time: 105.7060s
+	iters: 300, epoch: 3 | loss: 0.0926445
+	speed: 0.0467s/iter; left time: 103.7119s
+Epoch: 3 cost time: 14.851696729660034
+Epoch: 3, Steps: 315 | Train Loss: 0.0867836 Vali Loss: 0.1390455 Test Loss: 0.1515362
+EarlyStopping counter: 2 out of 3
+Adjusting learning rate to: 0.0000125
+	iters: 100, epoch: 4 | loss: 0.0939683
+	speed: 0.0492s/iter; left time: 103.5998s
+	iters: 200, epoch: 4 | loss: 0.0696462
+	speed: 0.0456s/iter; left time: 91.3774s
+	iters: 300, epoch: 4 | loss: 0.0625837
+	speed: 0.0469s/iter; left time: 89.3093s
+Epoch: 4 cost time: 14.953217506408691
+Epoch: 4, Steps: 315 | Train Loss: 0.0800198 Vali Loss: 0.1373852 Test Loss: 0.1465954
+EarlyStopping counter: 3 out of 3
+Adjusting learning rate to: 0.0000063
+Early stopping
+>>>>>>>testing : omdata4_test1_TransDtSt_Part_custom_ftMS_sl365_ll340_pl25_dm256_nh8_el3_dl1_df1024_fc1_ebtimeF_dtTrue_20240615_0<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+test 2971
+loading supervised model weight
+test shape: (2971, 1, 25, 1) (2971, 1, 25, 1)
+test shape: (2971, 25, 1) (2971, 25, 1)
+mse:0.6897103786468506, mae:0.6603978276252747, rmse:0.8304880261421204, mape:0.024550313130021095, mspe:0.0009636431350372732, rse:0.3677319884300232, r2_score:0.8809518243568252, acc:0.9754496868699789
+corr: [41.520943 41.86071  41.944344 41.99068  41.982296 41.94393  41.911434
+ 41.91286  41.950207 42.005    42.046417 42.058968 42.046772 42.028557
+ 42.027573 42.054604 42.1      42.14658  42.18489  42.21884  42.2511
+ 42.265182 42.256424 42.234737 42.002193]
+Args in experiment:
+Namespace(is_training=1, model_id='omdata4_test1', model='TransDtSt_Part', data='custom', root_path='./dataset/multivariate/', data_path='oisst_lat_20.0_lon_118.0.csv', features='MS', target='sst', freq='d', model_save_path='/root/autodl-tmp/checkpoints/', results_save_path='/root/autodl-tmp/results/', test_results_save_path='/root/autodl-tmp/test_results/', pretrain=False, pretrain_epochs=10, mask_ratio=0.75, finetune=False, freeze_epochs=3, seq_len=365, label_len=335, pred_len=30, inverse=True, individual=False, max_tokens=30, top_k=5, num_kernels=6, enc_in=11, dec_in=11, c_out=11, d_model=256, n_heads=8, e_layers=3, d_layers=1, d_ff=1024, moving_avg=25, factor=1, distil=True, dropout=0.1, embed='timeF', activation='gelu', output_attention=False, num_workers=10, itr=1, train_epochs=10, batch_size=32, patience=3, learning_rate=0.0001, des='20240615', loss='MSE', lradj='HalfLR', use_amp=False, use_gpu=True, gpu=0, use_multi_gpu=False, devices='0,1,2,3', p_hidden_dims=[128, 128], p_hidden_layers=2)
+Use GPU: cuda:0
+>>>>>>>start training : omdata4_test1_TransDtSt_Part_custom_ftMS_sl365_ll335_pl30_dm256_nh8_el3_dl1_df1024_fc1_ebtimeF_dtTrue_20240615_0>>>>>>>>>>>>>>>>>>>>>>>>>>
+train 10088
+val 1469
+test 2966
+Patience count starts from 1 epoch
+Using HalfLR learning rate adjustment
+Starting training
+	iters: 100, epoch: 1 | loss: 0.1258574
+	speed: 0.0592s/iter; left time: 180.6539s
+	iters: 200, epoch: 1 | loss: 0.1062152
+	speed: 0.0461s/iter; left time: 135.9175s
+	iters: 300, epoch: 1 | loss: 0.0895462
+	speed: 0.0464s/iter; left time: 132.2864s
+Epoch: 1 cost time: 15.880216836929321
+Epoch: 1, Steps: 315 | Train Loss: 0.1447794 Vali Loss: 0.1557075 Test Loss: 0.1695786
+Validation loss decreased (inf --> 0.155707).  Saving model ...
+Adjusting learning rate to: 0.0000500
+	iters: 100, epoch: 2 | loss: 0.0838672
+	speed: 0.0505s/iter; left time: 138.1755s
+	iters: 200, epoch: 2 | loss: 0.0852214
+	speed: 0.0462s/iter; left time: 121.8695s
+	iters: 300, epoch: 2 | loss: 0.0793249
+	speed: 0.0463s/iter; left time: 117.2996s
+Epoch: 2 cost time: 15.024758100509644
+Epoch: 2, Steps: 315 | Train Loss: 0.0963528 Vali Loss: 0.1285461 Test Loss: 0.1446319
+Validation loss decreased (0.155707 --> 0.128546).  Saving model ...
+Adjusting learning rate to: 0.0000250
+	iters: 100, epoch: 3 | loss: 0.0815666
+	speed: 0.0489s/iter; left time: 118.4416s
+	iters: 200, epoch: 3 | loss: 0.0791408
+	speed: 0.0461s/iter; left time: 106.9859s
+	iters: 300, epoch: 3 | loss: 0.0700158
+	speed: 0.0470s/iter; left time: 104.3256s
+Epoch: 3 cost time: 14.932072401046753
+Epoch: 3, Steps: 315 | Train Loss: 0.0845194 Vali Loss: 0.1276334 Test Loss: 0.1433725
+Validation loss decreased (0.128546 --> 0.127633).  Saving model ...
+Adjusting learning rate to: 0.0000125
+	iters: 100, epoch: 4 | loss: 0.0828901
+	speed: 0.0485s/iter; left time: 102.2246s
+	iters: 200, epoch: 4 | loss: 0.0872403
+	speed: 0.0460s/iter; left time: 92.2769s
+	iters: 300, epoch: 4 | loss: 0.0860830
+	speed: 0.0466s/iter; left time: 88.9107s
+Epoch: 4 cost time: 14.849741697311401
+Epoch: 4, Steps: 315 | Train Loss: 0.0783967 Vali Loss: 0.1303079 Test Loss: 0.1665978
+EarlyStopping counter: 1 out of 3
+Adjusting learning rate to: 0.0000063
+	iters: 100, epoch: 5 | loss: 0.0750039
+	speed: 0.0495s/iter; left time: 88.7251s
+	iters: 200, epoch: 5 | loss: 0.0765437
+	speed: 0.0464s/iter; left time: 78.4047s
+	iters: 300, epoch: 5 | loss: 0.0767750
+	speed: 0.0457s/iter; left time: 72.6644s
+Epoch: 5 cost time: 14.882406234741211
+Epoch: 5, Steps: 315 | Train Loss: 0.0755105 Vali Loss: 0.1248631 Test Loss: 0.1520663
+Validation loss decreased (0.127633 --> 0.124863).  Saving model ...
+Adjusting learning rate to: 0.0000031
+	iters: 100, epoch: 6 | loss: 0.0774216
+	speed: 0.0499s/iter; left time: 73.6016s
+	iters: 200, epoch: 6 | loss: 0.0728669
+	speed: 0.0458s/iter; left time: 62.9715s
+	iters: 300, epoch: 6 | loss: 0.0655829
+	speed: 0.0464s/iter; left time: 59.2485s
+Epoch: 6 cost time: 14.946537971496582
+Epoch: 6, Steps: 315 | Train Loss: 0.0738526 Vali Loss: 0.1272545 Test Loss: 0.1613662
+EarlyStopping counter: 1 out of 3
+Adjusting learning rate to: 0.0000016
+	iters: 100, epoch: 7 | loss: 0.0776879
+	speed: 0.0494s/iter; left time: 57.3975s
+	iters: 200, epoch: 7 | loss: 0.0764778
+	speed: 0.0466s/iter; left time: 49.4175s
+	iters: 300, epoch: 7 | loss: 0.0728891
+	speed: 0.0465s/iter; left time: 44.7083s
+Epoch: 7 cost time: 14.977591753005981
+Epoch: 7, Steps: 315 | Train Loss: 0.0733484 Vali Loss: 0.1281191 Test Loss: 0.1584515
+EarlyStopping counter: 2 out of 3
+Adjusting learning rate to: 0.0000008
+	iters: 100, epoch: 8 | loss: 0.0647560
+	speed: 0.0517s/iter; left time: 43.7332s
+	iters: 200, epoch: 8 | loss: 0.0667146
+	speed: 0.0461s/iter; left time: 34.3775s
+	iters: 300, epoch: 8 | loss: 0.0815233
+	speed: 0.0461s/iter; left time: 29.7952s
+Epoch: 8 cost time: 15.1123948097229
+Epoch: 8, Steps: 315 | Train Loss: 0.0729289 Vali Loss: 0.1276062 Test Loss: 0.1578692
+EarlyStopping counter: 3 out of 3
+Adjusting learning rate to: 0.0000004
+Early stopping
+>>>>>>>testing : omdata4_test1_TransDtSt_Part_custom_ftMS_sl365_ll335_pl30_dm256_nh8_el3_dl1_df1024_fc1_ebtimeF_dtTrue_20240615_0<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+test 2966
+loading supervised model weight
+test shape: (2966, 1, 30, 1) (2966, 1, 30, 1)
+test shape: (2966, 30, 1) (2966, 30, 1)
+mse:0.7816485166549683, mae:0.7048981189727783, rmse:0.8841089010238647, mape:0.02610597014427185, mspe:0.0010684443404898047, rse:0.3911718726158142, r2_score:0.8688157090222586, acc:0.9738940298557281
+corr: [41.633923 41.51647  41.486725 41.48811  41.51826  41.57251  41.63392
+ 41.680805 41.68688  41.65359  41.60336  41.573624 41.57554  41.601246
+ 41.63934  41.672363 41.69042  41.68848  41.6775   41.67341  41.68754
+ 41.70809  41.72603  41.74386  41.758354 41.771835 41.775677 41.762814
+ 41.73616  41.59611 ]

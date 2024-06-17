@@ -262,7 +262,8 @@ class ProbAttention(nn.Module):
         context, attn = self._update_context(
             context, values, scores_top, index, L_Q, attn_mask)
 
-        return context.contiguous(), attn
+        # return context.contiguous(), attn
+        return context.transpose(1, 2).contiguous(), attn
 
 
 class AttentionLayer(nn.Module):
@@ -292,7 +293,7 @@ class AttentionLayer(nn.Module):
         queries = rearrange(queries, 'B L (H D) -> B L H D', H=H)
         keys = rearrange(keys, 'B S (H D) -> B S H D', H=H)
         values = rearrange(values, 'B S (H D) -> B S H D', H=H)
-
+        # print(queries.shape, keys.shape, values.shape)
         out, attn = self.inner_attention(
             queries,
             keys,
@@ -301,6 +302,7 @@ class AttentionLayer(nn.Module):
             tau=tau,
             delta=delta
         )
+        # print(out.shape)
         out = rearrange(out, 'B L H D -> B L (H D)')
 
         return self.out_projection(out), attn

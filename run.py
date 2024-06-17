@@ -30,9 +30,9 @@ if __name__ == '__main__':
     parser.add_argument('--target', type=str, default='OT', help='target feature in S or MS task')
     parser.add_argument('--freq', type=str, default='h',
                         help='freq for time features encoding, options:[s:secondly, t:minutely, h:hourly, d:daily, b:business days, w:weekly, m:monthly], you can also use more detailed freq like 15min or 3h')
-    parser.add_argument('--model_save_path', type=str, default='/home/lanzhenfeng/root/autodl-tmp/checkpoints/', help='path to save model')
-    parser.add_argument('--results_save_path', type=str, default='/home/lanzhenfeng/root/autodl-tmp/results/', help='path to save results')
-    parser.add_argument('--test_results_save_path', type=str, default='/home/lanzhenfeng/root/autodl-tmp/test_results/', help='path to save test results')
+    parser.add_argument('--model_save_path', type=str, default='/root/autodl-tmp/checkpoints/', help='path to save model')
+    parser.add_argument('--results_save_path', type=str, default='/root/autodl-tmp/results/', help='path to save results')
+    parser.add_argument('--test_results_save_path', type=str, default='/root/autodl-tmp/test_results/', help='path to save test results')
 
     # reconstruction task (Pretrain)
     parser.add_argument('--pretrain', action='store_true', help='pretrain or not', default=False)
