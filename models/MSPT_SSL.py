@@ -12,6 +12,7 @@ import numpy as np
 from math import sqrt, ceil
 from einops import rearrange, repeat
 
+import re
 import matplotlib.pyplot as plt
 import seaborn as sns
 
@@ -54,7 +55,7 @@ def random_masking_4D(xb, mask_ratio):
 
     # x = rearrange(x, 'B C L D -> B (C L) D') # [B, C, L, D]
     
-    len_keep = int(L * (1 - mask_ratio)) if L > 1 else ceil(L * (1 - mask_ratio))
+    len_keep = int(L * (1 - mask_ratio))
         
     noise = torch.rand(bs, C, L, device=xb.device)  # noise in [0, 1], bs x L
         
@@ -82,50 +83,32 @@ def random_masking_4D(xb, mask_ratio):
     return x_masked, x_kept, mask, ids_restore
 
 class MultiScalePeriodicPatchEmbedding(nn.Module):
-    def __init__(self, seq_len, top_k=5, d_model=512, dropout=0., sparsity_threshold=0.01, hidden_size_factor=4):
+    def __init__(self, seq_len, patch_size=2, d_model=512, dropout=0., sparsity_threshold=0.01, hidden_size_factor=4):
         super(MultiScalePeriodicPatchEmbedding, self).__init__()
         self.seq_len = seq_len
-        self.top_k = top_k
-        # get the patch sizes
-        self.patch_sizes = self.get_patch_sizes(seq_len)
+        self.patch_size = patch_size
         # Patch Embedding parameters
-        self.value_embeddings = nn.ModuleList()
-        self.padding_patch_layers = nn.ModuleList()
-        for patch_size in self.patch_sizes:
-            self.value_embeddings.append(nn.Linear(patch_size, d_model, bias=False))
-            self.padding_patch_layers.append(nn.ReplicationPad1d((0, ceil(seq_len / patch_size) * patch_size - seq_len)))
+        self.value_embedding = nn.Linear(patch_size, d_model, bias=False)
+        self.padding_patch_layer = nn.ReplicationPad1d((0, ceil(seq_len / patch_size) * patch_size - seq_len))
         self.position_embedding = PositionalEmbedding2D(d_model, 11, ceil(seq_len / patch_size))
         self.dropout = nn.Dropout(dropout)
     
-    def get_patch_sizes(self, seq_len):
-        # get the period list, first element is inf if exclude_zero is False
-        peroid_list = 1 / torch.fft.rfftfreq(seq_len)[1:]
-        patch_sizes = peroid_list.floor().int().unique()
-        return patch_sizes
-    
-    def patch_embedding(self, x, patch_size, index_of_patch):
+    def patch_embedding(self, x, patch_size):
         B, L, C = x.shape
         # do patching
         x = rearrange(x, 'B L C -> B C L') # [B, C, L]
-        x = self.padding_patch_layers[index_of_patch](x)
+        x = self.padding_patch_layer(x)
         x = x.unfold(-1, patch_size, patch_size) # [B, C, L//patch_size, patch_size]
         # print(self.value_embeddings[index_of_patch](x).shape, self.position_embedding(x).shape)
-        x = self.value_embeddings[index_of_patch](x) + self.position_embedding(x) # [B, C, L, D]
+        x = self.value_embedding(x) + self.position_embedding(x) # [B, C, L, D]
         return self.dropout(x) # [B, C, L, D]
 
     def forward(self, x, mask_ratio=0.4):
         B, L, C = x.shape
-        # gates = self.afno1d_for_peroid_weights(x, self.training) # [B, Ps]
-        # xs = self.dispatcher(x, gates) # Ps*[B, C, L, D]
-        xs = []
-        masks = []
-        for i, patch_size in enumerate(self.patch_sizes): 
-            temp = self.patch_embedding(x, patch_size, i)
-            temp_masked, temp_kept, mask, ids_restore = random_masking_4D(temp, mask_ratio)
-            xs.append(temp_masked)
-            masks.append(mask)
-        return xs, masks
-    
+        x = self.patch_embedding(x, self.patch_size)
+        x_masked, x_kept, mask, ids_restore = random_masking_4D(x, mask_ratio)
+        return x_masked, mask
+
 
 class MLP(nn.Module):
     def __init__(self, d_model, d_ff, dropout=0.1, activation="relu"):
@@ -158,7 +141,6 @@ class CrossDimensionalPeriodicEncoderLayer(nn.Module):
     def forward(self, x, attn_mask=None, tau=None, delta=None):
         B, C, L, D = x.shape
         x = rearrange(x, 'B C L D -> (B L) C D')
-        # x = rearrange(x, 'B C L D -> B C (L D)')/
         res = x
         x, attn = self.cross_dimensional_attention(
             x, x, x,
@@ -208,22 +190,19 @@ class CrossDimensionalPeriodicEncoder(nn.Module):
         return x, attns
 
 class LinearPretrainHead(nn.Module):
-    def __init__(self, patch_sizes, seq_len, d_model, dropout=0., n_vars=11):
+    def __init__(self, patch_size, seq_len, d_model, dropout=0., n_vars=11):
         super(LinearPretrainHead, self).__init__()
-        self.patch_sizes = patch_sizes
+        self.patch_size = patch_size
         self.seq_len = seq_len
         self.n_vars = n_vars
         self.dropout = nn.Dropout(dropout)
-        self.linears = nn.ModuleList()
-        for patch_size in patch_sizes:
-            self.linears.append(nn.Linear(d_model, patch_size))
+        self.linear = nn.Linear(d_model, patch_size)
     
     def forward(self, xs):
         # xs Ps*[B, C, L, D] ids_stores [Ps, B, C*L]
-        for i, patch_size in enumerate(self.patch_sizes):
-            xs[i] = self.linears[i](self.dropout(xs[i]))
-            xs[i] = rearrange(xs[i], 'B C L P -> B (L P) C', P=patch_size)[:,:self.seq_len,:] # [B, L, C]
-        return xs # Ps * [B L C]
+        x = self.linear(self.dropout(xs))
+        x = rearrange(x, 'B C L P -> B (L P) C', P=self.patch_size)[:,:self.seq_len,:] # [B, L, C]
+        return x # [B, L, C]
 
 
 class Model(nn.Module):
@@ -237,60 +216,54 @@ class Model(nn.Module):
         self.individual = configs.individual
 
 
-        self.msppe = MultiScalePeriodicPatchEmbedding(self.seq_len, top_k=configs.top_k, d_model=configs.d_model, dropout=configs.dropout)
-        self.patch_sizes = self.msppe.patch_sizes
+        self.patch_size = configs.patch_size_ssl
+        self.msppe = MultiScalePeriodicPatchEmbedding(self.seq_len, patch_size=self.patch_size, d_model=configs.d_model, dropout=configs.dropout)
 
-        self.encoders = nn.ModuleList()
-        for patch_size in self.patch_sizes:
-            self.encoders.append(
-                CrossDimensionalPeriodicEncoder(
-                   [
-                        CrossDimensionalPeriodicEncoderLayer(
-                            AttentionLayer(
-                                FullAttention(False, configs.factor, attention_dropout=configs.dropout,
-                                            output_attention=configs.output_attention), configs.d_model, configs.n_heads),
-                            AttentionLayer(
-                                FullAttention(False, configs.factor, attention_dropout=configs.dropout,
-                                            output_attention=configs.output_attention), configs.d_model, configs.n_heads),
-                            configs.d_model,
-                            configs.d_ff,
-                            dropout=configs.dropout,
-                            activation=configs.activation
-                        ) for l in range(configs.e_layers)
-                    ],
-                    norm_layer=nn.LayerNorm(configs.d_model)
-                )
-            )
+        self.encoder = CrossDimensionalPeriodicEncoder(
+            [
+                CrossDimensionalPeriodicEncoderLayer(
+                    AttentionLayer(
+                        FullAttention(False, configs.factor, attention_dropout=configs.dropout,
+                                    output_attention=configs.output_attention), configs.d_model, configs.n_heads),
+                    AttentionLayer(
+                        FullAttention(False, configs.factor, attention_dropout=configs.dropout,
+                                    output_attention=configs.output_attention), configs.d_model, configs.n_heads),
+                    configs.d_model,
+                    configs.d_ff,
+                    dropout=configs.dropout,
+                    activation=configs.activation
+                ) for l in range(configs.e_layers)
+            ],
+            norm_layer=nn.LayerNorm(configs.d_model)
+        )
+
 
         if self.pretrain:
-            self.head = LinearPretrainHead(self.patch_sizes, self.seq_len, configs.d_model, dropout=configs.dropout, n_vars=configs.enc_in)
+            self.head = LinearPretrainHead(self.patch_size, self.seq_len, configs.d_model, dropout=configs.dropout, n_vars=configs.enc_in)
         # else:    
         #     self.head = LinearPredictionHead(self.patch_sizes, self.seq_len, self.pred_len, configs.d_model, dropout=configs.dropout)
 
 
     def forward(self, x_enc, x_mark_enc, x_dec, x_mark_dec):
-        # # Normalization from Non-stationary Transformer
-        # means = x_enc.mean(1, keepdim=True).detach()
-        # x_enc = x_enc - means
-        # stdev = torch.sqrt(torch.var(x_enc, dim=1, keepdim=True, unbiased=False) + 1e-5)
-        # x_enc /= stdev
+        # Normalization from Non-stationary Transformer
+        means = x_enc.mean(1, keepdim=True).detach()
+        x_enc = x_enc - means
+        stdev = torch.sqrt(torch.var(x_enc, dim=1, keepdim=True, unbiased=False) + 1e-5)
+        x_enc /= stdev
 
 
         B, L, C = x_enc.shape
 
         # Multi-scale periodic patch embedding 
-        xs_enc, masks = self.msppe(x_enc) # Ps*[B, C, L, D], [B, Ps]
+        x_enc, masks = self.msppe(x_enc) # Ps*[B, C, L, D], [B, Ps]
         # Encoder and Decoder
-        enc_outs = []
-        for i, x_enc in enumerate(xs_enc):
-            enc_out, attns = self.encoders[i](x_enc) # [B, C, VT, D]
-            enc_outs.append(enc_out)
+        enc_out, attns = self.encoder(x_enc) # [B, C, VT, D]
 
         # Head
-        dec_out = self.head(enc_outs)
+        dec_out = self.head(enc_out)
 
-        # # De-Normalization from Non-stationary Transformer
-        # dec_out = dec_out * (stdev[:, 0, :].unsqueeze(1).repeat(1, self.seq_len, 1))
-        # dec_out = dec_out + (means[:, 0, :].unsqueeze(1).repeat(1, self.seq_len, 1))
+        # De-Normalization from Non-stationary Transformer
+        dec_out = dec_out * (stdev[:, 0, :].unsqueeze(1).repeat(1, self.seq_len, 1))
+        dec_out = dec_out + (means[:, 0, :].unsqueeze(1).repeat(1, self.seq_len, 1))
 
         return dec_out, masks

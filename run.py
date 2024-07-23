@@ -7,6 +7,12 @@ from exp.exp_main import Exp_Main
 import random
 import numpy as np
 
+def get_patch_sizes(seq_len):
+    # get the period list, first element is inf if exclude_zero is False
+    peroid_list = 1 / torch.fft.rfftfreq(seq_len)[1:]
+    patch_sizes = peroid_list.floor().int().unique().detach().cpu().numpy()
+    return patch_sizes
+
 if __name__ == '__main__':
     fix_seed = 2024
     random.seed(fix_seed)
@@ -30,14 +36,16 @@ if __name__ == '__main__':
     parser.add_argument('--target', type=str, default='OT', help='target feature in S or MS task')
     parser.add_argument('--freq', type=str, default='h',
                         help='freq for time features encoding, options:[s:secondly, t:minutely, h:hourly, d:daily, b:business days, w:weekly, m:monthly], you can also use more detailed freq like 15min or 3h')
+    parser.add_argument('--pretrain_save_path', type=str, default='/root/autodl-tmp/pretrains/', help='path to save pretrained model')
     parser.add_argument('--model_save_path', type=str, default='/root/autodl-tmp/checkpoints/', help='path to save model')
     parser.add_argument('--results_save_path', type=str, default='/root/autodl-tmp/results/', help='path to save results')
     parser.add_argument('--test_results_save_path', type=str, default='/root/autodl-tmp/test_results/', help='path to save test results')
+    parser.add_argument('--model_save_filename', type=str, default='checkpoint.pth', help='model filename')
 
     # reconstruction task (Pretrain)
     parser.add_argument('--pretrain', action='store_true', help='pretrain or not', default=False)
     parser.add_argument('--pretrain_epochs', type=int, default=10, help='pretrain epochs')
-    parser.add_argument('--mask_ratio', type=float, default=0.75, help='masking ratio for the input')
+    parser.add_argument('--mask_ratio', type=float, default=0.4, help='masking ratio for the input')
 
     # finetune task
     parser.add_argument('--finetune', action='store_true', help='finetune or not', default=False)
@@ -140,33 +148,65 @@ if __name__ == '__main__':
 
     else:
         if args.is_training:
-            for ii in range(args.itr):
-                # setting record of experiments
-                setting = '{}_{}_{}_ft{}_sl{}_ll{}_pl{}_dm{}_nh{}_el{}_dl{}_df{}_fc{}_eb{}_dt{}_{}_{}'.format(
-                    args.model_id,
-                    args.model,
-                    args.data,
-                    args.features,
-                    args.seq_len,
-                    args.label_len,
-                    args.pred_len,
-                    args.d_model,
-                    args.n_heads,
-                    args.e_layers,
-                    args.d_layers,
-                    args.d_ff,
-                    args.factor,
-                    args.embed,
-                    args.distil,
-                    args.des, ii)
+            if args.pretrain:
+                patch_sizes = get_patch_sizes(args.seq_len)[::-1][:5]
+                for patch_size in patch_sizes:
+                    args.patch_size_ssl = patch_size
+                    for ii in range(args.itr):
+                        # setting record of experiments
+                        setting = '{}_{}_{}_ft{}_sl{}_ll{}_pl{}_dm{}_nh{}_el{}_dl{}_df{}_fc{}_eb{}_dt{}_{}_{}'.format(
+                            args.model_id,
+                            args.model,
+                            args.data,
+                            args.features,
+                            args.seq_len,
+                            args.label_len,
+                            args.pred_len,
+                            args.d_model,
+                            args.n_heads,
+                            args.e_layers,
+                            args.d_layers,
+                            args.d_ff,
+                            args.factor,
+                            args.embed,
+                            args.distil,
+                            args.des, ii)
+                    
+                        exp = Exp(args)  # set experiments
+                        print('>>>>>>>start training : {}>>>>>>>>>>>>>>>>>>>>>>>>>>'.format(setting))
+                        exp.train(setting)
 
-                exp = Exp(args)  # set experiments
-                print('>>>>>>>start training : {}>>>>>>>>>>>>>>>>>>>>>>>>>>'.format(setting))
-                exp.train(setting)
+                        print('>>>>>>>testing : {}<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'.format(setting))
+                        exp.test(setting, load_weight=True)
+                        torch.cuda.empty_cache()
+            else:
+                for ii in range(args.itr):
+                    # setting record of experiments
+                    setting = '{}_{}_{}_ft{}_sl{}_ll{}_pl{}_dm{}_nh{}_el{}_dl{}_df{}_fc{}_eb{}_dt{}_{}_{}'.format(
+                        args.model_id,
+                        args.model,
+                        args.data,
+                        args.features,
+                        args.seq_len,
+                        args.label_len,
+                        args.pred_len,
+                        args.d_model,
+                        args.n_heads,
+                        args.e_layers,
+                        args.d_layers,
+                        args.d_ff,
+                        args.factor,
+                        args.embed,
+                        args.distil,
+                        args.des, ii)
 
-                print('>>>>>>>testing : {}<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'.format(setting))
-                exp.test(setting, load_weight=True)
-                torch.cuda.empty_cache()
+                    exp = Exp(args)  # set experiments
+                    print('>>>>>>>start training : {}>>>>>>>>>>>>>>>>>>>>>>>>>>'.format(setting))
+                    exp.train(setting)
+
+                    print('>>>>>>>testing : {}<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'.format(setting))
+                    exp.test(setting, load_weight=True)
+                    torch.cuda.empty_cache()
         else:
             ii = 0
             setting = '{}_{}_{}_ft{}_sl{}_ll{}_pl{}_dm{}_nh{}_el{}_dl{}_df{}_fc{}_eb{}_dt{}_{}_{}'.format(

@@ -63,11 +63,11 @@ class EarlyStopping:
         self.delta = delta
         print(f'Patience count starts from {self.watch_epoch + 1} epoch')
 
-    def __call__(self, current_epoch, val_loss, model, path):
+    def __call__(self, current_epoch, val_loss, model, path, filename):
         score = -val_loss
         if self.best_score is None:
             self.best_score = score
-            self.save_checkpoint(val_loss, model, path)
+            self.save_checkpoint(val_loss, model, path, filename)
         elif score < self.best_score + self.delta:
             if current_epoch > self.watch_epoch:
                 self.counter += 1
@@ -77,13 +77,13 @@ class EarlyStopping:
                     self.save_last_checkpoint(model, path)
         else:
             self.best_score = score
-            self.save_checkpoint(val_loss, model, path)
+            self.save_checkpoint(val_loss, model, path, filename)
             self.counter = 0
 
-    def save_checkpoint(self, val_loss, model, path):
+    def save_checkpoint(self, val_loss, model, path, filename):
         if self.verbose:
             print(f'Validation loss decreased ({self.val_loss_min:.6f} --> {val_loss:.6f}).  Saving model ...')
-        torch.save(model.state_dict(), path + '/' + 'checkpoint.pth')
+        torch.save(model.state_dict(), path + '/' + filename)
         self.val_loss_min = val_loss
     
     def save_last_checkpoint(self, model, path):

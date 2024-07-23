@@ -9,8 +9,6 @@ from torch import optim
 import os
 import time
 import warnings
-
-import re
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -68,13 +66,13 @@ class Exp_Main(Exp_Basic):
             criterion = nn.L1Loss()
         return criterion
 
-    def _makedir(self, path):
-        if not os.path.exists(path):
-            os.makedirs(path)
-        # if not os.path.exists(self.results_save_path):
-        #     os.makedirs(self.results_save_path)
-        # if not os.path.exists(self.test_results_save_path):
-        #     os.makedirs(self.test_results_save_path)
+    def _makedirs(self):
+        if not os.path.exists(self.model_save_path):
+            os.makedirs(self.model_save_path)
+        if not os.path.exists(self.results_save_path):
+            os.makedirs(self.results_save_path)
+        if not os.path.exists(self.test_results_save_path):
+            os.makedirs(self.test_results_save_path)
 
     def _model_forward(self, batch_x, batch_x_mark, dec_inp, batch_y_mark):
         if self.args.use_amp:
@@ -103,6 +101,7 @@ class Exp_Main(Exp_Basic):
                 outputs, mask = self._model_forward(batch_x, batch_x_mark, batch_x, batch_x_mark)
 
                 loss = criterion(outputs, batch_x, mask)
+                # print(loss)
 
                 total_loss.append(loss.item())
         total_loss = np.average(total_loss)
@@ -136,10 +135,10 @@ class Exp_Main(Exp_Basic):
         train_data, train_loader = self._get_data(flag='train')
         vali_data, vali_loader = self._get_data(flag='val')
         test_data, test_loader = self._get_data(flag='test')
-        
-        self.model_save_path = os.path.join(self.args.model_save_path, setting)
-        self.results_save_path = os.path.join(self.args.results_save_path, setting)
-        self.test_results_save_path = os.path.join(self.args.test_results_save_path, setting)
+
+        self.model_save_path = os.path.join(self.args.model_save_path, setting, "default")
+        self.results_save_path = os.path.join(self.args.results_save_path, setting, "default")
+        self.test_results_save_path = os.path.join(self.args.test_results_save_path, setting, "default")
         
         early_stopping = EarlyStopping(patience=self.args.patience, verbose=True)
 
@@ -153,30 +152,29 @@ class Exp_Main(Exp_Basic):
         test_criterion = self._select_criterion()
 
         if self.args.pretrain:
-            patch_size = self.args.patch_size_ssl
-            criterion = ReconstructionLoss(patch_size)
-            test_criterion = ReconstructionLoss(patch_size)
-            pretrain_setting = re.sub(r'_ll\d+_pl\d+', '', setting)
-            self.pretrain_model_save_path = os.path.join(self.args.model_save_path, pretrain_setting, 'PS'+str(patch_size))
-            self.pretrain_results_save_path = os.path.join(self.args.results_save_path, pretrain_setting, 'PS'+str(patch_size))
-            self.pretrain_test_results_save_path = os.path.join(self.args.test_results_save_path, pretrain_setting, 'PS'+str(patch_size))
-            self._makedir(self.pretrain_model_save_path)
-            self._makedir(self.pretrain_results_save_path)
-            self._makedir(self.pretrain_test_results_save_path)
-   
-        else:
-            if self.args.finetune:
-                assert not self.args.pretrain, "Cannot pretrain and finetune at the same time"
-                self.transfer_weights(self.pretrain_model_save_path)
+            import re
+            # setting "sl365_ll0_pl30_dm128_nh8_el2_dl1_df256_fc1_ebtimeF_dtTrue_20240615_0" -> "sl365_dm128_nh8_el2_dl1_df256_fc1_ebtimeF_dtTrue_20240615_0"
+            # setting = re.sub(r'_ll\d+_pl\d+', '', setting)
+            self.model_save_path = os.path.join(self.args.model_save_path, setting, "pretrain")
+            self.results_save_path = os.path.join(self.args.results_save_path, setting, "pretrain")
+            self.test_results_save_path = os.path.join(self.args.test_results_save_path, setting, "pretrain")
 
-                early_stopping = EarlyStopping(patience=self.args.patience, watch_epoch=self.args.freeze_epochs, verbose=True)
+            criterion = ReconstructionLoss()
+            test_criterion = ReconstructionLoss()
 
-                scheduler = self._select_scheduler(model_optim, self.args.learning_rate, train_steps, self.args.train_epochs) if self.args.freeze_epochs == 0 else [self._select_scheduler(model_optim, self.args.learning_rate, train_steps, self.args.freeze_epochs), self._select_scheduler(model_optim, self.args.learning_rate//2, train_steps, self.args.train_epochs-self.args.freeze_epochs)]
-            
-            self._makedir(self.model_save_path)
-            self._makedir(self.results_save_path)
-            self._makedir(self.test_results_save_path)
+        if self.args.finetune:
+            assert not self.args.pretrain, "Cannot pretrain and finetune at the same time"
+            pretrain_model_path = os.path.join(self.args.model_save_path, setting, "pretrain") + '/checkpoint.pth'
+            self.transfer_weights(pretrain_model_path)
+            self.model_save_path = os.path.join(self.args.model_save_path, setting, "finetune")
+            self.results_save_path = os.path.join(self.args.results_save_path, setting, "finetune")
+            self.test_results_save_path = os.path.join(self.args.test_results_save_path, setting, "finetune")
+
+            early_stopping = EarlyStopping(patience=self.args.patience, watch_epoch=self.args.freeze_epochs, verbose=True)
+
+            scheduler = self._select_scheduler(model_optim, self.args.learning_rate, train_steps, self.args.train_epochs) if self.args.freeze_epochs == 0 else [self._select_scheduler(model_optim, self.args.learning_rate, train_steps, self.args.freeze_epochs), self._select_scheduler(model_optim, self.args.learning_rate//2, train_steps, self.args.train_epochs-self.args.freeze_epochs)]
         
+        self._makedirs()
 
         if self.args.use_amp:
             scaler = torch.cuda.amp.GradScaler()
@@ -225,7 +223,7 @@ class Exp_Main(Exp_Basic):
 
                 print("Epoch: {0}, Steps: {1} | Train Loss: {2:.7f} Vali Loss: {3:.7f} Test Loss: {4:.7f}".format(
                     epoch + 1, train_steps, train_loss, vali_loss, test_loss))
-                early_stopping(epoch + 1, vali_loss, self.model, self.pretrain_model_save_path, self.args.model_save_filename)
+                early_stopping(epoch + 1, vali_loss, self.model, self.model_save_path)
                 print("Adjusting learning rate to: {:.7f}".format(scheduler.get_last_lr()[0]))
                 if early_stopping.early_stop:
                     print("Early stopping")
@@ -289,7 +287,7 @@ class Exp_Main(Exp_Basic):
 
                     print("Epoch: {0}, Steps: {1} | Train Loss: {2:.7f} Vali Loss: {3:.7f} Test Loss: {4:.7f}".format(
                         epoch + 1, train_steps, train_loss, vali_loss, test_loss))
-                    early_stopping(epoch + 1, vali_loss, self.model, self.model_save_path, self.args.model_save_filename)
+                    early_stopping(epoch + 1, vali_loss, self.model, self.model_save_path)
                     print("Adjusting learning rate to: {:.7f}".format(scheduler[0].get_last_lr()[0]))
 
                 print("Stage 2 of finetuning")
@@ -346,7 +344,7 @@ class Exp_Main(Exp_Basic):
 
                     print("Epoch: {0}, Steps: {1} | Train Loss: {2:.7f} Vali Loss: {3:.7f} Test Loss: {4:.7f}".format(
                         epoch + 1, train_steps, train_loss, vali_loss, test_loss))
-                    early_stopping(epoch + 1, vali_loss, self.model, self.model_save_path, self.args.model_save_filename)
+                    early_stopping(epoch + 1, vali_loss, self.model, self.model_save_path)
                     print("Adjusting learning rate to: {:.7f}".format(scheduler[1].get_last_lr()[0]))
                     if early_stopping.early_stop:
                         print("Early stopping")
@@ -407,7 +405,7 @@ class Exp_Main(Exp_Basic):
 
                     print("Epoch: {0}, Steps: {1} | Train Loss: {2:.7f} Vali Loss: {3:.7f} Test Loss: {4:.7f}".format(
                         epoch + 1, train_steps, train_loss, vali_loss, test_loss))
-                    early_stopping(epoch + 1, vali_loss, self.model, self.model_save_path, self.args.model_save_filename)
+                    early_stopping(epoch + 1, vali_loss, self.model, self.model_save_path)
                     print("Adjusting learning rate to: {:.7f}".format(scheduler.get_last_lr()[0]))
                     if early_stopping.early_stop:
                         print("Early stopping")
@@ -418,49 +416,30 @@ class Exp_Main(Exp_Basic):
     def test(self, setting, load_weight=True):
         test_data, test_loader = self._get_data(flag='test')
         if load_weight:
-            
             if self.args.pretrain:
                 print('loading pretrain model weight')
-                self.model.load_state_dict(torch.load(os.path.join(self.pretrain_model_save_path, self.args.model_save_filename), map_location=self.device))
-                
+                self.model.load_state_dict(torch.load(os.path.join(self.args.model_save_path + setting, 'pretrain', 'checkpoint.pth'), map_location=self.device))
+                test_results_save_path = self.args.test_results_save_path + setting + '/pretrain/'
+                results_save_path = self.args.results_save_path + setting + '/pretrain/'
             elif self.args.finetune:
                 print('loading finetune model weight')
-                self.model.load_state_dict(torch.load(os.path.join(self.args.model_save_path + setting, self.args.model_save_filename), map_location=self.device))
-
+                self.model.load_state_dict(torch.load(os.path.join(self.args.model_save_path + setting, 'finetune', 'checkpoint.pth'), map_location=self.device))
+                test_results_save_path = self.args.test_results_save_path + setting + '/finetune/'
+                results_save_path = self.args.results_save_path + setting + '/finetune/'
             else:
                 print('loading supervised model weight')
-                self.model.load_state_dict(torch.load(os.path.join(self.args.model_save_path + setting, self.args.model_save_filename), map_location=self.device))
-                self.model_save_path = os.path.join(self.args.model_save_path, setting)
-                self.results_save_path = os.path.join(self.args.results_save_path, setting)
-                self.test_results_save_path = os.path.join(self.args.test_results_save_path, setting)
+                self.model.load_state_dict(torch.load(os.path.join(self.args.model_save_path + setting, 'default', 'checkpoint.pth'), map_location=self.device))
+                test_results_save_path = self.args.test_results_save_path + setting + '/default/'
+                results_save_path = self.args.results_save_path + setting + '/default/'
+
+        if not os.path.exists(test_results_save_path):
+            os.makedirs(test_results_save_path)
+
+        if not os.path.exists(results_save_path):
+            os.makedirs(results_save_path)
     
         preds = []
         trues = []
-
-        # hooks: get the gates of AdaptiveFourierTransformGateLayer Class of Model
-        # layers = list(dict(self.model.named_children()).keys())
-        # print(layers)
-        gates_list = []
-        def getGates(name):
-            # the hook signature
-            def hook(model, input, output):
-                # print(1)
-                # print(output.shape)
-                gates_list.append(output.detach().cpu().numpy())
-            return hook
-        
-        hooks = []
-        # register forward hooks on the layers of choice 
-        # from models.MSPT_CI import AdaptiveFourierTransformGateLayer   
-        from models.PGMST import PeriodGuidedMultiScaleRouter
-        for name, module in self.model.named_modules():
-        #     print(name)
-            if isinstance(module, PeriodGuidedMultiScaleRouter):
-                hooks.append(module.register_forward_hook(getGates(name)))
-        # for layer in layers:
-            # if isinstance(getattr(self.model, layer), PeriodGuidedMultiScaleRouter):
-            #     # getattr(self.model, layer).register_forward_hook(getGates(layer))
-            #     hooks.append(getattr(self.model, layer).register_forward_hook(getGates(layer)))
     
         self.model.eval()
 
@@ -473,27 +452,30 @@ class Exp_Main(Exp_Basic):
                     # encoder - decoder
                     outputs, _ = self._model_forward(batch_x, batch_x_mark, batch_x, batch_x_mark)
 
-                    outputs = outputs.detach().cpu().numpy()
                     batch_x = batch_x.detach().cpu().numpy()
-                    
-                    # print(output.shape, batch_x.shape)
-                    if test_data.scale and self.args.inverse:
-                        shape = outputs.shape
-                        outputs = test_data.inverse_transform(outputs.squeeze(0)).reshape(shape)
-                        batch_x = test_data.inverse_transform(batch_x.squeeze(0)).reshape(shape)
-                    
-                    pred = outputs[:, :, -1:]
-                    true = batch_x[:, :, -1:]
-                    preds.append(pred)
-                    trues.append(true)
-                    if i % 20 == 0:
-                        # input = batch_x.detach().cpu().numpy()
-                        # if test_data.scale and self.args.inverse:
-                        #     shape = input.shape
-                        #     input = test_data.inverse_transform(input.squeeze(0)).reshape(shape)
-                        gt = true[0, :, -1]
-                        pd = pred[0, :, -1]
-                        visual(gt, pd, os.path.join(self.pretrain_test_results_save_path, str(i) +  '.pdf'))
+
+                    for j, output in enumerate(outputs):
+                        B, L, C = output.shape
+                        output = output.detach().cpu().numpy()
+                        
+                        # print(output.shape, batch_x.shape)
+                        if test_data.scale and self.args.inverse:
+                            shape = output.shape
+                            output = test_data.inverse_transform(output.squeeze(0)).reshape(shape)
+                            xb = test_data.inverse_transform(batch_x.squeeze(0)).reshape(shape)
+                        
+                        pred = output[:, :, -1:]
+                        true = xb[:, :, -1:]
+                        preds.append(pred)
+                        trues.append(true)
+                        if i % 20 == 0:
+                            # input = batch_x.detach().cpu().numpy()
+                            # if test_data.scale and self.args.inverse:
+                            #     shape = input.shape
+                            #     input = test_data.inverse_transform(input.squeeze(0)).reshape(shape)
+                            gt = true[0, :, -1]
+                            pd = pred[0, :, -1]
+                            visual(gt, pd, os.path.join(test_results_save_path, str(i) + '_P_' + str(j) +  '.pdf'))
         else:
             with torch.no_grad():
                 for i, (batch_x, batch_y, batch_x_mark, batch_y_mark) in enumerate(test_loader):
@@ -533,13 +515,7 @@ class Exp_Main(Exp_Basic):
                             input = test_data.inverse_transform(input.squeeze(0)).reshape(shape)
                         gt = np.concatenate((input[0, -365:, -1], true[0, :, -1]), axis=0)
                         pd = np.concatenate((input[0, -365:, -1], pred[0, :, -1]), axis=0)
-                        visual(gt, pd, os.path.join(self.test_results_save_path, str(i) + '.pdf'))
-        
-        # for h in h_list: h.remove()
-        for hook in hooks: hook.remove()
-        # for layer in layers:
-        #     if isinstance(getattr(self.model, layer), AdaptiveFourierTransformGateLayer):
-        #         getattr(self.model, layer).remove_hook()
+                        visual(gt, pd, os.path.join(test_results_save_path, str(i) + '.pdf'))
 
         preds = np.array(preds)
         trues = np.array(trues)
@@ -548,13 +524,6 @@ class Exp_Main(Exp_Basic):
         trues = trues.reshape(-1, trues.shape[-2], trues.shape[-1])
         print('test shape:', preds.shape, trues.shape)
 
-        gates_list = np.array(gates_list) 
-        print('gates_list shape:', gates_list.shape)
-        gates_list = gates_list.reshape(-1, gates_list.shape[-1])
-        print('gates_list shape:', gates_list.shape)
-        # plt.close()
-        # sns.heatmap(gates_list, cmap='viridis')
-        # plt.savefig('./gates1.pdf')
 
         mae, mse, rmse, mape, mspe, rse, corr, r2_score, acc = metric(preds, trues)
         print('mse:{}, mae:{}, rmse:{}, mape:{}, mspe:{}, rse:{}, r2_score:{}, acc:{}'.format(mse, mae, rmse, mape, mspe, rse, r2_score, acc))
@@ -567,16 +536,10 @@ class Exp_Main(Exp_Basic):
         f.write('\n')
         f.write('\n')
         f.close()
-        
-        if self.args.pretrain:
-            np.save(self.pretrain_results_save_path + '/metrics.npy', np.array([mae, mse, rmse, mape, mspe, rse, r2_score, acc]))
-            np.save(self.pretrain_results_save_path + '/pred.npy', preds) 
-            np.save(self.pretrain_results_save_path + '/true.npy', trues)
-        else:
-            np.save(self.results_save_path + '/metrics.npy', np.array([mae, mse, rmse, mape, mspe, rse, r2_score, acc]))
-            np.save(self.results_save_path + '/pred.npy', preds) 
-            np.save(self.results_save_path + '/true.npy', trues)
-            np.save(self.results_save_path + '/gates.npy', gates_list)
+
+        np.save(results_save_path + 'metrics.npy', np.array([mae, mse, rmse, mape, mspe, rse, r2_score, acc]))
+        np.save(results_save_path + 'pred.npy', preds)
+        np.save(results_save_path + 'true.npy', trues)
     
     def test_climatology(self, setting, load_weight=True):
         test_data, test_loader = self._get_data(flag='test')
@@ -730,44 +693,6 @@ class Exp_Main(Exp_Basic):
             else:
                 print(f"weights from {weights_path} successfully transferred!")
         self.model = self.model.to(self.device)
-    
-    # get gates from AdaptiveFourierTransformGateLayer Class
-    # def model_with_gates_hook(self, model):
-    #     gates_list = []
-
-    #     def get_gates(name):
-    #         def hook(model, input, output):
-    #             gates_list.append(output.detach().cpu().numpy())
-    #         return hook
-    
-    #     from models.MSPT_CI import AdaptiveFourierTransformGateLayer
-    #     for layer in model.modules():
-    #         if isinstance(layer, AdaptiveFourierTransformGateLayer):
-    #             layer.register_forward_hook(get_gates(layer))
-
-    #     return model
-    
-    # def clear_gates_hook(self, model):
-    #     for layer in model.modules():
-    #         if hasattr(layer, 'hooks'):
-    #             for hook in layer.hooks:
-    #                 hook.remove()
-    #     return model
-
-    # def get_gate_layer_output(self, ):
-    #     gates_list = []
-
-    #     def get_gates(name):
-    #         def hook(model, input, output):
-    #             gates_list.append(output.detach().cpu().numpy())
-    #         return hook
-        
-    #     from models.MSPT_CI import AdaptiveFourierTransformGateLayer
-    #     for layer in self.model.modules():
-    #         if isinstance(layer, AdaptiveFourierTransformGateLayer):
-    #             layer.register_forward_hook(get_gates(layer))
-
-    #     return gates_list
 
     # def get_layer_output(self, inp, layers=None, unwrap=False):
     #     """

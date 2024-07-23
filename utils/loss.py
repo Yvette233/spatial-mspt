@@ -224,13 +224,75 @@ class TILDEQ_LOSS_OFFICIAL(nn.Module):
         assert loss == loss, "Loss Nan!"
         return loss
 
+# class ReconstructionLoss(nn.Module):
+#     def __init__(self):
+#         super().__init__()
+    
+#     def forward(self, input, target, mask):
+#         # print(input.shape, target.shape, mask.shape)
+#         loss = (input - target) ** 2
+#         loss = loss.mean(dim=-1)
+#         loss = (loss * mask).sum() / mask.sum()
+#         return loss
+
+from einops import rearrange
+from math import ceil
+
+
+# class ReconstructionLoss(nn.Module):
+#     def __init__(self):
+#         super().__init__()
+#         self.patch_sizes = self.get_patch_sizes(365)
+#     def get_patch_sizes(self, seq_len):
+#         # get the period list, first element is inf if exclude_zero is False
+#         peroid_list = 1 / torch.fft.rfftfreq(seq_len)[1:]
+#         patch_sizes = peroid_list.floor().int().unique()
+#         return patch_sizes
+    
+#     def forward(self, inputs, target, masks):
+#         # print(input.shape, target.shape, mask.shape)
+#         losses = []
+#         for input, mask, patch_size in zip(inputs, masks, self.patch_sizes):
+#             B, L, C = target.shape
+#             temp_target = target.clone()
+#             input = rearrange(input, 'B L C -> B C L') # [B, C, L]
+#             input = F.pad(input, (0, ceil(L / patch_size) * patch_size - L), mode='constant', value=0)
+#             input = input.unfold(-1, patch_size, patch_size)[:, -1, :, :] # [B, L, P]
+#             temp_target = rearrange(temp_target, 'B L C -> B C L') # [B, C, L]
+#             temp_target = F.pad(temp_target, (0, ceil(L / patch_size) * patch_size - L), mode='constant', value=0)
+#             temp_target = temp_target.unfold(-1, patch_size, patch_size)[:, -1, :, :] # [B, L, P]
+#             sst_mask = mask[:, -1, :] # [B, L]
+
+#             loss = (input - temp_target) ** 2 # [B, L, P]
+#             loss = loss.mean(dim=-1) # [B, L]
+#             # if not training:
+#             #     print(f"{patch_size}:1:{loss}")
+#             loss = (loss * sst_mask).sum() / sst_mask.sum() if sst_mask.sum() >= 1 else loss[0][0]
+#             # if not training:
+#             #     print(f"{patch_size}:2:{loss}")
+#             losses.append(loss) # [B]
+#         losses = torch.stack(losses)
+#         return losses.mean()
+
+
 class ReconstructionLoss(nn.Module):
-    def __init__(self):
+    def __init__(self, patch_size):
         super().__init__()
+        self.patch_size = patch_size
     
     def forward(self, input, target, mask):
         # print(input.shape, target.shape, mask.shape)
-        loss = (input - target) ** 2
+        patch_size = self.patch_size
+        B, L, C = target.shape
+        input = rearrange(input, 'B L C -> B C L') # [B, C, L]
+        input = F.pad(input, (0, ceil(L / patch_size) * patch_size - L), mode='constant', value=0)
+        input = input.unfold(-1, patch_size, patch_size)[:, -1, :, :] # [B, L, P]
+        target = rearrange(target, 'B L C -> B C L')
+        target = F.pad(target, (0, ceil(L / patch_size) * patch_size - L), mode='constant', value=0)
+        target = target.unfold(-1, patch_size, patch_size)[:, -1, :, :]
+        mask = mask[:, -1, :]
+
+        loss = (input - target) ** 2 # [B, L, P]
         loss = loss.mean(dim=-1)
-        loss = (loss * mask).sum() / mask.sum()
+        loss = (loss * mask).sum() / mask.sum() if mask.sum() >= 1 else loss[0][0]
         return loss

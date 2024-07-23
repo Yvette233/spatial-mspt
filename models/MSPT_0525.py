@@ -39,7 +39,7 @@ class MultiScalePeriodicPatchEmbedding(nn.Module):
         for patch_size in self.patch_sizes:
             self.value_embeddings.append(nn.Linear(patch_size, d_model, bias=False))
             self.padding_patch_layers.append(nn.ReplicationPad1d((0, ceil(seq_len / patch_size) * patch_size - seq_len)))
-        self.position_embedding = PositionalEmbedding2D(d_model, 11, ceil(seq_len / patch_size))
+        self.position_embedding = PositionalEmbedding2D(d_model, 11, 256)
         self.dropout = nn.Dropout(dropout)
     
     def get_patch_sizes(self, seq_len):
@@ -188,7 +188,7 @@ class CrossDimensionalPeriodicEncoderLayer(nn.Module):
 
         res = x
         x = self.cross_dimensional_mlp(x)
-        x = self.norm1(res + self.dropout(x))
+        x = self.norm2(res + self.dropout(x))
 
         x = rearrange(x, '(B L) C D -> (B C) L D', L=L)
         res = x

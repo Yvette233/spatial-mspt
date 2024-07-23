@@ -2,571 +2,330 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from layers.Embed import PositionalEmbedding, TokenEmbedding, TemporalEmbedding, TimeFeatureEmbedding, positional_encoding
+from layers.Embed import PositionalEmbedding, PositionalEmbedding2D, TemporalEmbedding, TimeFeatureEmbedding
 from layers.Transformer_EncDec import Encoder, EncoderLayer, Decoder, DecoderLayer
-from layers.SelfAttention_Family import FullAttention, AttentionLayer
-from layers.Revin import RevIN
+from layers.SelfAttention_Family import FullAttention
 
 import numpy as np
-from math import sqrt
+from math import sqrt, ceil
 from einops import rearrange, repeat
 
-def random_masking(xb, mask_ratio):
-    # xb: [bs x num_patch x dim]
-    bs, L, D = xb.shape
-    x = xb.clone()
-    
-    len_keep = int(L * (1 - mask_ratio))
-        
-    noise = torch.rand(bs, L, device=xb.device)  # noise in [0, 1], bs x L
-        
-    # sort noise for each sample
-    ids_shuffle = torch.argsort(noise, dim=1)  # ascend: small is keep, large is remove
-    ids_restore = torch.argsort(ids_shuffle, dim=1)                                     # ids_restore: [bs x L]
-
-    # keep the first subset
-    ids_keep = ids_shuffle[:, :len_keep]                                                 # ids_keep: [bs x len_keep]         
-    x_kept = torch.gather(x, dim=1, index=ids_keep.unsqueeze(-1).repeat(1, 1, D))        # x_kept: [bs x len_keep x dim]
-   
-    # removed x
-    x_removed = torch.zeros(bs, L-len_keep, D, device=xb.device)                        # x_removed: [bs x (L-len_keep) x dim]
-    x_ = torch.cat([x_kept, x_removed], dim=1)                                          # x_: [bs x L x dim]
-
-    # combine the kept part and the removed one
-    x_masked = torch.gather(x_, dim=1, index=ids_restore.unsqueeze(-1).repeat(1, 1, D))    # x_masked: [bs x num_patch x dim]
-
-    # generate the binary mask: 0 is keep, 1 is remove
-    mask = torch.ones([bs, L], device=x.device)                                          # mask: [bs x num_patch]
-    mask[:, :len_keep] = 0
-    # unshuffle to get the binary mask
-    mask = torch.gather(mask, dim=1, index=ids_restore)                                  # [bs x num_patch]
-    return x_masked, x_kept, mask, ids_restore
-                                
-
-class DataEmbedding(nn.Module):
-    def __init__(self, c_in, d_model, embed_type='fixed', freq='h', dropout=0.1):
-        super(DataEmbedding, self).__init__()
-
-        self.value_embedding = TokenEmbedding(c_in=c_in, d_model=d_model)
-        self.position_embedding = PositionalEmbedding(d_model=d_model)
-        self.temporal_embedding = TemporalEmbedding(d_model=d_model, embed_type=embed_type,
-                                                    freq=freq) if embed_type != 'timeF' else TimeFeatureEmbedding(
-            d_model=d_model, embed_type=embed_type, freq=freq)
-        self.dropout = nn.Dropout(p=dropout)
-
-    def forward(self, x, x_mark):
-        if x_mark is None:
-            x = self.value_embedding(x) + self.position_embedding(x)
-        else:
-            x = self.value_embedding(
-                x) + self.temporal_embedding(x_mark) + self.position_embedding(x)
-        return self.dropout(x)
-    
-
-class SparseDispatcher(object):
-    def __init__(self, num_experts, gates):
-        """Create a SparseDispatcher."""
-
-        self._gates = gates
-        self._num_experts = num_experts
-
-        # sort experts
-        sorted_experts, index_sorted_experts = torch.nonzero(gates).sort(0)
-        _, self._expert_index = sorted_experts.split(1, dim=1)
-        # get according batch index for each expert
-        self._batch_index = torch.nonzero(gates)[index_sorted_experts[:, 1], 0]
-        self._part_sizes = (gates > 0).sum(0).tolist()
-        gates_exp = gates[self._batch_index.flatten()]
-        self._nonzero_gates = torch.gather(gates_exp, 1, self._expert_index)
-
-    def dispatch(self, inp):
-        # assigns samples to experts whose gate is nonzero
-        # expand according to batch index so we can just split by _part_sizes
-        inp_exp = inp[self._batch_index].squeeze(1)
-        return torch.split(inp_exp, self._part_sizes, dim=0)
-
-    def combine(self, expert_out, multiply_by_gates=True):
-        # apply exp to expert outputs, so we are not longer in log space
-        # stitched = torch.cat(expert_out, 0).exp()
-        stitched = torch.cat(expert_out, 0)
-        if multiply_by_gates:
-            stitched = torch.einsum("ikh,ik -> ikh", stitched, self._nonzero_gates) # [BN L D] [BN L] -> [BN L D]
-        zeros = torch.zeros(self._gates.size(0), expert_out[-1].size(1), expert_out[-1].size(2),
-                            requires_grad=True, device=stitched.device)
-        # combine samples that have been processed by the same k experts
-        combined = zeros.index_add(0, self._batch_index, stitched.float())
-        # add eps to all zero values in order to avoid nans when going back to log space
-        # combined[combined == 0] = np.finfo(float).eps
-        # back to log space
-        # return combined.log()
-        return combined
-
-
-class DualAttention(nn.Module):
-    def __init__(self, n_vars, num_patchs, patch_size, d_model, n_heads, d_keys=None, d_values=None,
-                  attention_dropout=0.1, pos_embed_dropout=0.1, learned_pos_embed=False, cascaded=True, 
-                  res_attention=False, cross=True):
-        super(DualAttention, self).__init__()
-
-        d_keys = d_keys or (d_model // n_heads)
-        d_values = d_values or (d_model // n_heads)
-
-        self.n_vars = n_vars
-        self.num_patchs = num_patchs
-        self.patch_size = patch_size
-        self.d_model = d_model
-        self.n_heads = n_heads
-        self.cross = cross
-        
-        ## intra_periodic_attention
-        if self.cross:
-            self.intra_periodic_tokens = nn.Parameter(torch.rand(1, n_vars, num_patchs, 1, 16))
-            self.intra_periodic_embedding_weights = nn.Parameter(torch.rand(num_patchs, 16, d_model))
-            self.intra_periodic_embedding_biases = nn.Parameter(torch.rand(num_patchs, d_model))
-
-            self.intra_periodic_pos_embed_q = positional_encoding(pe='zeros', learn_pe=True, q_len=1, d_model=d_model) if learned_pos_embed else positional_encoding(pe='sincos', learn_pe=False, q_len=1, d_model=d_model) # [1, 1, 1, d_model]
-
-            self.intra_periodic_pos_embed_kv = positional_encoding(pe='zeros', learn_pe=True, q_len=patch_size, d_model=d_model) if learned_pos_embed else positional_encoding(pe='sincos', learn_pe=False, q_len=patch_size, d_model=d_model)
-
-            self.intra_periodic_pos_embed_dropout = nn.Dropout(pos_embed_dropout)
-
-            self.intra_periodic_out_proj = nn.Linear(num_patchs, num_patchs * patch_size)
-
-        else:
-            self.intra_periodic_pos_embed = positional_encoding(pe='zeros', learn_pe=True, q_len=patch_size, d_model=d_model) if learned_pos_embed else positional_encoding(pe='sincos', learn_pe=False, q_len=patch_size, d_model=d_model)
-
-            self.intra_periodic_pos_embed_dropout = nn.Dropout(pos_embed_dropout)
-
-            self.intra_periodic_out_proj = nn.Linear(d_model, d_model)
-
-        self.intra_periodic_q_proj = nn.Linear(d_model, d_keys * n_heads)
-        self.intra_periodic_k_proj = nn.Linear(d_model, d_keys * n_heads)
-        self.intra_periodic_v_proj = nn.Linear(d_model, d_values * n_heads)
-
-        
-
-        ## inter_periodic_attention
-        self.inter_periodic_embed_linear = nn.Linear(patch_size * d_model, patch_size * d_model)
-        self.inter_periodic_pos_embed = positional_encoding(pe='zeros', learn_pe=True, q_len=num_patchs, d_model=d_model) if learned_pos_embed else positional_encoding(pe='sincos', learn_pe=False, q_len=num_patchs, d_model=d_model)
-        self.inter_periodic_pos_embed_dropout = nn.Dropout(pos_embed_dropout)
-
-        self.inter_periodic_q_proj = nn.Linear(patch_size * d_model, patch_size * d_keys * n_heads)
-        self.inter_periodic_k_proj = nn.Linear(patch_size * d_model, patch_size * d_keys * n_heads)
-        self.inter_periodic_v_proj = nn.Linear(patch_size * d_model, patch_size * d_values * n_heads)
-
-        self.inter_periodic_out_proj = nn.Linear(patch_size * d_model, patch_size * d_model)
-        
-        self.attention_dropout = nn.Dropout(attention_dropout)
-        self.res_attention = res_attention
-
-
-    def forward(self, x, prev=None):
-        B, N, P, D = x.shape
-        H = self.n_heads
-
-        # intra_out_concat = None
-        
-        n_vars = self.intra_periodic_tokens.shape[1]
-
-        ####intra Attention#####
-        if self.cross:
-            intra_periodic_tokens = self.intra_periodic_tokens.expand(B//n_vars, -1, -1, -1, -1) # [B, n_vars, num_patchs, patch_size, 16]
-            # embed to d_model for each patch
-            intra_periodic_tokens = rearrange(intra_periodic_tokens, 'B C N 1 D -> (B C) 1 N D')
-            intra_periodic_tokens = torch.bmm(intra_periodic_tokens, self.intra_periodic_embedding_weights) + self.intra_periodic_embedding_biases
-            intra_periodic_tokens = rearrange(intra_periodic_tokens, 'BC 1 N D -> BC N 1 D')
-
-            # add position embedding
-            intra_periodic_pos_embed_q = repeat(self.intra_periodic_pos_embed_q, '1 D -> BC N 1 D', BC=B, N=N)
-            intra_periodic_pos_embed_kv = repeat(self.intra_periodic_pos_embed_kv, 'P D -> BC N P D', BC=B, N=N)
-            intra_periodic_tokens = self.intra_periodic_pos_embed_dropout(intra_periodic_tokens + intra_periodic_pos_embed_q)
-            cross_x = self.intra_periodic_pos_embed_dropout(x + intra_periodic_pos_embed_kv)
-
-            # project the queries, keys and values
-            intra_periodic_queries = self.intra_periodic_q_proj(intra_periodic_tokens)
-            intra_periodic_keys = self.intra_periodic_k_proj(cross_x)
-            intra_periodic_values = self.intra_periodic_v_proj(cross_x)
-
-            # split the keys, queries and values in multiple heads
-            intra_periodic_queries = rearrange(intra_periodic_queries, 'BC N 1 (H D) -> (BC N) H 1 D', H=self.n_heads)
-            intra_periodic_keys = rearrange(intra_periodic_keys, 'BC N P (H D) -> (BC N) H D P', H=self.n_heads)
-            intra_periodic_values = rearrange(intra_periodic_values, 'BC N P (H D) -> (BC N) H P D', H=self.n_heads)
-        
-        else:
-            # add position embedding
-            intra_periodic_pos_embed = repeat(self.intra_periodic_pos_embed, 'P D -> BC N P D', BC=B, N=N)
-            cross_x = self.intra_periodic_pos_embed_dropout(x + intra_periodic_pos_embed)
-
-            # project the queries, keys and values
-            intra_periodic_queries = self.intra_periodic_q_proj(cross_x)
-            intra_periodic_keys = self.intra_periodic_k_proj(cross_x)
-            intra_periodic_values = self.intra_periodic_v_proj(cross_x)
-
-            # split the keys, queries and values in multiple heads 
-            intra_periodic_queries = rearrange(intra_periodic_queries, 'BC N P (H D) -> (BC N) H P D', H=H)
-            intra_periodic_keys = rearrange(intra_periodic_keys, 'BC N P (H D) -> (BC N) H D P', H=H)
-            intra_periodic_values = rearrange(intra_periodic_values, 'BC N P (H D) -> (BC N) H P D', H=H)
-            
-
-        # compute the unnormalized attention scores
-        scale = 1. / sqrt(D // H)
-        intra_periodic_attn_scores = torch.matmul(intra_periodic_queries, intra_periodic_keys) * scale # [bs x n_heads x q_len x k_len]
-
-        # # Add pre-softmax attention scores from the previous layer (optional)
-        # if self.res_attention and prev is not None:
-        #     intra_periodic_attn_scores = intra_periodic_attn_scores + prev
-
-        # normalize the attention weights
-        intra_periodic_attn_weights = F.softmax(intra_periodic_attn_scores, dim=-1)  # [bs x n_heads x q_len x k_len]
-        intra_periodic_attn_weights = self.attention_dropout(intra_periodic_attn_weights)
-
-        # compute the new values given the attention weights
-        intra_periodic_output = torch.matmul(intra_periodic_attn_weights, intra_periodic_values)  # output: [bs x n_heads x q_len x dim]
-
-        # concatenate the heads and project the output back to the patch_size*d_model dimensions
-        intra_periodic_output = rearrange(intra_periodic_output, '(BC N) H 1 D -> BC 1 (H D) N', N=N)
-        intra_periodic_output = self.intra_periodic_out_proj(intra_periodic_output)
-        intra_periodic_output = rearrange(intra_periodic_output, 'BC 1 D (N P) -> BC N P D', N=N)
-
-        ####inter Attention######
-        x_reshape = rearrange(x, 'BC N P D -> BC N (P D)') # [b*nvar, patch_num, dim*patch_len]
-
-        x_reshape = self.inter_periodic_embed_linear(x_reshape)
-        x_reshape = self.inter_periodic_pos_embed_dropout(x_reshape + self.inter_periodic_pos_embed)
-
-        # project the queries, keys and values
-        inter_periodic_queries = self.inter_periodic_q_proj(x_reshape)
-        inter_periodic_keys = self.inter_periodic_k_proj(x_reshape)
-        inter_periodic_values = self.inter_periodic_v_proj(x_reshape)
-
-        # split the keys, queries and values in multiple heads
-        inter_periodic_queries = rearrange(inter_periodic_queries, 'BC N (H D) -> BC H N D', H=H)
-        inter_periodic_keys = rearrange(inter_periodic_keys, 'BC N (H D) -> BC H D N', H=H)
-        inter_periodic_values = rearrange(inter_periodic_values, 'BC N (H D) -> BC H N D', H=H)
-
-        # compute the unnormalized attention scores
-        scale = 1. / sqrt(D // H)
-        inter_periodic_attn_scores = torch.matmul(inter_periodic_queries, inter_periodic_keys) * scale # [bs x n_heads x q_len x k_len]
-
-        # Add pre-softmax attention scores from the previous layer (optional)
-        if self.res_attention and prev is not None:
-            inter_periodic_attn_scores = inter_periodic_attn_scores + prev
-
-        # normalize the attention weights
-        inter_periodic_attn_weights = F.softmax(inter_periodic_attn_scores, dim=-1)  # [bs x n_heads x q_len x k_len]
-        inter_periodic_attn_weights = self.attention_dropout(inter_periodic_attn_weights)
-
-        # compute the new values given the attention weights
-        inter_periodic_output = torch.matmul(inter_periodic_attn_weights, inter_periodic_values)  # output: [bs x n_heads x q_len x dim]
-
-        # concatenate the heads and project the output back to the patch_size*d_model dimensions
-        inter_periodic_output = rearrange(inter_periodic_output, 'BC H N D -> BC N (H D)')
-        inter_periodic_output = self.inter_periodic_out_proj(inter_periodic_output)
-        inter_periodic_output = rearrange(inter_periodic_output, 'BC N (P D) -> BC N P D', P=P, D=D)
-
-        out = intra_periodic_output + inter_periodic_output
-        return out, inter_periodic_attn_weights
-
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 class MLP(nn.Module):
-    def __init__(self, d_model, d_ff=None, dropout=0.1, activation="relu", flatten=False):
+    def __init__(self, d_model, d_ff, dropout=0.1, activation="relu"):
         super(MLP, self).__init__()
-        d_ff = d_ff or 4 * d_model
         self.fc1 = nn.Linear(d_model, d_ff)
         self.fc2 = nn.Linear(d_ff, d_model)
         self.dropout = nn.Dropout(dropout)
-        self.activation = nn.ReLU() if activation == "relu" else nn.GELU()
-        self.flatten = flatten
+        self.activation = F.relu if activation == "relu" else F.gelu
 
     def forward(self, x):
-        B, N, P, D = x.shape
-        if self.flatten:
-            x = rearrange(x, 'B N P D -> B N (P D)')
-        x = self.fc1(x)
-        x = self.activation(x)
-        x = self.dropout(x)
+        x = self.dropout(self.activation(self.fc1(x)))
         x = self.fc2(x)
-        x = self.dropout(x)
-        if self.flatten:
-            x = rearrange(x, 'B N (P D) -> B N P D', P=P, D=D)
         return x
 
-
-class EncoderLayer(nn.Module):
-    def __init__(self, attention, fft, d_model, dropout=0.1, pre_norm=False):
-        super(EncoderLayer, self).__init__()
-        self.attention = attention
-        self.ffn = fft
-        self.norm1 = nn.LayerNorm(d_model)
-        self.norm2 = nn.LayerNorm(d_model)
-        self.dropout = nn.Dropout(dropout)
-
-        self.pre_norm = pre_norm
-
-    def forward(self, x, prev=None):
-        # [bs, num_patch, patch_size, D]
-        if self.pre_norm:
-            res = x 
-            x = self.norm1(x)
-        new_x, attn = self.attention(x, prev) # [bs, num_patch, patch_size, D]
-        if self.pre_norm:
-            x = res + self.dropout(new_x)
-        else:
-            x = self.norm1(x + self.dropout(new_x))
-
-        res = x
-        if self.pre_norm:
-            x = self.norm2(x)
-        x = self.ffn(x) # [bs, num_patch, patch_size, D]
-        if self.pre_norm:
-            x = res + x
-        else:
-            x = self.norm2(res + x)
-
-        return x, attn
-
-
-class Encoder(nn.Module):
-    def __init__(self, encoder_layers, norm_layer=None, patch_size=4):
-        super(Encoder, self).__init__()
-        self.patch_size = patch_size
-        self.encoder_layers = nn.ModuleList(encoder_layers)
-        self.norm = norm_layer
+class PeriodGuidedMultiScaleEmbeding(nn.Module):
+    def __init__(self, num_features, seq_len, d_embed, embed_type, freq, dropout=0.1, activation="relu", mlp_ratio=4., individual=False):
+        super(PeriodGuidedMultiScaleEmbeding, self).__init__()
+        d_ff = d_embed * mlp_ratio
+        self.individual = individual
+        # GET Patch sizes corresponding to the period
+        self.patch_sizes = self.get_patch_sizes(seq_len)
+        # GET padding length for each patch size
+        self.padding_lens = [ceil(seq_len / patch_size) * patch_size - seq_len for patch_size in self.patch_sizes]
+        # AFNO1D
+        self.start_fc = nn.Linear(num_features, 1)
+        self.num_freqs = seq_len // 2
+        self.mlp_ratio = mlp_ratio
+        self.scale = 0.02
+        self.w1 = nn.Parameter(self.scale * torch.randn(2, self.num_freqs, int(self.num_freqs * self.mlp_ratio)))
+        self.b1 = nn.Parameter(self.scale * torch.randn(2, int(self.num_freqs * self.mlp_ratio)))
+        # self.w2 = nn.Parameter(self.scale * torch.randn(2, self.num_freqs * self.multi_factor, len(self.patch_sizes)))
+        # self.b2 = nn.Parameter(self.scale * torch.randn(2, len(self.patch_sizes)))
+        self.w2 = nn.Parameter(self.scale * torch.randn(2, int(self.num_freqs * self.mlp_ratio), self.num_freqs))
+        self.b2 = nn.Parameter(self.scale * torch.randn(2, self.num_freqs))
+        self.w_gate = nn.Parameter(torch.zeros(self.num_freqs, len(self.patch_sizes)))
+        self.w_noise = nn.Parameter(torch.zeros(self.num_freqs, len(self.patch_sizes)))
+        # Embedding
+        self.value_embedding = nn.Linear(1, d_embed, bias=False) if individual else nn.Linear(num_features, d_embed, bias=False)
+        self.temporal_embedding = TemporalEmbedding(d_model=d_embed, embed_type=embed_type, freq=freq) if embed_type != 'timeF' else TimeFeatureEmbedding(d_model=d_embed, embed_type=embed_type, freq=freq)
+        self.embed_dropout = nn.Dropout(dropout)
+        # self.position_embedding = PositionalEmbedding2D(d_model, num_features, seq_len + max(self.padding_lens)) if individual else PositionalEmbedding(d_model, seq_len + max(self.padding_lens))
+        self.position_embedding = PositionalEmbedding2D(d_embed, num_features, ceil(seq_len / min(self.patch_sizes)) * min(self.patch_sizes)) if individual else PositionalEmbedding(d_embed, seq_len + ceil(seq_len / min(self.patch_sizes)) * min(self.patch_sizes))
+        self.pos_dropout = nn.Dropout(dropout)
+        # Start projections
+        self.projections = nn.ModuleList()
+        for patch_size in self.patch_sizes:
+            self.projections.append(nn.Linear(seq_len, ceil(seq_len / patch_size) * patch_size))
+        # MLPs
+        self.mlps = nn.ModuleList()
+        for patch_size in self.patch_sizes:
+            self.mlps.append(MLP(patch_size*d_embed, patch_size*d_ff, dropout, activation))
         
-    def patchify(self, x):
-        # [bs, L, D]
-        # switch to [bs, D, L]
-        x = rearrange(x, 'B L D -> B D L')
-        # padding
-        x = F.pad(x, (0, self.patch_size - x.shape[-1] % self.patch_size), mode='replicate') # [bs, D, L]
-        # unfold
-        x = x.unfold(dimension=-1, size=self.patch_size, step=self.patch_size) # [bs D num_patch patch_size]
-        # switch to [bs, num_patch, patch_size, D]
-        x = rearrange(x, 'B D N P -> B N P D')
-        return x
-    
-    def unpacthify(self, x):
-        # [bs, num_patch, patch_size, D]
-        x = rearrange(x, 'B N P D -> B (N P) D')
-        return x
-
-    def forward(self, x):
-        # [bs, L, D]
-        # patchify
-        L = x.shape[1]
-        x = self.patchify(x) # [bs, num_patch, patch_size, D]
-
-        attns = []
-        for encoder_layer in self.encoder_layers:
-            prev = attns[-1] if len(attns) > 0 else None
-            x, attn = encoder_layer(x, prev) # [bs, num_patch, patch_size, D]
-            attns.append(attn)
-
-        if self.norm is not None:
-            x = self.norm(x) # [bs, num_patch, patch_size, D]
-        
-        x = self.unpacthify(x)[:, :L, :] # [bs, L, D]
-
-        return x, attns
-        
-
-    
-class EncoderStack(nn.Module):
-    def __init__(self, configs):
-        super(EncoderStack, self).__init__()
-        self.seq_len = configs.seq_len
-        self.k = configs.top_k
-        self.e_layer = configs.e_layers
-
-        patch_sizes = self.get_patch_sizes(configs.seq_len, exclude_zero=True)
-        self.num_patch_sizes = len(patch_sizes)
-
-        self.start_linear = nn.Linear(in_features=configs.d_model, out_features=1)
-        self.w_noise = nn.Parameter(torch.zeros(configs.seq_len, self.num_patch_sizes), requires_grad=True)
-
-        self.encoders = nn.ModuleList()
-        for patch_size in patch_sizes:
-            num_patchs = int(self.seq_len / patch_size) + 1
-            self.encoders.append(
-                Encoder(
-                    [
-                        EncoderLayer(
-                            DualAttention(
-                                configs.enc_in, num_patchs, patch_size, configs.d_model, configs.n_heads, attention_dropout=configs.dropout,
-                                pos_embed_dropout=configs.dropout, learned_pos_embed=True, res_attention=True, cross=True),
-                            MLP(patch_size*configs.d_model, patch_size*configs.d_ff, dropout=configs.dropout),
-                            configs.d_model,
-                            dropout=configs.dropout,
-                            pre_norm=False
-                        ) for l in range(self.e_layer)
-                    ],
-                    norm_layer=nn.LayerNorm(configs.d_model),
-                    patch_size=patch_size
-                )
-            )
-
-    def get_patch_sizes(self, seq_len, exclude_zero=True):
+    def get_patch_sizes(self, seq_len):
         # get the period list, first element is inf if exclude_zero is False
-        peroid_list = 1 / torch.fft.rfftfreq(seq_len)[1:] if exclude_zero else 1 / torch.fft.rfftfreq(seq_len)
-        patch_sizes = peroid_list.int().unique()
+        peroid_list = 1 / torch.fft.rfftfreq(seq_len)[1:]
+        patch_sizes = peroid_list.floor().int().unique().detach().cpu().numpy()[::-1]
+        # patch_sizes = peroid_list.ceil().int().unique().detach().cpu().numpy()
         return patch_sizes
+    
+    def afno1d_for_peroid_gates(self, x, training, noise_epsilon=1e-2):
+        x = self.start_fc(x).squeeze(-1) # B, L, 1
 
-    def fft_for_peroid(self, x, exclude_zero=True):
-        # [bs, L, D]
-        # transform to frequency domain
-        x_freq = torch.fft.rfft(x, dim=1)
-        # compute the amplitude
-        amplitude_list = abs(x_freq).mean(-1)[:, 1:] if exclude_zero else abs(x_freq).mean(-1)
-        # get the frequency list
-        frequency_list = torch.fft.rfftfreq(x.shape[1], 1)[1:] if exclude_zero else torch.fft.rfftfreq(x.shape[1], 1)
-        # get the period list, first element is inf if exclude_zero is False
-        peroid_list = 1 / frequency_list
-        return peroid_list, amplitude_list
+        B, L = x.shape
+        xf = torch.fft.rfft(x, dim=-1, norm='ortho') # B, C, L//2+1
 
-    def groups_by_period(self, peroid_list, amplitude_list):
-        # peroid_list [L] amplitude_list [bs, L]
-        int_peroid_list = peroid_list.int()
-        groups_period, indices = torch.unique(int_peroid_list, return_inverse=True)
-        indices = indices.unsqueeze(0).expand(amplitude_list.shape[0], -1).to(amplitude_list.device)
-        groups_amplitude = torch.zeros(amplitude_list.shape[0], groups_period.shape[0], device=amplitude_list.device)
-        groups_amplitude = groups_amplitude.scatter_add(1, indices, amplitude_list)
-        # groups_amplitude = torch.bincount(indices, weights=amplitude_list)
-        return groups_period, groups_amplitude
+        xf_ac = xf[:, 1:]
 
-    def top_k_gating(self, x, groups_amplitude, train, noise_epsilon=1e-2):
-        x = self.start_linear(x).squeeze(-1)
+        o1_real = torch.zeros([B, int(self.num_freqs * self.mlp_ratio)], device=x.device)
+        o1_imag = torch.zeros([B, int(self.num_freqs * self.mlp_ratio)], device=x.device)
+        o2_real = torch.zeros([B, self.num_freqs], device=x.device)
+        o2_imag = torch.zeros([B, self.num_freqs], device=x.device)
 
-        clean_logits = groups_amplitude
-        if train:
-            raw_noise_stddev = x @ self.w_noise
-            noise_stddev = ((F.softplus(raw_noise_stddev) + noise_epsilon))
-            noisy_logits = clean_logits + (torch.randn_like(clean_logits) * noise_stddev)
-            logits = noisy_logits
+        o1_real = F.relu(xf_ac.real @ self.w1[0] - xf_ac.imag @ self.w1[1] + self.b1[0])
+        o1_imag = F.relu(xf_ac.imag @ self.w1[0] + xf_ac.real @ self.w1[1] + self.b1[1])
+        o2_real = o1_real @ self.w2[0] - o1_imag @ self.w2[1] + self.b2[0]
+        o2_imag = o1_imag @ self.w2[0] + o1_real @ self.w2[1] + self.b2[1]
+        
+        xf_ac = torch.stack([o2_real, o2_imag], dim=-1) # B, L-1, 2
+        xf_ac = torch.view_as_complex(xf_ac)
+        xf_ac = torch.abs(xf_ac) # B, L-1
+        
+        clean_logits = xf_ac @ self.w_gate
+
+        # visual gates
+        fig, ax = plt.subplots(2, 2, figsize=(10, 10))
+        sns.heatmap(clean_logits.detach().cpu().numpy(), ax=ax[0, 0], cmap='jet')
+
+        if training:
+            raw_noise_stddev = xf_ac @ self.w_noise
+            noise_stddev = (F.softplus(raw_noise_stddev) + noise_epsilon)
+            noise = torch.randn_like(clean_logits) * noise_stddev
+            noisy_logits = clean_logits + noise
+            logits = noisy_logits # [B, L-1]
         else:
-            logits = clean_logits
-        # calculate topk + 1 that will be needed for the noisy gates
-        top_logits, top_indices = logits.topk(self.k + 1, dim=1)
+            logits = clean_logits # [B, L-1]
+       
+        weights = logits # B, L-1
 
-        top_k_logits = top_logits[:, :self.k]
-        top_k_indices = top_indices[:, :self.k]
-        top_k_gates = top_k_logits.softmax(1)
+        top_weights, top_indices = torch.topk(weights, self.top_k, dim=-1) # [B, top_k]
+        top_weights = F.softmax(top_weights, dim=-1) # [B, top_k]
 
-        zeros = torch.zeros_like(logits, requires_grad=True)
-        gates = zeros.scatter(1, top_k_indices, top_k_gates)
+        zeros = torch.zeros_like(weights) # [B, Ps]
+        gates = zeros.scatter_(-1, top_indices, top_weights) # [B, Ps]
+        
+        sns.heatmap(noise.detach().cpu().numpy(), ax=ax[0, 1], cmap='jet')
+        sns.heatmap(weights.detach().cpu().numpy(), ax=ax[1, 0], cmap='jet')
+        sns.heatmap(gates.detach().cpu().numpy(), ax=ax[1, 1], cmap='jet')
+
+        plt.savefig('/root/MSPT/test_visuals/sets.png')
 
         return gates
 
-    def forward(self, x):
-        # [bs, L, D]
-        period_list, amplitude_list = self.fft_for_peroid(x) # [T], [bs, T]
-        groups_period, groups_amplitude = self.groups_by_period(period_list, amplitude_list) # [num_period], [bs, num_period]
-        groups_amplitude = groups_amplitude.softmax(dim=-1) # [bs, num_period]
-        gates = self.top_k_gating(x, groups_amplitude, train=self.training) # [bs, num_period]
+    def dispatcher(self, x, gates):
+        # sort experts
+        sorted_experts, index_sorted_experts = torch.nonzero(gates).sort(0)
+        # get according batch index for each expert
+        _batch_index = torch.nonzero(gates)[index_sorted_experts[:, 1], 0]
+        _part_sizes = (gates > 0).sum(0).tolist()
+        # assigns samples to experts whose gate is nonzero
+        # expand according to batch index so we can just split by _part_sizes
+        xs = x[_batch_index].squeeze(1)
+        return list(torch.split(xs, _part_sizes, dim=0))
 
-        dispatcher = SparseDispatcher(self.num_patch_sizes, gates)
-        encoders_input = dispatcher.dispatch(x) # list[[bs, L, D]*num_patch_sizes] bs may be equal to zero
-        encoders_output = [self.encoders[i](encoders_input[i])[0] for i in range(self.num_patch_sizes)] # list[[bs, L, D]*num_patch_sizes]
-        output = dispatcher.combine(encoders_output) # [bs, L, D]
-        # output = output + x
-        return output # [bs, L, D]
-
-
-class PretrainHead(nn.Module):
-    def __init__(self, configs):
-        super().__init__()
-        self.top_k = configs.top_k
-        self.dec_embedding = DataEmbedding(configs.d_model, configs.d_model, configs.embed, configs.freq, configs.dropout)
-        self.mask_token = nn.Parameter(torch.randn(1, 1, configs.d_model))
-        self.decoder = Encoder(
-            [
-                EncoderLayer(
-                    AttentionLayer(
-                        FullAttention(False, configs.factor, attention_dropout=configs.dropout,
-                                    output_attention=False),
-                        configs.d_model, configs.n_heads),
-                    configs.d_model,
-                    configs.d_ff,
-                    dropout=configs.dropout,
-                    activation=configs.activation,
-                ) for l in range(configs.d_layers)
-            ],
-            norm_layer=nn.LayerNorm(configs.d_model),
-        )
-
-        self.projections = nn.Linear(configs.d_model, configs.enc_in, bias=True)
-    
-    def forward(self, x, ids_restore, x_mask=None):
+    def forward(self, x, x_mark=None):
+        B, L, C = x.shape
+        # Gate
+        gates = self.afno1d_for_peroid_gates(x, self.training)
         
-        mask_tokens = self.mask_token.repeat(x.shape[0], ids_restore.shape[1] - x.shape[1], 1)
-        x_ = torch.cat([x, mask_tokens], dim=1)
-        x_ = torch.gather(x_, dim=1, index=ids_restore.unsqueeze(-1).repeat(1, 1, x.shape[2]))
-        x_ = self.dec_embedding(x_, x_mask)
-        dec_out, _ = self.decoder(x_)
-        dec_out = self.projections(dec_out)
-        return dec_out
+        if self.individual:
+            x = rearrange(x, 'B L C -> B C L').unsqueeze(-1)
+        # embedding + pos
+        if x_mark is None:
+            x_embed = self.embed_dropout(self.value_embedding(x))
+        else:
+            x_embed = self.embed_dropout(self.value_embedding(x) + self.temporal_embedding(x_mark))
+        # Dispatcher
+        xs = self.dispatcher(x_embed, gates)
+        for i, patch_size in enumerate(self.patch_sizes):
+            xs[i] = self.projections[i](xs[i].transpose(1, 2)).transpose(1, 2)
+            xs[i] = rearrange(xs[i], 'B C (F P) D -> B C F (P D)', P=patch_size) if self.individual else rearrange(xs[i], 'B (F P) D -> B F (P D)', P=patch_size)
+            xs[i] = self.pos_dropout(xs[i] + self.position_embedding(xs[i]))
+            xs[i] = self.mlps[i](xs[i])
+        return xs, gates
     
+class AttentionLayer(nn.Module):
+    def __init__(self, attention, d_in, d_hid, n_heads, d_keys=None,
+                 d_values=None):
+        super(AttentionLayer, self).__init__()
+        d_out = d_in
 
-class PredictionHead(nn.Module):
-    def __init__(self, configs):
-        super().__init__()
-        self.n_vars = configs.enc_in
-        self.channels_fusion = nn.Linear(configs.d_model * configs.enc_in, configs.d_model)
-        self.decoder = Decoder(
-            [
-                DecoderLayer(
-                    AttentionLayer(
-                        FullAttention(True, configs.factor, attention_dropout=configs.dropout,
-                                    output_attention=False),
-                        configs.d_model, configs.n_heads),
-                    AttentionLayer(
-                        FullAttention(False, configs.factor, attention_dropout=configs.dropout,
-                                    output_attention=False),
-                        configs.d_model, configs.n_heads),
-                    configs.d_model,
-                    configs.d_ff,
-                    dropout=configs.dropout,
-                    activation=configs.activation,
-                ) for l in range(configs.d_layers)
-            ],
-            norm_layer=nn.LayerNorm(configs.d_model),
-            projection=nn.Linear(configs.d_model, configs.c_out, bias=True)
-        )
-    
-    def forward(self, x, cross, x_mask=None, cross_mask=None, tau=None, delta=None):
-        # x [B, S, C1] cross [B, L, C2]
-        cross = rearrange(cross, '(B N) L D -> B L (N D)', N=self.n_vars)
-        cross = self.channels_fusion(cross)
-        dec_out = self.decoder(x, cross, x_mask, cross_mask, tau, delta)
-        return dec_out
-    
-class LinearProbeHead(nn.Module):
-    def __init__(self, configs):
-        super().__init__()
-        self.decoder = Decoder(
-            [
-                DecoderLayer(
-                    AttentionLayer(
-                        FullAttention(True, configs.factor, attention_dropout=configs.dropout,
-                                    output_attention=False),
-                        configs.d_model, configs.n_heads),
-                    AttentionLayer(
-                        FullAttention(False, configs.factor, attention_dropout=configs.dropout,
-                                    output_attention=False),
-                        configs.d_model, configs.n_heads),
-                    configs.d_model,
-                    configs.d_ff,
-                    dropout=configs.dropout,
-                    activation=configs.activation,
-                ) for l in range(configs.d_layers)
-            ],
-            norm_layer=nn.LayerNorm(configs.d_model),
-            projection=nn.Linear(configs.d_model, configs.c_out, bias=True)
-        )
-    
-    def forward(self, x, cross, x_mask=None, cross_mask=None, tau=None, delta=None):
-        dec_out = self.decoder(x, cross, x_mask, cross_mask, tau, delta)
-        return dec_out 
+        d_keys = d_keys or (d_hid // n_heads)
+        d_values = d_values or (d_hid // n_heads)
 
+        self.inner_attention = attention
+        self.query_projection = nn.Linear(d_in, d_keys * n_heads)
+        self.key_projection = nn.Linear(d_in, d_keys * n_heads)
+        self.value_projection = nn.Linear(d_in, d_values * n_heads)
+        self.out_projection = nn.Linear(d_values * n_heads, d_out)
+        self.n_heads = n_heads
+
+    def forward(self, queries, keys, values, attn_mask, tau=None, delta=None):
+        B, L, _ = queries.shape
+        _, S, _ = keys.shape
+        H = self.n_heads
+
+        queries = self.query_projection(queries)
+        keys = self.key_projection(keys)
+        values = self.value_projection(values)
+
+        queries = rearrange(queries, 'B L (H D) -> B L H D', H=H)
+        keys = rearrange(keys, 'B S (H D) -> B S H D', H=H)
+        values = rearrange(values, 'B S (H D) -> B S H D', H=H)
+
+        out, attn = self.inner_attention(
+            queries,
+            keys,
+            values,
+            attn_mask,
+            tau=tau,
+            delta=delta
+        )
+
+        out = rearrange(out, 'B L H D -> B L (H D)')
+
+        return self.out_projection(out), attn
+
+class CrossDimensionalPeriodicEncoderLayer(nn.Module):
+    def __init__(self, cross_dimensional_attention, inter_periodic_attention, d_model, d_ff=None, dropout=0.1, activation="relu"):
+        super(CrossDimensionalPeriodicEncoderLayer, self).__init__()
+        d_ff = d_ff or 4 * d_model
+        self.cross_dimensional_attention = cross_dimensional_attention
+        self.inter_periodic_attention = inter_periodic_attention
+        self.cross_dimensional_mlp = MLP(d_model, d_ff, dropout, activation)
+        self.inter_periodic_mlp = MLP(d_model, d_ff, dropout, activation)
+        self.norm1 = nn.LayerNorm(d_model)
+        self.norm2 = nn.LayerNorm(d_model)
+        self.norm3 = nn.LayerNorm(d_model)
+        self.norm4 = nn.LayerNorm(d_model)
+        self.dropout = nn.Dropout(dropout)
+
+    def forward(self, x, attn_mask=None, tau=None, delta=None):
+        B, C, F, D = x.shape
+        x = rearrange(x, 'B C F D -> B C (F D)')
+        res = x
+        x, attn1 = self.cross_dimensional_attention(
+            x, x, x,
+            attn_mask=attn_mask,
+            tau=tau, delta=delta
+        )
+        x = self.norm1(res + self.dropout(x))
+
+        res = x
+        x = self.cross_dimensional_mlp(x)
+        x = self.norm2(res + self.dropout(x))
+
+        x = rearrange(x, 'B C (F D) -> (B C) F D', F=F)
+        res = x
+        x, attn2 = self.inter_periodic_attention(
+            x, x, x,
+            attn_mask=attn_mask,
+            tau=tau, delta=delta
+        )
+        x = self.norm3(res + self.dropout(x))
+
+        res = x
+        x = self.inter_periodic_mlp(x)
+        x = self.norm4(res + self.dropout(x))
+
+        x = rearrange(x, '(B C) F D -> B C F D', C=C)
+
+        return x, attn2
+
+
+class CrossDimensionalPeriodicEncoder(nn.Module):
+    def __init__(self, attn_layers, norm_layer=None):
+        super(CrossDimensionalPeriodicEncoder, self).__init__()
+        self.attn_layers = nn.ModuleList(attn_layers)
+        self.norm = norm_layer
+
+    def forward(self, x, attn_mask=None):
+        # x [B, C, L, D]
+        attns = []
+        for attn_layer in self.attn_layers:
+            x, attn = attn_layer(x, attn_mask=attn_mask)
+            attns.append(attn)
+
+        if self.norm is not None:
+            x = self.norm(x)
+
+        return x, attns
+
+
+class CrossScalePeriodicFeatureAggregator(nn.Module):
+    def __init__(self):
+        super(CrossScalePeriodicFeatureAggregator, self).__init__()
+
+    def forward(self, xs, gates, multiply_by_gates=True):
+        # sort experts
+        sorted_experts, index_sorted_experts = torch.nonzero(gates).sort(0) 
+        _, _expert_index = sorted_experts.split(1, dim=1)
+        # get according batch index for each expert
+        _batch_index = torch.nonzero(gates)[index_sorted_experts[:, 1], 0]
+        gates_exp = gates[_batch_index.flatten()]
+        _nonzero_gates = torch.gather(gates_exp, 1, _expert_index)
+        # apply exp to expert outputs, so we are not longer in log space
+        stitched = torch.cat(xs, 0).exp() # [BN L D]
+        # stitched = torch.cat(xs, 0)
+        if multiply_by_gates:
+            stitched = torch.einsum("ikh,ik -> ikh", stitched, _nonzero_gates) # [BN L D] [BN L] -> [BN L D]
+        zeros = torch.zeros(gates.size(0), xs[-1].size(1), xs[-1].size(2),
+                            requires_grad=True, device=stitched.device)
+        # combine samples that have been processed by the same k experts
+        combined = zeros.index_add(0, _batch_index, stitched.float())
+        # add eps to all zero values in order to avoid nans when going back to log space
+        combined[combined == 0] = np.finfo(float).eps
+        # go back to log space
+        combined = combined.log()
+        return combined # [B, L, D]
+
+
+class LinearPredictionHead(nn.Module):
+    def __init__(self, patch_sizes, seq_len, pred_len, d_model, dropout=0.):
+        super(LinearPredictionHead, self).__init__()
+        self.patch_sizes = patch_sizes
+        self.seq_len = seq_len
+        self.dropout = nn.Dropout(dropout)
+        self.linears = nn.ModuleList()
+        for patch_size in patch_sizes:
+            self.linears.append(nn.Linear(ceil(seq_len / patch_size)*d_model, pred_len))
+        self.cspfa = CrossScalePeriodicFeatureAggregator(patch_sizes, seq_len, d_model)
+        
+    def forward(self, xs, gates, x_dec, x_mark_dec=None):
+        # Ps*[B, C, L, D]
+
+        # visual gates
+        # fig, ax = plt.subplots(9, 4, figsize=(80, 40))
+
+        # sns.heatmap(clean_logits_low.detach().cpu().numpy(), ax=ax[0, 0])
+
+        # sns.heatmap(clean_logits_high.detach().cpu().numpy(), ax=ax[0, 1])
+        # # sns.heatmap(weights.detach().cpu().numpy(), ax=ax[1, 0])
+        # sns.heatmap(gates.detach().cpu().numpy(), ax=ax[1, 1])
+
+        # plt.savefig('/root/MSPT/test_visuals/sets.png')
+        for i, patch_size in enumerate(self.patch_sizes):
+            # pos_x = i // 4
+            # pos_y = i % 4
+            xs[i] = self.linears[i](self.dropout(xs[i].flatten(start_dim=2))) # [B, C, F, D] -> [B, C, P]
+            xs[i] = rearrange(xs[i], 'B C P -> B P C') # [B, P, C]
+        #     sns.lineplot(data=xs[i].mean(0)[:, -1].detach().cpu().numpy(), ax=ax[pos_x, pos_y])
+        # plt.savefig('/root/MSPT/test_visuals/xs.png')
+        xs = self.cspfa(xs, gates)
+        return xs # [bs, P, C]
+    
 
 class Model(nn.Module):
     def __init__(self, configs):
@@ -575,77 +334,59 @@ class Model(nn.Module):
         self.seq_len = configs.seq_len
         self.label_len = configs.label_len
         self.pred_len = configs.pred_len
-        self.top_k = configs.top_k
-        self.e_layers = configs.e_layers
         self.mask_ratio = configs.mask_ratio
+        self.pretrain = configs.pretrain
         self.individual = configs.individual
 
-        self.pretrain = configs.pretrain
+        self.pgmse = PeriodGuidedMultiScaleEmbeding(configs.enc_in, self.seq_len, d_embed=16, embed_type=configs.embed, freq=configs.freq, dropout=configs.dropout, activation=configs.activation, mlp_ratio=configs.mlp_ratio, individual=self.individual)
 
-        self.revin = RevIN(configs.enc_in)
+        self.patch_sizes = self.pgmse.patch_sizes
 
-        if self.individual:
-            self.enc_embedding = DataEmbedding(1, configs.d_model, configs.embed, configs.freq, configs.dropout)
-        else:
-            self.enc_embedding = DataEmbedding(configs.enc_in, configs.d_model, configs.embed, configs.freq, configs.dropout)
-        self.dec_embedding = DataEmbedding(configs.dec_in, configs.d_model, configs.embed, configs.freq, configs.dropout)
+        self.encoders = nn.ModuleList()
+        for patch_size in self.patch_sizes:
+            self.encoders.append(
+                CrossDimensionalPeriodicEncoder(
+                   [
+                        CrossDimensionalPeriodicEncoderLayer(
+                            AttentionLayer(
+                                FullAttention(False, configs.factor, attention_dropout=configs.dropout,
+                                            output_attention=configs.output_attention), patch_size*16, configs.d_model, configs.n_heads),
+                            AttentionLayer(
+                                FullAttention(False, configs.factor, attention_dropout=configs.dropout,
+                                            output_attention=configs.output_attention), patch_size*16, configs.d_model, configs.n_heads),
+                            configs.d_model,
+                            configs.d_ff,
+                            dropout=configs.dropout,
+                            activation=configs.activation
+                        ) for l in range(configs.e_layers)
+                    ],
+                    norm_layer=nn.LayerNorm(configs.d_model)
+                )
+            )
         
 
-        self.encoder_stack = EncoderStack(configs)
         
-        if self.pretrain:
-            self.head = PretrainHead(configs) # custom head passed as a partial func with all its kwargs
-        else:
-            self.head = PredictionHead(configs)
-    
-    def random_masking(self, x, len_keep, ids_shuffle, ids_restore):
-        # xb: [bs x num_patch x dim]
-        bs, L, D = x.shape
+        self.head = LinearPredictionHead(self.patch_sizes, self.seq_len, self.pred_len, configs.d_model, dropout=configs.dropout)
 
-        # keep the first subset
-        ids_keep = ids_shuffle[:, :len_keep]                                        
-        x_kept = torch.gather(x, dim=1, index=ids_keep.unsqueeze(-1).repeat(1, 1, D))  
-    
-        # removed x
-        x_removed = torch.zeros(bs, L-len_keep, D, device=x.device)         
-        x_ = torch.cat([x_kept, x_removed], dim=1)   
+    def forward(self, x_enc, x_mark_enc, x_dec, x_mark_dec):
+        # Normalization from Non-stationary Transformer
+        means = x_enc.mean(1, keepdim=True).detach()
+        x_enc = x_enc - means
+        stdev = torch.sqrt(torch.var(x_enc, dim=1, keepdim=True, unbiased=False) + 1e-5)
+        x_enc /= stdev
 
-        # combine the kept part and the removed one
-        x_masked = torch.gather(x_, dim=1, index=ids_restore.unsqueeze(-1).repeat(1, 1, D))
+        # Multi-scale periodic patch embedding 
+        xs_enc, gates = self.pgmse(x_enc) # Ps*[B, C, F, D], [B, Ps]
+        # Encoder and Decoder
+        enc_outs = []
+        for i, x_enc in enumerate(xs_enc):
+            enc_out, attns = self.encoders[i](x_enc) # [B, C, varF, D]
+            enc_outs.append(enc_out)
+        # Head
+        dec_out = self.head(enc_outs, gates, x_dec, x_mark_dec)
 
-        return x_masked, x_kept
-    
-    def forward(self, x_enc, x_mark_enc, x_dec, x_mark_dec, mask=None):
-        # x_enc [B, L, C] x_mark_enc [B, L, M] x_dec [B, S, C] x_mark_dec [B, S, M]
+        # De-Normalization from Non-stationary Transformer
+        dec_out = dec_out * (stdev[:, 0, :].unsqueeze(1).repeat(1, self.pred_len, 1))
+        dec_out = dec_out + (means[:, 0, :].unsqueeze(1).repeat(1, self.pred_len, 1))
 
-        # revin
-        x_enc, x_dec = self.revin(x_enc, 'forward', x_dec)
-
-        
-        # individual
-        if self.individual:
-            n_vars = x_enc.shape[-1]
-            x_enc = x_enc.unsqueeze(-1) # [B, L, C, 1]
-            x_enc = rearrange(x_enc, 'B L C 1 -> (B C) L 1') # [B*C, L, 1]
-            x_mark_enc = repeat(x_mark_enc, 'B L M -> (B C) L M', C=n_vars) # [B*C, L, M]
-        
-        # embedding
-        enc_out = self.enc_embedding(x_enc, x_mark_enc)  # [bs, L, D]
-
-        if self.pretrain:
-            # mask
-            enc_out = self.encoder_stack(enc_out, n_vars) # [bs, L, D]
-            # dec_out = self.head(enc_outs, ids_restore, x_mask=None)
-
-            dec_out = self.revin(dec_out, 'inverse')
-
-            return dec_out, mask
-
-        else:
-            dec_out = self.dec_embedding(x_dec, None)
-            enc_out = self.encoder_stack(enc_out) # [bs, L, D]
-            dec_out = self.head(dec_out, enc_out)
-
-            dec_out = self.revin(dec_out, 'inverse')
-
-            return dec_out
+        return dec_out

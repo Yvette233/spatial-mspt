@@ -221,8 +221,8 @@ class Dataset_Custom(Dataset):
             self.data_path = 'climatology_' + self.data_path
             self.set_type = 2
         self.scaler = StandardScaler()
-        # df_raw = pd.read_csv(os.path.join(self.root_path, self.data_path))[:15067]
-        df_raw = pd.read_csv(os.path.join(self.root_path, self.data_path))[122:] # 1982-01-01开始
+        df_raw = pd.read_csv(os.path.join(self.root_path, self.data_path))
+        # df_raw = pd.read_csv(os.path.join(self.root_path, self.data_path))[122:] # 1982-01-01开始
         # df_raw = pd.read_csv(os.path.join(self.root_path, self.data_path))[-15340:]
         # df_raw = pd.read_csv(os.path.join(self.root_path, self.data_path))[7305:]
 
