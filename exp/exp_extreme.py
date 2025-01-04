@@ -2,7 +2,7 @@ from data_provider.data_factory import data_provider
 from exp.exp_basic import Exp_Basic
 from utils.tools import EarlyStopping, TrainTracking, adjust_learning_rate, visual, visual_climatology
 from utils.metrics import metric
-from utils.loss import ReconstructionLoss
+from utils.loss import MarineHeatwaveMSELoss
 import torch
 import torch.nn as nn
 from torch import optim
@@ -16,10 +16,10 @@ import seaborn as sns
 warnings.filterwarnings('ignore')
 
 
-class Exp_Main(Exp_Basic):
+class Exp_Extreme(Exp_Basic):
 
     def __init__(self, args):
-        super(Exp_Main, self).__init__(args)
+        super(Exp_Extreme, self).__init__(args)
 
     def _build_model(self):
         model = self.model_dict[self.args.model].Model(self.args).float()
@@ -103,6 +103,8 @@ class Exp_Main(Exp_Basic):
             criterion = nn.MSELoss()
         elif self.args.loss == 'MAE':
             criterion = nn.L1Loss()
+        elif self.args.loss == 'MHWMSE':
+            criterion = MarineHeatwaveMSELoss()
         return criterion
 
     def _makedirs(self):
@@ -136,8 +138,8 @@ class Exp_Main(Exp_Basic):
         total_loss = []
         self.model.eval()
         with torch.no_grad():
-            for i, (batch_x, batch_y, batch_x_mark,
-                    batch_y_mark) in enumerate(vali_loader):
+            for i, (batch_x, batch_y, batch_x_mark, batch_y_mark,
+                    mhw_mask) in enumerate(vali_loader):
                 batch_x = batch_x.float().to(self.device)
                 batch_y = batch_y.float()
                 batch_x_mark = batch_x_mark.float().to(self.device)
@@ -149,7 +151,6 @@ class Exp_Main(Exp_Basic):
                     [batch_y[:, :self.args.label_len, :], dec_inp],
                     dim=1).float().to(self.device)
                 # encoder - decoder
-
                 outputs = self._model_forward(batch_x, batch_x_mark, dec_inp,
                                               batch_y_mark)
                 # outputs = self._model_forward(batch_x, batch_x_mark, dec_inp, batch_y_mark)
@@ -186,7 +187,8 @@ class Exp_Main(Exp_Basic):
         print(f"Using {self.args.lradj} learning rate adjustment")
 
         criterion = self._select_criterion()
-        test_criterion = self._select_criterion()
+        # test_criterion = self._select_criterion()
+        test_criterion = nn.MSELoss()
 
         self._makedirs()
 
@@ -200,14 +202,15 @@ class Exp_Main(Exp_Basic):
 
             self.model.train()
             epoch_time = time.time()
-            for i, (batch_x, batch_y, batch_x_mark,
-                    batch_y_mark) in enumerate(train_loader):
+            for i, (batch_x, batch_y, batch_x_mark, batch_y_mark,
+                    mhw_mask) in enumerate(train_loader):
                 model_optim.zero_grad()
 
                 batch_x = batch_x.float().to(self.device)
                 batch_y = batch_y.float()
                 batch_x_mark = batch_x_mark.float().to(self.device)
                 batch_y_mark = batch_y_mark.float().to(self.device)
+                mhw_mask = mhw_mask.float().to(self.device)
 
                 # decoder input
                 dec_inp = torch.zeros_like(
@@ -225,7 +228,7 @@ class Exp_Main(Exp_Basic):
                 batch_y = batch_y[:, -self.args.pred_len:,
                                   f_dim:].to(self.device)
 
-                loss = criterion(outputs, batch_y)
+                loss = criterion(outputs, batch_y, mhw_mask)
 
                 train_loss.append(loss.item())
 
@@ -282,40 +285,11 @@ class Exp_Main(Exp_Basic):
         preds = []
         trues = []
 
-        weights = []
-        hooks = []
-
-        # register forward hooks to get gates of Multi-Scale Periodic Patch Embedding
-        if 'MSPT' in self.args.model:
-            import importlib
-
-            def import_class(module_name, class_name):
-                # 导入模块
-                module = importlib.import_module(module_name)
-                # 从模块中获取类
-                clazz = getattr(module, class_name)
-                return clazz
-
-            myclass = import_class('models.' + self.args.model,
-                                   'MultiScalePeriodicPatchEmbedding')
-
-            def get_weight(name):
-                # hook
-                def hook(model, input, output):
-                    weights.append(output[1].detach().cpu().numpy())
-
-                return hook
-
-            for name, module in self.model.named_modules():
-                if isinstance(module, myclass):
-                    hooks.append(module.register_forward_hook(
-                        get_weight(name)))
-
         self.model.eval()
 
         with torch.no_grad():
-            for i, (batch_x, batch_y, batch_x_mark,
-                    batch_y_mark) in enumerate(test_loader):
+            for i, (batch_x, batch_y, batch_x_mark, batch_y_mark,
+                    mhw_mask) in enumerate(test_loader):
                 batch_x = batch_x.float().to(self.device)
                 batch_y = batch_y.float()
 
@@ -394,181 +368,6 @@ class Exp_Main(Exp_Basic):
                 np.array([mae, mse, rmse, mape, mspe, rse, r2_score, acc]))
         np.save(results_save_path + 'pred.npy', preds)
         np.save(results_save_path + 'true.npy', trues)
-
-        if 'MSPT' in self.args.model:
-            for hook in hooks:
-                hook.remove()
-            weights = np.array(weights)
-            print('weights:', weights.shape)
-            weights = weights.reshape(-1, weights.shape[-1])
-            print('weights:', weights.shape)
-            np.save(results_save_path + 'weights.npy', weights)
-
-    # def test_climatology(self, setting, load_weight=True):
-    #     test_data, test_loader = self._get_data(flag='test')
-    #     climatology_data, climatology_loader = self._get_data(
-    #         flag='test_climatology')
-    #     if load_weight:
-    #         if self.args.pretrain:
-    #             print('loading pretrain model weight')
-    #             self.model.load_state_dict(
-    #                 torch.load(os.path.join(
-    #                     self.args.model_save_path + setting, 'pretrain',
-    #                     'checkpoint.pth'),
-    #                            map_location=self.device))
-    #             test_results_save_path = self.args.test_results_save_path + setting + '/pretrain/'
-    #             results_save_path = self.args.results_save_path + setting + '/pretrain/'
-    #         elif self.args.finetune:
-    #             print('loading finetune model weight')
-    #             self.model.load_state_dict(
-    #                 torch.load(os.path.join(
-    #                     self.args.model_save_path + setting, 'finetune',
-    #                     'checkpoint.pth'),
-    #                            map_location=self.device))
-    #             test_results_save_path = self.args.test_results_save_path + setting + '/finetune/'
-    #             results_save_path = self.args.results_save_path + setting + '/finetune/'
-    #         else:
-    #             print('loading supervised model weight')
-    #             self.model.load_state_dict(
-    #                 torch.load(os.path.join(
-    #                     self.args.model_save_path + setting, 'default',
-    #                     'checkpoint.pth'),
-    #                            map_location=self.device))
-    #             test_results_save_path = self.args.test_results_save_path + setting + '/default/'
-    #             results_save_path = self.args.results_save_path + setting + '/default/'
-
-    #     if not os.path.exists(test_results_save_path):
-    #         os.makedirs(test_results_save_path)
-
-    #     if not os.path.exists(results_save_path):
-    #         os.makedirs(results_save_path)
-
-    #     preds = []
-    #     trues = []
-    #     climatologys = []
-
-    #     self.model.eval()
-
-    #     with torch.no_grad():
-    #         for i, (batch_x, batch_y, batch_x_mark,
-    #                 batch_y_mark), (climatology_batch_x, climatology_batch_y,
-    #                                 climatology_batch_x_mark,
-    #                                 climatology_batch_y_mark) in zip(
-    #                                     enumerate(test_loader),
-    #                                     enumerate(climatology_loader)):
-    #             batch_x = batch_x.float().to(self.device)
-    #             batch_y = batch_y.float()
-
-    #             batch_x_mark = batch_x_mark.float().to(self.device)
-    #             batch_y_mark = batch_y_mark.float().to(self.device)
-
-    #             # decoder input
-    #             dec_inp = torch.zeros_like(
-    #                 batch_y[:, -self.args.pred_len:, :]).float()
-    #             dec_inp = torch.cat(
-    #                 [batch_y[:, :self.args.label_len, :], dec_inp],
-    #                 dim=1).float().to(self.device)
-    #             # encoder - decoder
-    #             outputs = self._model_forward(batch_x, batch_x_mark, dec_inp,
-    #                                           batch_y_mark)
-
-    #             f_dim = -1 if self.args.features == 'MS' else 0
-    #             outputs = outputs[:, -self.args.pred_len:, :]
-    #             batch_y = batch_y[:, -self.args.pred_len:, :].to(self.device)
-    #             climatology_batch_y = climatology_batch_y[:, -self.args.
-    #                                                       pred_len:, :].to(
-    #                                                           self.device)
-    #             outputs = outputs.detach().cpu().numpy()
-    #             batch_y = batch_y.detach().cpu().numpy()
-    #             climatology_batch_y = climatology_batch_y.detach().cpu().numpy(
-    #             )
-    #             if test_data.scale and self.args.inverse:
-    #                 shape = outputs.shape
-    #                 outputs = test_data.inverse_transform(
-    #                     outputs.squeeze(0)).reshape(shape)
-    #                 batch_y = test_data.inverse_transform(
-    #                     batch_y.squeeze(0)).reshape(shape)
-
-    #             if climatology_data.scale and self.args.inverse:
-    #                 shape = climatology_batch_y.shape
-    #                 climatology_batch_y = climatology_data.inverse_transform(
-    #                     climatology_batch_y.squeeze(0)).reshape(shape)
-
-    #             outputs = outputs[:, :, f_dim:]
-    #             batch_y = batch_y[:, :, f_dim:]
-    #             climatology_batch_y = climatology_batch_y[:, :, f_dim:]
-
-    #             pred = outputs
-    #             true = batch_y
-    #             climatology = climatology_batch_y
-    #             preds.append(pred)
-    #             trues.append(true)
-    #             climatologys.append(climatology)
-    #             if i % 20 == 0:
-    #                 input = batch_x.detach().cpu().numpy()
-    #                 if test_data.scale and self.args.inverse:
-    #                     shape = input.shape
-    #                     input = test_data.inverse_transform(
-    #                         input.squeeze(0)).reshape(shape)
-    #                 gt = np.concatenate((input[0, -365:, -1], true[0, :, -1]),
-    #                                     axis=0)
-    #                 pd = np.concatenate((input[0, -365:, -1], pred[0, :, -1]),
-    #                                     axis=0)
-    #                 cg = np.concatenate(
-    #                     (input[0, -365:, -1], climatology[0, :, -1]), axis=0)
-    #                 visual_climatology(
-    #                     gt, pd, cg,
-    #                     os.path.join(test_results_save_path,
-    #                                  'climatology_' + str(i) + '.pdf'))
-
-    #     preds = np.array(preds)
-    #     trues = np.array(trues)
-    #     climatologys = np.array(climatologys)
-    #     print('test shape:', preds.shape, trues.shape, climatologys.shape)
-    #     preds = preds.reshape(-1, preds.shape[-2], preds.shape[-1])
-    #     trues = trues.reshape(-1, trues.shape[-2], trues.shape[-1])
-    #     climatologys = climatologys.reshape(-1, climatologys.shape[-2],
-    #                                         climatologys.shape[-1])
-    #     print('test shape:', preds.shape, trues.shape, climatologys.shape)
-
-    #     mae1, mse1, rmse1, mape1, mspe1, rse1, corr1, r2_score1, acc1 = metric(
-    #         preds, trues)
-    #     mae2, mse2, rmse2, mape2, mspe2, rse2, corr2, r2_score2, acc2 = metric(
-    #         climatologys, trues)
-    #     print(
-    #         'pred and true: mse:{}, mae:{}, rmse:{}, mape:{}, mspe:{}, rse:{}, r2_score:{}, acc:{}'
-    #         .format(mse1, mae1, rmse1, mape1, mspe1, rse1, r2_score1, acc1))
-    #     print('corr:', corr1)
-    #     print(
-    #         'climatology and true: mse:{}, mae:{}, rmse:{}, mape:{}, mspe:{}, rse:{}, r2_score:{}, acc:{}'
-    #         .format(mse2, mae2, rmse2, mape2, mspe2, rse2, r2_score2, acc2))
-    #     print('corr:', corr2)
-    #     f = open("result_forecast_climatology.txt", 'a')
-    #     f.write(setting + "  \n")
-    #     f.write(
-    #         'pred and true: mse:{}, mae:{}, rmse:{}, mape:{}, mspe:{}, rse:{}, r2_score:{}, acc:{}'
-    #         .format(mse1, mae1, rmse1, mape1, mspe1, rse1, r2_score1, acc1))
-    #     f.write('\n')
-    #     f.write('corr:{}'.format(corr1))
-    #     f.write('\n')
-    #     f.write(
-    #         'climatology and true: mse:{}, mae:{}, rmse:{}, mape:{}, mspe:{}, rse:{}, r2_score:{}, acc:{}'
-    #         .format(mse2, mae2, rmse2, mape2, mspe2, rse2, r2_score2, acc2))
-    #     f.write('\n')
-    #     f.write('corr:{}'.format(corr2))
-    #     f.write('\n')
-    #     f.write('\n')
-    #     f.close()
-
-    #     np.save(
-    #         results_save_path + 'metrics_climatology.npy',
-    #         np.array([
-    #             mae1, mse1, rmse1, mape1, mspe1, rse1, r2_score1, acc1, mae2,
-    #             mse2, rmse2, mape2, mspe2, rse2, r2_score2, acc2
-    #         ]))
-    #     np.save(results_save_path + 'preds.npy', preds)
-    #     np.save(results_save_path + 'trues.npy', trues)
-    #     np.save(results_save_path + 'climatologys.npy', climatologys)
 
     def get_model(self):
         return self.model.module if isinstance(self.model,

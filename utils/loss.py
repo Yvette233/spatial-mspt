@@ -4,10 +4,20 @@ import torch.nn.functional as F
 
 
 class DishTSLoss(nn.Module):
+
     def __init__(self):
         super().__init__()
-        
-    def forward(self, input_y, target_y, target_x=None, phil=None, xil=None, phih=None, xih=None, alpha=0.5, beta=0.5):
+
+    def forward(self,
+                input_y,
+                target_y,
+                target_x=None,
+                phil=None,
+                xil=None,
+                phih=None,
+                xih=None,
+                alpha=0.5,
+                beta=0.5):
         if target_x is None:
             return F.mse_loss(input_y, target_y)
         B, H, C = target_y.shape
@@ -15,10 +25,21 @@ class DishTSLoss(nn.Module):
         mse_loss = F.mse_loss(input_y, target_y, reduction='none')
         # print(mse_loss.shape)
         # prior_konwledge_loss = alpha * torch.pow((torch.sum(target, dim=1, keepdim=True) / H) - phih, 2)
-        prior_konwledge_loss1 = torch.pow((torch.sum(target_x, dim=1, keepdim=True) / L) - phil, 2) + torch.abs(torch.sum(torch.pow(target_x - phil, 2), dim=1, keepdim=True)/(L-1) - xil)
-        prior_konwledge_loss2 = torch.pow((torch.sum(target_y, dim=1, keepdim=True) / H) - phih, 2) + torch.abs(torch.sum(torch.pow(target_y - phih, 2), dim=1, keepdim=True)/(H-1) - xih)
+        prior_konwledge_loss1 = torch.pow(
+            (torch.sum(target_x, dim=1, keepdim=True) / L) - phil,
+            2) + torch.abs(
+                torch.sum(torch.pow(target_x - phil, 2), dim=1, keepdim=True) /
+                (L - 1) - xil)
+        prior_konwledge_loss2 = torch.pow(
+            (torch.sum(target_y, dim=1, keepdim=True) / H) - phih,
+            2) + torch.abs(
+                torch.sum(torch.pow(target_y - phih, 2), dim=1, keepdim=True) /
+                (H - 1) - xih)
         # print(prior_konwledge_loss.shape)
-        return torch.mean(torch.mean(mse_loss + alpha * prior_konwledge_loss1 + beta * prior_konwledge_loss2, dim=1), dim=0)
+        return torch.mean(torch.mean(mse_loss + alpha * prior_konwledge_loss1 +
+                                     beta * prior_konwledge_loss2,
+                                     dim=1),
+                          dim=0)
 
 
 # input = torch.rand(2, 96, 1)
@@ -29,6 +50,7 @@ class DishTSLoss(nn.Module):
 # loss = DishTSLoss()
 # loss(input, target, phih, xih)
 # print(loss(input, target))
+
 
 def gram_matrix(feat):
     # https://github.com/pytorch/examples/blob/master/fast_neural_style/neural_style/utils.py
@@ -47,6 +69,7 @@ def total_variation_loss(image):
 
 
 class InpaintingLoss(nn.Module):
+
     def __init__(self, extractor):
         super().__init__()
         self.l1 = nn.L1Loss()
@@ -64,9 +87,9 @@ class InpaintingLoss(nn.Module):
             feat_output = self.extractor(output)
             feat_gt = self.extractor(gt)
         elif output.shape[1] == 1:
-            feat_output_comp = self.extractor(torch.cat([output_comp]*3, 1))
-            feat_output = self.extractor(torch.cat([output]*3, 1))
-            feat_gt = self.extractor(torch.cat([gt]*3, 1))
+            feat_output_comp = self.extractor(torch.cat([output_comp] * 3, 1))
+            feat_output = self.extractor(torch.cat([output] * 3, 1))
+            feat_gt = self.extractor(torch.cat([gt] * 3, 1))
         else:
             raise ValueError('only gray an')
 
@@ -86,22 +109,27 @@ class InpaintingLoss(nn.Module):
 
         return loss_dict
 
+
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+
 class TILDE_Q(nn.Module):
+
     def __init__(self, alpha, gamma):
         super().__init__()
         assert 0 <= alpha <= 1
         self.alpha = alpha
         self.gamma = gamma
-    
+
     def ashift_loss(self, input, target):
         # input [B, T, C]
         # target [B, T, C]
         B, T, C = input.shape
-        return (torch.sum(torch.abs(1 / T - F.softmax(input - target, dim=1)), dim=1, keepdim=True)).mean()
-    
+        return (torch.sum(torch.abs(1 / T - F.softmax(input - target, dim=1)),
+                          dim=1,
+                          keepdim=True)).mean()
+
     def phase_loss(self, input, target, top_k=5, p=2):
         # input [B, T, C]
         # target [B, T, C]
@@ -110,77 +138,102 @@ class TILDE_Q(nn.Module):
         B, T, C = target_f.shape
         target_f_abs = torch.abs(target_f)
         target_f_abs[:, 0, :] = 0
-        _, top_list = torch.topk(target_f_abs, top_k, dim=1) # [B, top_k, C]
+        _, top_list = torch.topk(target_f_abs, top_k, dim=1)  # [B, top_k, C]
         # Create a range tensor of shape [B, T, C] similar to xf's T dimension
-        all_indices = torch.arange(T, device=input.device).view(1, T, 1).expand(B, -1, C)
+        all_indices = torch.arange(T, device=input.device).view(1, T,
+                                                                1).expand(
+                                                                    B, -1, C)
         # Create a mask of shape [B, T, C] where top_k indices are marked with False (or 0)
         mask = torch.ones(B, T, C, dtype=torch.bool, device=input.device)
         mask.scatter_(1, top_list, 0)
         # Get the indices of the non-top_k elements
         non_top_list = all_indices[mask].view(B, T - top_k, C)
-        domain_loss = torch.norm(torch.gather(target_f, 1, top_list) - torch.gather(input_f, 1, top_list), p=p, dim=1).mean()
-        nondomain_loss = torch.norm(torch.gather(input_f, 1, non_top_list), p=p, dim=1, keepdim=True).mean()
+        domain_loss = torch.norm(torch.gather(target_f, 1, top_list) -
+                                 torch.gather(input_f, 1, top_list),
+                                 p=p,
+                                 dim=1).mean()
+        nondomain_loss = torch.norm(torch.gather(input_f, 1, non_top_list),
+                                    p=p,
+                                    dim=1,
+                                    keepdim=True).mean()
         return domain_loss + nondomain_loss
-    
+
     def amp_loss(self, input, target, p=2):
         # input [B, T, C]
         # target [B, T, C]
-        self_corr = F.conv1d(target.permute(0, 2, 1), torch.flip(target.permute(0, 2, 1), dims=[-1]), groups=target.shape[2]).permute(0, 2, 1)
-        cross_corr = F.conv1d(target.permute(0, 2, 1), torch.flip(input.permute(0, 2, 1), dims=[-1]), groups=target.shape[2]).permute(0, 2, 1)
+        self_corr = F.conv1d(target.permute(0, 2, 1),
+                             torch.flip(target.permute(0, 2, 1), dims=[-1]),
+                             groups=target.shape[2]).permute(0, 2, 1)
+        cross_corr = F.conv1d(target.permute(0, 2, 1),
+                              torch.flip(input.permute(0, 2, 1), dims=[-1]),
+                              groups=target.shape[2]).permute(0, 2, 1)
         # print(self_corr.shape, cross_corr.shape)
-        return torch.norm(self_corr - cross_corr, p=p, dim=1, keepdim=True).mean()
-        
+        return torch.norm(self_corr - cross_corr, p=p, dim=1,
+                          keepdim=True).mean()
+
     def forward(self, input, target):
         # input [B, H, C]
-        # target [B, L, C] 
+        # target [B, L, C]
         print(self.alpha * self.ashift_loss(input, target))
         print((1 - self.alpha) * self.phase_loss(input, target))
         print(self.gamma * self.amp_loss(input, target))
-        return (self.alpha * self.ashift_loss(input, target) + (1 - self.alpha) * self.phase_loss(input, target) + self.gamma * self.amp_loss(input, target))
+        return (self.alpha * self.ashift_loss(input, target) +
+                (1 - self.alpha) * self.phase_loss(input, target) +
+                self.gamma * self.amp_loss(input, target))
 
 
 class TILDEQ_LOSS_OFFICIAL(nn.Module):
+
     def __init__(self, alpha, gamma):
         super().__init__()
         assert 0 <= alpha <= 1
         self.alpha = alpha
         self.gamma = gamma
-    
+
     def ashift_loss(self, outputs, targets):
         T = outputs.size(-1)
-        mean, o_mean = targets.mean(dim = -1, keepdim = True), outputs.mean(dim = -1, keepdim = True)
+        mean, o_mean = targets.mean(dim=-1,
+                                    keepdim=True), outputs.mean(dim=-1,
+                                                                keepdim=True)
         # reduce the effect of mean value in softmax
         normed_tgt = targets - mean
         normed_out = outputs - o_mean
         #Note: because we need a signed distance function, we use simple negation instead of L1 distance
-        loss = torch.mean(torch.sum(torch.abs(1 / T - torch.softmax((normed_tgt - normed_out), dim = -1)), dim = -1))
+        loss = torch.mean(
+            torch.sum(
+                torch.abs(1 / T -
+                          torch.softmax((normed_tgt - normed_out), dim=-1)),
+                dim=-1))
 
         return loss
 
-    def phase_loss(self, outputs, targets, batch_x = None):
+    def phase_loss(self, outputs, targets, batch_x=None):
         # if batch_x is not None:
-            # batch_x = batch_x.permute(0,2,1)
-            # outputs = torch.cat([batch_x[:, :, -365:], outputs], dim = -1)
-            # targets = torch.cat([batch_x[:, :, -365:], targets], dim = -1)
+        # batch_x = batch_x.permute(0,2,1)
+        # outputs = torch.cat([batch_x[:, :, -365:], outputs], dim = -1)
+        # targets = torch.cat([batch_x[:, :, -365:], targets], dim = -1)
         T = outputs.size(-1)
-        out_fourier = torch.fft.fft(outputs, dim = -1) # [B, T]
-        tgt_fourier = torch.fft.fft(targets, dim = -1) # [B, T]
+        out_fourier = torch.fft.fft(outputs, dim=-1)  # [B, T]
+        tgt_fourier = torch.fft.fft(targets, dim=-1)  # [B, T]
 
         # calculate dominant frequencies
-        tgt_fourier_sq = (tgt_fourier.real ** 2 + tgt_fourier.imag ** 2) # [B, T]
+        tgt_fourier_sq = (tgt_fourier.real**2 + tgt_fourier.imag**2)  # [B, T]
         # filter out the non-dominant frequencies
-        mask = (tgt_fourier_sq > (T)).float() # [B, T]
+        mask = (tgt_fourier_sq > (T)).float()  # [B, T]
         # guarantee the number of dominant frequencies is equal or greater than T**0.5
-        topk_indices = tgt_fourier_sq.topk(k = int(T ** 0.5), dim = -1).indices # [B, T**0.5]
-        mask = mask.scatter_(-1, topk_indices, 1.) # [B, T]
+        topk_indices = tgt_fourier_sq.topk(k=int(T**0.5),
+                                           dim=-1).indices  # [B, T**0.5]
+        mask = mask.scatter_(-1, topk_indices, 1.)  # [B, T]
         # guarantee that the loss function always considers the mean value
-        mask[...,0] = 1. # [B, T]
-        mask = torch.where(mask > 0, 1., 0.) # [B, T]
-        mask = mask.bool() # [B, T]
-        inv_mask = (~mask).float() # [B, T]
+        mask[..., 0] = 1.  # [B, T]
+        mask = torch.where(mask > 0, 1., 0.)  # [B, T]
+        mask = mask.bool()  # [B, T]
+        inv_mask = (~mask).float()  # [B, T]
         # inv_mask /= torch.mean(inv_mask) # [B, T]
-        zero_error = torch.abs(out_fourier) * inv_mask # [B, T]
-        zero_error = torch.where(torch.isnan(zero_error), torch.zeros_like(zero_error), zero_error) # [B, 1]
+        zero_error = torch.abs(out_fourier) * inv_mask  # [B, T]
+        zero_error = torch.where(torch.isnan(zero_error),
+                                 torch.zeros_like(zero_error),
+                                 zero_error)  # [B, 1]
         mask = mask.float()
         # mask /= torch.mean(mask)
         ae = torch.abs(out_fourier - tgt_fourier) * mask
@@ -193,24 +246,25 @@ class TILDEQ_LOSS_OFFICIAL(nn.Module):
     def amp_loss(self, outputs, targets):
         T = outputs.size(-1)
         fft_size = 1 << (2 * T - 1).bit_length()
-        out_fourier = torch.fft.fft(outputs, fft_size, dim = -1)
-        tgt_fourier = torch.fft.fft(targets, fft_size, dim = -1)
+        out_fourier = torch.fft.fft(outputs, fft_size, dim=-1)
+        tgt_fourier = torch.fft.fft(targets, fft_size, dim=-1)
 
-        out_norm = torch.norm(outputs, dim = -1, keepdim = True)
-        tgt_norm = torch.norm(targets, dim = -1, keepdim = True)
-        tgt_corr = torch.fft.ifft(tgt_fourier * tgt_fourier.conj(), dim = -1).real
+        out_norm = torch.norm(outputs, dim=-1, keepdim=True)
+        tgt_norm = torch.norm(targets, dim=-1, keepdim=True)
+        tgt_corr = torch.fft.ifft(tgt_fourier * tgt_fourier.conj(),
+                                  dim=-1).real
         n_tgt_corr = tgt_corr / (tgt_norm * tgt_norm)
 
-        ccorr = torch.fft.ifft(tgt_fourier * out_fourier.conj(), dim = -1).real
+        ccorr = torch.fft.ifft(tgt_fourier * out_fourier.conj(), dim=-1).real
         n_ccorr = ccorr / (tgt_norm * out_norm)
         loss = torch.mean(torch.abs(n_tgt_corr - n_ccorr))
 
         return loss
-    
-    def forward(self, outputs, targets, batch_x = None):
+
+    def forward(self, outputs, targets, batch_x=None):
         #outputs = outputs.squeeze(dim = 1)
-        outputs = outputs.permute(0,2,1)
-        targets = targets.permute(0,2,1)
+        outputs = outputs.permute(0, 2, 1)
+        targets = targets.permute(0, 2, 1)
 
         assert not torch.isnan(outputs).any(), "Nan value detected!"
         assert not torch.isinf(outputs).any(), "Inf value detected!"
@@ -224,13 +278,35 @@ class TILDEQ_LOSS_OFFICIAL(nn.Module):
         assert loss == loss, "Loss Nan!"
         return loss
 
+
 class ReconstructionLoss(nn.Module):
+
     def __init__(self):
         super().__init__()
-    
-    def forward(self, input, target, mask):
+
+    def forward(self, inputs, targets, masks):
         # print(input.shape, target.shape, mask.shape)
-        loss = (input - target) ** 2
+        losses = []
+        for input, target, mask in zip(inputs, targets, masks):
+            sst_input = input[:, -1, :, :]  # [B, L, P]
+            sst_target = target[:, -1, :, :]  # [B, L, P]
+            sst_mask = masks[:, -1, :]  # [B, L]
+
+            loss = (sst_input - sst_target)**2  # [B, L, P]
+            loss = loss.mean(dim=-1)  # [B, L]
+            loss = (loss * sst_mask).sum() / sst_mask.sum()  # [B]
+            losses.append(loss)  # [B]
+        losses = torch.stack(losses)
+        return losses.mean()
+
+
+class MarineHeatwaveMSELoss(nn.Module):
+
+    def __init__(self):
+        super().__init__()
+
+    def forward(self, input, target, mask):
+        loss = (input - target)**2
         loss = loss.mean(dim=-1)
-        loss = (loss * mask).sum() / mask.sum()
+        loss = (loss * mask).mean()
         return loss

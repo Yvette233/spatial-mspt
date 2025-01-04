@@ -1,9 +1,15 @@
 import argparse
 import os
 import torch
-from exp.exp_pretrain import Exp_Pretrain
+from exp.exp_extreme import Exp_Extreme
 import random
 import numpy as np
+
+# def get_patch_sizes(seq_len):
+#     # get the period list, first element is inf if exclude_zero is False
+#     peroid_list = 1 / torch.fft.rfftfreq(seq_len)[1:]
+#     patch_sizes = peroid_list.floor().int().unique().detach().cpu().numpy()
+#     return patch_sizes
 
 if __name__ == '__main__':
     fix_seed = 2024
@@ -11,14 +17,13 @@ if __name__ == '__main__':
     torch.manual_seed(fix_seed)
     np.random.seed(fix_seed)
 
-    parser = argparse.ArgumentParser(description='TimesNet')
+    parser = argparse.ArgumentParser(description='Multi-Scale Periodicity Transformer(MSPT)')
 
     # basic config
     parser.add_argument('--is_training', type=int, required=True, default=1, help='status')
-    parser.add_argument('--model_id', type=str, required=True, default='test', help='model id')
-    parser.add_argument('--model', type=str, required=True, default='Autoformer',
-                        help='model name, options: [Autoformer, Transformer, TimesNet]')
-    parser.add_argument('--head_type', type=str, required=True, default='prediction', help='head type, options: [pretrain, prediction]') 
+    parser.add_argument('--model_id', type=str, required=True, default='extreme', help='model id')
+    parser.add_argument('--model', type=str, required=True, default='MSPT',
+                        help='model name, options: [MSPT]')
 
     # data loader
     parser.add_argument('--data', type=str, required=True, default='ETTm1', help='dataset type')
@@ -29,7 +34,9 @@ if __name__ == '__main__':
     parser.add_argument('--target', type=str, default='OT', help='target feature in S or MS task')
     parser.add_argument('--freq', type=str, default='h',
                         help='freq for time features encoding, options:[s:secondly, t:minutely, h:hourly, d:daily, b:business days, w:weekly, m:monthly], you can also use more detailed freq like 15min or 3h')
-    parser.add_argument('--checkpoints', type=str, default='/root/autodl-tmp/checkpoints/', help='location of model checkpoints')
+    parser.add_argument('--model_save_path', type=str, default='/root/autodl-tmp-extreme/checkpoints/', help='path to save model')
+    parser.add_argument('--results_save_path', type=str, default='/root/autodl-tmp-extreme/results/', help='path to save results')
+    parser.add_argument('--test_results_save_path', type=str, default='/root/autodl-tmp-extreme/test_results/', help='path to save test results')
 
     # forecasting task
     parser.add_argument('--seq_len', type=int, default=96, help='input sequence length')
@@ -38,6 +45,7 @@ if __name__ == '__main__':
     parser.add_argument('--inverse', action='store_true', help='inverse output data', default=False)
 
     # model define
+    parser.add_argument('--individual', action='store_true', help='Channel independence', default=False)
     parser.add_argument('--top_k', type=int, default=5, help='for TimesBlock')
     parser.add_argument('--num_kernels', type=int, default=6, help='for Inception')
     parser.add_argument('--enc_in', type=int, default=7, help='encoder input size')
@@ -59,9 +67,6 @@ if __name__ == '__main__':
     parser.add_argument('--activation', type=str, default='gelu', help='activation')
     parser.add_argument('--output_attention', action='store_true', help='whether to output attention in ecoder')
 
-    # Pretrain mask
-    parser.add_argument('--mask_ratio', type=float, default=0.4, help='masking ratio for the input')
-    
     # optimization
     parser.add_argument('--num_workers', type=int, default=10, help='data loader num workers')
     parser.add_argument('--itr', type=int, default=1, help='experiments times')
@@ -70,7 +75,7 @@ if __name__ == '__main__':
     parser.add_argument('--patience', type=int, default=3, help='early stopping patience')
     parser.add_argument('--learning_rate', type=float, default=0.0001, help='optimizer learning rate')
     parser.add_argument('--des', type=str, default='test', help='exp description')
-    parser.add_argument('--loss', type=str, default='MSE', help='loss function')
+    parser.add_argument('--loss', type=str, default='MHWMSE', help='loss function')
     parser.add_argument('--lradj', type=str, default='OneCycleLR', help='adjust learning rate')
     parser.add_argument('--use_amp', action='store_true', help='use automatic mixed precision training', default=False)
 
@@ -97,16 +102,16 @@ if __name__ == '__main__':
 
     print('Args in experiment:')
     print(args)
-
-    Exp = Exp_Pretrain
+    
+    Exp = Exp_Extreme
+        
 
     if args.is_training:
         for ii in range(args.itr):
             # setting record of experiments
-            setting = '{}_{}_{}_{}_ft{}_sl{}_ll{}_pl{}_dm{}_nh{}_el{}_dl{}_df{}_fc{}_eb{}_dt{}_{}_{}'.format(
+            setting = '{}_{}_{}_ft{}_sl{}_ll{}_pl{}_dm{}_nh{}_el{}_dl{}_df{}_fc{}_eb{}_dt{}_{}_{}'.format(
                 args.model_id,
                 args.model,
-                args.head_type,
                 args.data,
                 args.features,
                 args.seq_len,
@@ -127,14 +132,13 @@ if __name__ == '__main__':
             exp.train(setting)
 
             print('>>>>>>>testing : {}<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'.format(setting))
-            exp.test(setting)
+            exp.test(setting, load_weight=True)
             torch.cuda.empty_cache()
     else:
         ii = 0
-        setting = '{}_{}_{}_{}_ft{}_sl{}_ll{}_pl{}_dm{}_nh{}_el{}_dl{}_df{}_fc{}_eb{}_dt{}_{}_{}'.format(
+        setting = '{}_{}_{}_ft{}_sl{}_ll{}_pl{}_dm{}_nh{}_el{}_dl{}_df{}_fc{}_eb{}_dt{}_{}_{}'.format(
             args.model_id,
             args.model,
-            args.head_type,
             args.data,
             args.features,
             args.seq_len,
@@ -149,8 +153,8 @@ if __name__ == '__main__':
             args.embed,
             args.distil,
             args.des, ii)
-
+        
         exp = Exp(args)  # set experiments
         print('>>>>>>>testing : {}<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'.format(setting))
-        exp.test(setting, test=1) 
+        exp.test(setting, load_weight=True) 
         torch.cuda.empty_cache()

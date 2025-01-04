@@ -1,28 +1,23 @@
 import os
 import torch
-from models import FC_LSTM, MSPT, MSPT_S, MSPT_L, MSPT_E, MAE, MAEncoder, DLinear, NLinear, TransDtSt_Part, iTransformer, MICN, TimesNet, Climatology, Informer, MSPT_0525, LSTM
+from models import FC_LSTM, MSPT, DLinear, NLinear, TransDtSt_Part, iTransformer, MICN, TimesNet, Informer, LSTM, PatchTST
 
 
 class Exp_Basic(object):
+
     def __init__(self, args):
         self.args = args
         self.model_dict = {
             'MSPT': MSPT,
-            'MSPT_S': MSPT_S,
-            'MSPT_L': MSPT_L,
-            'MSPT_E': MSPT_E,
-            'MAE': MAE,
-            'MAEncoder': MAEncoder,
-            'DLinear': DLinear,
-            'NLinear': NLinear,
-            'FC_LSTM': FC_LSTM,
             'TransDtSt_Part': TransDtSt_Part,
+            'FC_LSTM': FC_LSTM,
             'iTransformer': iTransformer,
             'MICN': MICN,
-            'TimesNet': TimesNet, 
-            'Climatology': Climatology,
+            'PatchTST': PatchTST,
+            'TimesNet': TimesNet,
+            'DLinear': DLinear,
+            'NLinear': NLinear,
             'Informer': Informer,
-            'MSPT_0525': MSPT_0525,
             'LSTM': LSTM
         }
         self.device = self._acquire_device()
@@ -35,7 +30,8 @@ class Exp_Basic(object):
     def _acquire_device(self):
         if self.args.use_gpu:
             os.environ["CUDA_VISIBLE_DEVICES"] = str(
-                self.args.gpu) if not self.args.use_multi_gpu else self.args.devices
+                self.args.gpu
+            ) if not self.args.use_multi_gpu else self.args.devices
             device = torch.device('cuda:{}'.format(self.args.gpu))
             print('Use GPU: cuda:{}'.format(self.args.gpu))
         else:

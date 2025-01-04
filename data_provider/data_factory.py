@@ -1,4 +1,4 @@
-from data_provider.data_loader import Dataset_ETT_hour, Dataset_ETT_minute, Dataset_Custom
+from data_provider.data_loader import Dataset_ETT_hour, Dataset_ETT_minute, Dataset_Custom, Dataset_Extreme
 from torch.utils.data import DataLoader
 
 data_dict = {
@@ -7,6 +7,7 @@ data_dict = {
     'ETTm1': Dataset_ETT_minute,
     'ETTm2': Dataset_ETT_minute,
     'custom': Dataset_Custom,
+    'extreme': Dataset_Extreme,
 }
 
 
@@ -14,7 +15,7 @@ def data_provider(args, flag):
     Data = data_dict[args.data]
     timeenc = 0 if args.embed != 'timeF' else 1
 
-    if flag == 'test' or flag == 'test_climatology':
+    if flag == 'test':
         shuffle_flag = False
         drop_last = True
         batch_size = 1  # bsz=1 for evaluation
@@ -37,10 +38,9 @@ def data_provider(args, flag):
         # seasonal_patterns=args.seasonal_patterns
     )
     print(flag, len(data_set))
-    data_loader = DataLoader(
-        data_set,
-        batch_size=batch_size,
-        shuffle=shuffle_flag,
-        num_workers=args.num_workers,
-        drop_last=drop_last)
+    data_loader = DataLoader(data_set,
+                             batch_size=batch_size,
+                             shuffle=shuffle_flag,
+                             num_workers=args.num_workers,
+                             drop_last=drop_last)
     return data_set, data_loader
