@@ -225,7 +225,8 @@ class DataEmbedding_wo_pos(nn.Module):
                  dropout=0.1):
         super(DataEmbedding_wo_pos, self).__init__()
 
-        self.value_embedding = TokenEmbedding(c_in=c_in, d_model=d_model)
+        # self.value_embedding = TokenEmbedding(c_in=c_in, d_model=d_model)
+        self.value_embedding = nn.Linear(c_in, d_model)
         self.position_embedding = PositionalEmbedding(d_model=d_model)
         self.temporal_embedding = TemporalEmbedding(
             d_model=d_model, embed_type=embed_type,

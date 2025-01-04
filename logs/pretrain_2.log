@@ -1,0 +1,200 @@
+Args in experiment:
+Namespace(is_training=1, model_id='omdata1_test1', model='MSPT_SSL', data='custom', root_path='./dataset/multivariate/', data_path='oisst_lat_14.0_lon_112.0.csv', features='MS', target='sst', freq='d', pretrain_save_path='/root/autodl-tmp/pretrains/', model_save_path='/root/autodl-tmp/checkpoints/', results_save_path='/root/autodl-tmp/results/', test_results_save_path='/root/autodl-tmp/test_results/', model_save_filename='checkpoint.pth', pretrain=True, pretrain_epochs=10, mask_ratio=0.4, finetune=False, freeze_epochs=3, seq_len=365, label_len=0, pred_len=0, inverse=True, individual=False, max_tokens=30, top_k=5, num_kernels=6, enc_in=11, dec_in=11, c_out=11, d_model=512, n_heads=8, e_layers=2, d_layers=1, d_ff=2048, moving_avg=25, factor=1, distil=True, dropout=0.2, embed='timeF', activation='gelu', output_attention=False, num_workers=10, itr=1, train_epochs=100, batch_size=128, patience=10, learning_rate=0.001, des='20240615', loss='MSE', lradj='OneCycleLR', use_amp=False, use_gpu=True, gpu=0, use_multi_gpu=False, devices='0,1,2,3', p_hidden_dims=[128, 128], p_hidden_layers=2)
+Use GPU: cuda:0
+>>>>>>>start training : omdata1_test1_MSPT_SSL_custom_ftMS_sl365_ll0_pl0_dm512_nh8_el2_dl1_df2048_fc1_ebtimeF_dtTrue_20240615_0>>>>>>>>>>>>>>>>>>>>>>>>>>
+train 10118
+val 1499
+test 2996
+Patience count starts from 1 epoch
+Using OneCycleLR learning rate adjustment
+Starting pretraining
+Epoch: 1 cost time: 1.979860782623291
+Epoch: 1, Steps: 79 | Train Loss: 0.9615853 Vali Loss: 0.4529132 Test Loss: 0.4619828
+Validation loss decreased (inf --> 0.452913).  Saving model ...
+Adjusting learning rate to: 0.0000426
+Epoch: 2 cost time: 1.5678291320800781
+Epoch: 2, Steps: 79 | Train Loss: 0.5165860 Vali Loss: 0.2633023 Test Loss: 0.2798857
+Validation loss decreased (0.452913 --> 0.263302).  Saving model ...
+Adjusting learning rate to: 0.0000505
+Epoch: 3 cost time: 1.639035940170288
+Epoch: 3, Steps: 79 | Train Loss: 0.4081388 Vali Loss: 0.2230966 Test Loss: 0.2345647
+Validation loss decreased (0.263302 --> 0.223097).  Saving model ...
+Adjusting learning rate to: 0.0000635
+Epoch: 4 cost time: 2.4117374420166016
+Epoch: 4, Steps: 79 | Train Loss: 0.3579816 Vali Loss: 0.2040472 Test Loss: 0.2089464
+Validation loss decreased (0.223097 --> 0.204047).  Saving model ...
+Adjusting learning rate to: 0.0000815
+Epoch: 5 cost time: 1.5949933528900146
+Epoch: 5, Steps: 79 | Train Loss: 0.3370102 Vali Loss: 0.1915120 Test Loss: 0.1860713
+Validation loss decreased (0.204047 --> 0.191512).  Saving model ...
+Adjusting learning rate to: 0.0001044
+Epoch: 6 cost time: 1.5974435806274414
+Epoch: 6, Steps: 79 | Train Loss: 0.3227112 Vali Loss: 0.1750976 Test Loss: 0.1852610
+Validation loss decreased (0.191512 --> 0.175098).  Saving model ...
+Adjusting learning rate to: 0.0001317
+Epoch: 7 cost time: 1.6635773181915283
+Epoch: 7, Steps: 79 | Train Loss: 0.3234417 Vali Loss: 0.1765539 Test Loss: 0.1848720
+EarlyStopping counter: 1 out of 10
+Adjusting learning rate to: 0.0001634
+Epoch: 8 cost time: 1.778733253479004
+Epoch: 8, Steps: 79 | Train Loss: 0.3219833 Vali Loss: 0.1659776 Test Loss: 0.1987688
+Validation loss decreased (0.175098 --> 0.165978).  Saving model ...
+Adjusting learning rate to: 0.0001989
+Epoch: 9 cost time: 1.68365478515625
+Epoch: 9, Steps: 79 | Train Loss: 0.4030015 Vali Loss: 0.3206429 Test Loss: 0.2837256
+EarlyStopping counter: 1 out of 10
+Adjusting learning rate to: 0.0002380
+Epoch: 10 cost time: 1.511831521987915
+Epoch: 10, Steps: 79 | Train Loss: 0.4809294 Vali Loss: 0.7743107 Test Loss: 0.5983232
+EarlyStopping counter: 2 out of 10
+Adjusting learning rate to: 0.0002802
+Epoch: 11 cost time: 1.649052381515503
+Epoch: 11, Steps: 79 | Train Loss: 0.8265617 Vali Loss: 0.8283811 Test Loss: 0.7478553
+EarlyStopping counter: 3 out of 10
+Adjusting learning rate to: 0.0003250
+Epoch: 12 cost time: 1.6902177333831787
+Epoch: 12, Steps: 79 | Train Loss: 0.9053821 Vali Loss: 0.9029677 Test Loss: 0.7689813
+EarlyStopping counter: 4 out of 10
+Adjusting learning rate to: 0.0003719
+Epoch: 13 cost time: 1.5597283840179443
+Epoch: 13, Steps: 79 | Train Loss: 0.9530282 Vali Loss: 0.7133101 Test Loss: 0.7147120
+EarlyStopping counter: 5 out of 10
+Adjusting learning rate to: 0.0004205
+Epoch: 14 cost time: 1.662989854812622
+Epoch: 14, Steps: 79 | Train Loss: 0.9474286 Vali Loss: 0.9715399 Test Loss: 0.9816124
+EarlyStopping counter: 6 out of 10
+Adjusting learning rate to: 0.0004701
+Epoch: 15 cost time: 1.5312955379486084
+Epoch: 15, Steps: 79 | Train Loss: 1.1557357 Vali Loss: 1.2127834 Test Loss: 1.0460742
+EarlyStopping counter: 7 out of 10
+Adjusting learning rate to: 0.0005203
+Epoch: 16 cost time: 1.4640100002288818
+Epoch: 16, Steps: 79 | Train Loss: 1.0269725 Vali Loss: 1.0376440 Test Loss: 0.9791342
+EarlyStopping counter: 8 out of 10
+Adjusting learning rate to: 0.0005705
+Epoch: 17 cost time: 1.5564334392547607
+Epoch: 17, Steps: 79 | Train Loss: 0.9590254 Vali Loss: 0.7763084 Test Loss: 0.7860766
+EarlyStopping counter: 9 out of 10
+Adjusting learning rate to: 0.0006202
+Epoch: 18 cost time: 1.461742639541626
+Args in experiment:
+Namespace(is_training=1, model_id='omdata1_test1', model='MSPT_SSL', data='custom', root_path='./dataset/multivariate/', data_path='oisst_lat_14.0_lon_112.0.csv', features='MS', target='sst', freq='d', pretrain_save_path='/root/autodl-tmp/pretrains/', model_save_path='/root/autodl-tmp/checkpoints/', results_save_path='/root/autodl-tmp/results/', test_results_save_path='/root/autodl-tmp/test_results/', model_save_filename='checkpoint.pth', pretrain=True, pretrain_epochs=10, mask_ratio=0.4, finetune=False, freeze_epochs=3, seq_len=365, label_len=0, pred_len=0, inverse=True, individual=False, max_tokens=30, top_k=5, num_kernels=6, enc_in=11, dec_in=11, c_out=11, d_model=512, n_heads=8, e_layers=2, d_layers=1, d_ff=2048, moving_avg=25, factor=1, distil=True, dropout=0.2, embed='timeF', activation='gelu', output_attention=False, num_workers=10, itr=1, train_epochs=100, batch_size=128, patience=10, learning_rate=0.001, des='20240615', loss='MSE', lradj='OneCycleLR', use_amp=False, use_gpu=True, gpu=0, use_multi_gpu=False, devices='0,1,2,3', p_hidden_dims=[128, 128], p_hidden_layers=2)
+Use GPU: cuda:0
+>>>>>>>start training : omdata1_test1_MSPT_SSL_custom_ftMS_sl365_ll0_pl0_dm512_nh8_el2_dl1_df2048_fc1_ebtimeF_dtTrue_20240615_0>>>>>>>>>>>>>>>>>>>>>>>>>>
+train 10118
+val 1499
+test 2996
+Patience count starts from 1 epoch
+Using OneCycleLR learning rate adjustment
+Starting pretraining
+Epoch: 1 cost time: 2.018920421600342
+Epoch: 1, Steps: 79 | Train Loss: 1.0701077 Vali Loss: 0.9963313 Test Loss: 0.9240130
+Validation loss decreased (inf --> 0.996331).  Saving model ...
+Adjusting learning rate to: 0.0000426
+Epoch: 2 cost time: 1.6725380420684814
+Epoch: 2, Steps: 79 | Train Loss: 1.0355675 Vali Loss: 0.9968958 Test Loss: 0.9231133
+EarlyStopping counter: 1 out of 10
+Adjusting learning rate to: 0.0000505
+Epoch: 3 cost time: 1.58363676071167
+Epoch: 3, Steps: 79 | Train Loss: 1.0301202 Vali Loss: 0.9960982 Test Loss: 0.9241188
+Validation loss decreased (0.996331 --> 0.996098).  Saving model ...
+Adjusting learning rate to: 0.0000635
+Epoch: 4 cost time: 2.245459794998169
+Epoch: 4, Steps: 79 | Train Loss: 1.0228178 Vali Loss: 0.9974762 Test Loss: 0.9252325
+EarlyStopping counter: 1 out of 10
+Adjusting learning rate to: 0.0000815
+Epoch: 5 cost time: 1.6191864013671875
+Epoch: 5, Steps: 79 | Train Loss: 1.0104090 Vali Loss: 0.9998420 Test Loss: 0.9232982
+EarlyStopping counter: 2 out of 10
+Adjusting learning rate to: 0.0001044
+Epoch: 6 cost time: 1.7287213802337646
+Args in experiment:
+Namespace(is_training=1, model_id='omdata1_test1', model='MSPT_SSL', data='custom', root_path='./dataset/multivariate/', data_path='oisst_lat_14.0_lon_112.0.csv', features='MS', target='sst', freq='d', pretrain_save_path='/root/autodl-tmp/pretrains/', model_save_path='/root/autodl-tmp/checkpoints/', results_save_path='/root/autodl-tmp/results/', test_results_save_path='/root/autodl-tmp/test_results/', model_save_filename='checkpoint.pth', pretrain=True, pretrain_epochs=10, mask_ratio=0.4, finetune=False, freeze_epochs=3, seq_len=365, label_len=0, pred_len=0, inverse=True, individual=False, max_tokens=30, top_k=5, num_kernels=6, enc_in=11, dec_in=11, c_out=11, d_model=512, n_heads=8, e_layers=2, d_layers=1, d_ff=2048, moving_avg=25, factor=1, distil=True, dropout=0.2, embed='timeF', activation='gelu', output_attention=False, num_workers=10, itr=1, train_epochs=100, batch_size=128, patience=10, learning_rate=0.001, des='20240615', loss='MSE', lradj='Constant', use_amp=False, use_gpu=True, gpu=0, use_multi_gpu=False, devices='0,1,2,3', p_hidden_dims=[128, 128], p_hidden_layers=2)
+Use GPU: cuda:0
+>>>>>>>start training : omdata1_test1_MSPT_SSL_custom_ftMS_sl365_ll0_pl0_dm512_nh8_el2_dl1_df2048_fc1_ebtimeF_dtTrue_20240615_0>>>>>>>>>>>>>>>>>>>>>>>>>>
+train 10118
+val 1499
+test 2996
+Patience count starts from 1 epoch
+Using Constant learning rate adjustment
+Starting pretraining
+Epoch: 1 cost time: 1.7899904251098633
+Epoch: 1, Steps: 79 | Train Loss: 1.0442728 Vali Loss: 1.0062368 Test Loss: 0.9334767
+Validation loss decreased (inf --> 1.006237).  Saving model ...
+Adjusting learning rate to: 0.0010000
+Epoch: 2 cost time: 1.5676627159118652
+Epoch: 2, Steps: 79 | Train Loss: 0.9529038 Vali Loss: 1.0016833 Test Loss: 0.9268649
+Validation loss decreased (1.006237 --> 1.001683).  Saving model ...
+Adjusting learning rate to: 0.0010000
+Epoch: 3 cost time: 1.7226545810699463
+Epoch: 3, Steps: 79 | Train Loss: 0.9448633 Vali Loss: 0.9962144 Test Loss: 0.9243185
+Validation loss decreased (1.001683 --> 0.996214).  Saving model ...
+Adjusting learning rate to: 0.0010000
+Epoch: 4 cost time: 2.133794069290161
+Epoch: 4, Steps: 79 | Train Loss: 0.9434979 Vali Loss: 0.9978934 Test Loss: 0.9248286
+EarlyStopping counter: 1 out of 10
+Adjusting learning rate to: 0.0010000
+Epoch: 5 cost time: 1.5727994441986084
+Epoch: 5, Steps: 79 | Train Loss: 0.9429245 Vali Loss: 0.9987390 Test Loss: 0.9220526
+EarlyStopping counter: 2 out of 10
+Adjusting learning rate to: 0.0010000
+Epoch: 6 cost time: 1.6204807758331299
+Epoch: 6, Steps: 79 | Train Loss: 0.9427694 Vali Loss: 0.9963874 Test Loss: 0.9216709
+EarlyStopping counter: 3 out of 10
+Adjusting learning rate to: 0.0010000
+Epoch: 7 cost time: 1.4765267372131348
+Epoch: 7, Steps: 79 | Train Loss: 0.9424720 Vali Loss: 0.9960731 Test Loss: 0.9251323
+Validation loss decreased (0.996214 --> 0.996073).  Saving model ...
+Adjusting learning rate to: 0.0010000
+Epoch: 8 cost time: 1.4840373992919922
+Epoch: 8, Steps: 79 | Train Loss: 0.9421523 Vali Loss: 0.9964522 Test Loss: 0.9218162
+EarlyStopping counter: 1 out of 10
+Adjusting learning rate to: 0.0010000
+Epoch: 9 cost time: 2.0774941444396973
+Epoch: 9, Steps: 79 | Train Loss: 0.9422625 Vali Loss: 0.9909880 Test Loss: 0.9218509
+Validation loss decreased (0.996073 --> 0.990988).  Saving model ...
+Adjusting learning rate to: 0.0010000
+Epoch: 10 cost time: 1.439091682434082
+Epoch: 10, Steps: 79 | Train Loss: 0.9421830 Vali Loss: 0.9959126 Test Loss: 0.9222389
+EarlyStopping counter: 1 out of 10
+Adjusting learning rate to: 0.0010000
+Epoch: 11 cost time: 1.5764830112457275
+Epoch: 11, Steps: 79 | Train Loss: 0.9418459 Vali Loss: 0.9955755 Test Loss: 0.9219722
+EarlyStopping counter: 2 out of 10
+Adjusting learning rate to: 0.0010000
+Epoch: 12 cost time: 1.516432762145996
+Epoch: 12, Steps: 79 | Train Loss: 0.9421570 Vali Loss: 0.9959160 Test Loss: 0.9213188
+EarlyStopping counter: 3 out of 10
+Adjusting learning rate to: 0.0010000
+Epoch: 13 cost time: 1.5101141929626465
+Epoch: 13, Steps: 79 | Train Loss: 0.9414813 Vali Loss: 0.9973842 Test Loss: 0.9222706
+EarlyStopping counter: 4 out of 10
+Adjusting learning rate to: 0.0010000
+Epoch: 14 cost time: 1.500037670135498
+Epoch: 14, Steps: 79 | Train Loss: 0.9418973 Vali Loss: 0.9956273 Test Loss: 0.9224332
+EarlyStopping counter: 5 out of 10
+Adjusting learning rate to: 0.0010000
+Epoch: 15 cost time: 1.6947944164276123
+Epoch: 15, Steps: 79 | Train Loss: 0.9418340 Vali Loss: 0.9931713 Test Loss: 0.9231429
+EarlyStopping counter: 6 out of 10
+Adjusting learning rate to: 0.0010000
+Epoch: 16 cost time: 1.5522983074188232
+Epoch: 16, Steps: 79 | Train Loss: 0.9416252 Vali Loss: 0.9940523 Test Loss: 0.9226922
+EarlyStopping counter: 7 out of 10
+Adjusting learning rate to: 0.0010000
+Epoch: 17 cost time: 1.7315254211425781
+Epoch: 17, Steps: 79 | Train Loss: 0.9414934 Vali Loss: 0.9931228 Test Loss: 0.9220223
+EarlyStopping counter: 8 out of 10
+Adjusting learning rate to: 0.0010000
+Epoch: 18 cost time: 1.48787522315979
+Epoch: 18, Steps: 79 | Train Loss: 0.9416494 Vali Loss: 0.9944417 Test Loss: 0.9219360
+EarlyStopping counter: 9 out of 10
+Adjusting learning rate to: 0.0010000
+Epoch: 19 cost time: 1.5072417259216309
+Epoch: 19, Steps: 79 | Train Loss: 0.9409659 Vali Loss: 0.9975735 Test Loss: 0.9235930
+EarlyStopping counter: 10 out of 10
+Adjusting learning rate to: 0.0010000
+Early stopping
+>>>>>>>testing : omdata1_test1_MSPT_SSL_custom_ftMS_sl365_ll0_pl0_dm512_nh8_el2_dl1_df2048_fc1_ebtimeF_dtTrue_20240615_0<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+test 2996
+loading pretrain model weight
