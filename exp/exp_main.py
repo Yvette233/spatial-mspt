@@ -13,6 +13,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+from models.MSPT import Model as SpatialMSPT
+from data_provider import get_data_provider
+
+
 warnings.filterwarnings('ignore')
 
 
@@ -20,16 +24,84 @@ class Exp_Main(Exp_Basic):
     def __init__(self, args):
         super(Exp_Main, self).__init__(args)
 
+    # def _build_model(self):
+    #     model = self.model_dict[self.args.model].Model(self.args).float()
+
+    #     if self.args.use_multi_gpu and self.args.use_gpu:
+    #         model = nn.DataParallel(model, device_ids=self.args.device_ids)
+    #     return model
+    
     def _build_model(self):
-        model = self.model_dict[self.args.model].Model(self.args).float()
+        """
+        Build model. Support SpatialMSPT (custom) and fallback to model_dict for legacy models.
+        """
+        # If user selected our SpatialMSPT
+        if getattr(self.args, 'model', '').lower() == 'spatialmspt':
+            model = SpatialMSPT(self.args).float()
+        else:
+            # legacy behavior (keep existing registry)
+            model = self.model_dict[self.args.model].Model(self.args).float()
 
         if self.args.use_multi_gpu and self.args.use_gpu:
             model = nn.DataParallel(model, device_ids=self.args.device_ids)
         return model
 
+
+    # def _get_data(self, flag):
+    #     data_set, data_loader = data_provider(self.args, flag)
+    #     return data_set, data_loader
+    
     def _get_data(self, flag):
-        data_set, data_loader = data_provider(self.args, flag)
-        return data_set, data_loader
+        """
+        Return (dataset, loader)
+        For SpatialMSPT we use our get_data_provider('oisst_4grid') which returns
+        (train_loader, val_loader, test_loader). To keep the rest of the training
+        code unchanged (which expects iterables yielding 4-tuples), we wrap the
+        returned loader to yield (batch_x, batch_y, batch_x_mark, batch_y_mark).
+        """
+        # If SpatialMSPT -> use the custom oisst_4grid dataloader
+        if getattr(self.args, 'model', '').lower() == 'spatialmspt':
+            train_loader, val_loader, test_loader = get_data_provider("oisst_4grid")
+
+            # Helper wrapper class to add dummy marks and keep len()
+            class WrappedLoader:
+                def __init__(self, loader):
+                    self.loader = loader
+                def __iter__(self):
+                    for batch in self.loader:
+                        # loader returns (x_enc, y_dec) where x_enc: [B, T, H, W, C]
+                        if isinstance(batch, (list, tuple)) and len(batch) == 2:
+                            batch_x, batch_y = batch
+                        else:
+                            # fallback: assume batch already 4-tuple
+                            yield batch
+                            continue
+
+                        # create dummy marks shaped to match existing pipeline expectations
+                        B = batch_x.shape[0]
+                        # create simple temporal marks of shape (B, T, 1)
+                        batch_x_mark = torch.zeros((B, batch_x.shape[1], 1), dtype=torch.float32)
+                        batch_y_mark = torch.zeros((B, batch_y.shape[1], 1), dtype=torch.float32)
+
+                        yield batch_x, batch_y, batch_x_mark, batch_y_mark
+
+                def __len__(self):
+                    try:
+                        return len(self.loader)
+                    except:
+                        return 0
+
+            if flag == 'train':
+                return None, WrappedLoader(train_loader)
+            elif flag == 'val':
+                return None, WrappedLoader(val_loader)
+            else:
+                return None, WrappedLoader(test_loader)
+        else:
+            # legacy behavior for other datasets/models
+            data_set, data_loader = data_provider(self.args, flag)
+            return data_set, data_loader
+
 
     def _select_optimizer(self):
         model_optim = optim.Adam(self.model.parameters(), lr=self.args.learning_rate)

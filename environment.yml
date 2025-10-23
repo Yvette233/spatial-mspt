@@ -1,0 +1,26 @@
+name: mspt
+channels:
+  - pytorch
+  - nvidia
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.9
+  - pytorch
+  - torchvision
+  - torchaudio
+  - pytorch-cuda=11.8
+  - numpy
+  - scipy
+  - pandas
+  - xarray
+  - netcdf4
+  - dask
+  - scikit-learn
+  - matplotlib
+  - tqdm
+  - pyyaml
+  - pip
+  - pip:
+      - einops
+      - tensorboard

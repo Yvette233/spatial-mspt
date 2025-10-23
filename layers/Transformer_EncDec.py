@@ -3,6 +3,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
+# 在文件顶部导入
+from layers.spatial_attention import SpatialSelfAttention
+
 # Module for TransDtSt-Part
 class EncoderStack(nn.Module):   ## 类InformerStack会调用这个EncoderStack，从论文里看是为增加distilling的鲁棒性
     def __init__(self, encoders, inp_lens):
@@ -110,26 +113,106 @@ class Encoder(nn.Module):
         self.attn_layers = nn.ModuleList(attn_layers)
         self.conv_layers = nn.ModuleList(conv_layers) if conv_layers is not None else None
         self.norm = norm_layer
+        # === 新增: 空间注意力模块 ===
+        self.spa = SpatialSelfAttention(embed_dim=attn_layers[0].attention.d_model if hasattr(attn_layers[0].attention, 'd_model') else 64,
+                                        n_heads=4, mem_window=5, use_geo=True, use_sem=True)
 
-    def forward(self, x, attn_mask=None, tau=None, delta=None):
+        def forward(self, x, attn_mask=None, tau=None, delta=None, geo_mask=None, sem_mask=None):
+            """
+            x: (B, L, D)  -- original temporal tokens
+            or (B, C, Nt, Ps, D) if you pre-embed as spatio-temporal tokens (preferred)
+            """
+            attns = []
+
+            # If we receive (B, C, Nt, Ps, D) as H_spatial (pre-embedded), we will bypass per-layer
+            # reshape; otherwise we will treat x as (B,L,D) and expand to (B,1,L,1,D) as placeholder.
+            is_spatial = False
+            if x.ndim == 5 and x.shape[1] > 1:
+                # format (B, C, Nt, Ps, D) OR (B, C, Nt, Ps, D)
+                is_spatial = True
+
+            # lazy init of spa to match embedding dim D (x may be 3D or 5D)
+            if x.ndim == 3:
+                B, L, D = x.shape
+            elif x.ndim == 5:
+                B, C, Nt, Ps, D = x.shape
+                # flatten time dimension to L for temporal attention if needed
+                L = Nt * Ps
+            else:
+                raise ValueError(f"Unsupported x.ndim={x.ndim}")
+
+            if not hasattr(self, "spa") or self.spa.embed_dim != D:
+                # choose n_heads reasonably: (e.g. 8 or min(8, D//8))
+                n_heads = min(8, max(1, D // 8))
+                self.spa = SpatialSelfAttention(embed_dim=D, n_heads=n_heads, mem_window=5, use_geo=True, use_sem=True)
+                # move to same device as x if previously created on CPU
+                self.spa.to(x.device)
+
+            if self.conv_layers is not None:
+                # original pipeline for conv_layers present
+                for i, (attn_layer, conv_layer) in enumerate(zip(self.attn_layers, self.conv_layers)):
+                    delta = delta if i == 0 else None
+                    x, attn = attn_layer(x, attn_mask=attn_mask, tau=tau, delta=delta)
+                    x = conv_layer(x)
+                    attns.append(attn)
+
+                    # === 插入空间注意力（按需） ===
+                    # If x is temporal tokens (B,L,D), create placeholder spatial H with Ps=1
+                    if x.ndim == 3:
+                        B, L, D = x.shape
+                        H_spa = x.view(B, 1, L, 1, D)   # (B, C=1, Nt=L, Ps=1, D)
+                        H_spa = self.spa(H_spa, geo_mask=geo_mask, sem_mask=sem_mask)
+                        x = H_spa.view(B, L, D)
+                    else:
+                        # if x already spatio-temporal: assume x shape is (B, C, Nt, Ps, D)
+                        H_spa = self.spa(x, geo_mask=geo_mask, sem_mask=sem_mask)
+                        # decide how to convert back for subsequent attn layers:
+                        # simplest: flatten back to (B, L, D)
+                        B, C, Nt, Ps, D = H_spa.shape
+                        x = H_spa.view(B, C * Nt * Ps, D)
+                # final attn_layers[-1] existing call (保持原有)
+                x, attn = self.attn_layers[-1](x, tau=tau, delta=None)
+                attns.append(attn)
+            else:
+                # no conv layers, just sequential attn layers
+                for attn_layer in self.attn_layers:
+                    x, attn = attn_layer(x, attn_mask=attn_mask, tau=tau, delta=delta)
+                    attns.append(attn)
+
+                    # 插入SPA同上
+                    if x.ndim == 3:
+                        B, L, D = x.shape
+                        H_spa = x.view(B, 1, L, 1, D)
+                        H_spa = self.spa(H_spa, geo_mask=geo_mask, sem_mask=sem_mask)
+                        x = H_spa.view(B, L, D)
+                    else:
+                        B, C, Nt, Ps, D = x.shape
+                        H_spa = self.spa(x, geo_mask=geo_mask, sem_mask=sem_mask)
+                        x = H_spa.view(B, C * Nt * Ps, D)
+
+            if self.norm is not None:
+                x = self.norm(x)
+
+            return x, attns
+
+
+    def forward(self, x, attn_mask=None, tau=None, delta=None,
+        geo_mask=None, sem_mask=None):   # ✅ 给两个mask加默认None
+
         # x [B, L, D]
         attns = []
-        if self.conv_layers is not None:
-            for i, (attn_layer, conv_layer) in enumerate(zip(self.attn_layers, self.conv_layers)):
-                delta = delta if i == 0 else None
-                x, attn = attn_layer(x, attn_mask=attn_mask, tau=tau, delta=delta)
-                x = conv_layer(x)
-                attns.append(attn)
-            x, attn = self.attn_layers[-1](x, tau=tau, delta=None)
+        for i, attn_layer in enumerate(self.attn_layers):
+            x, attn = attn_layer(x, attn_mask=attn_mask, tau=tau, delta=delta)
             attns.append(attn)
-        else:
-            for attn_layer in self.attn_layers:
-                x, attn = attn_layer(x, attn_mask=attn_mask, tau=tau, delta=delta)
-                attns.append(attn)
-
+            # === 新增: 在每层后添加空间注意力 ===
+            # 将 x 从 (B,L,D) reshape 成 (B, C, Nt, Ps, D)
+            # 这里先用简单假设：C=1, Nt=L, Ps=1（未来扩展成空间patch）
+            B, L, D = x.shape
+            H = x.view(B, 1, L, 1, D)       # 占位扩展维度
+            H = self.spa(H, geo_mask=geo_mask, sem_mask=sem_mask)
+            x = H.view(B, L, D)             # 再还原回来
         if self.norm is not None:
             x = self.norm(x)
-
         return x, attns
 
 

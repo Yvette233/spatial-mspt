@@ -11,6 +11,11 @@ import numpy as np
 from math import sqrt, ceil
 from einops import rearrange, repeat
 
+from layers.patch_embedding_3d import PatchEmbedding3D
+from layers.spatial_attention import SpatialSelfAttention   # ✅ 新增
+
+
+
 
 def dispatch(inp, gates):
     # sort experts
@@ -278,18 +283,37 @@ class Encoder(nn.Module):
         super(Encoder, self).__init__()
         self.attn_layers = nn.ModuleList(attn_layers)
         self.norm = norm_layer
+        # === 新增: 空间注意力模块 ===
+        # embed_dim 要与 d_model 一致（configs.d_model）
+        self.spa = SpatialSelfAttention(embed_dim=64, n_heads=4, mem_window=5, use_geo=True, use_sem=True)
 
-    def forward(self, x, attn_mask=None):
-        # x [B, C, L, D]
+
+  
+    
+    def forward(self, x, attn_mask=None, geo_mask=None, sem_mask=None):
+        """
+        x: 输入形状 [B, C, L, D]
+        在每层周期注意力后加入空间注意力，用于建模多格点依赖。
+        """
         attns = []
         for attn_layer in self.attn_layers:
+            # === 原周期注意力 ===
             x, attn = attn_layer(x, attn_mask=attn_mask)
             attns.append(attn)
+
+            # === 新增: 空间注意力 ===
+            # 将输入视为 [B, C, Nt, Ps, D]，其中 C 可视为通道维
+            B, C, L, D = x.shape
+            Nt, Ps = L, 1
+            H = x.view(B, C, Nt, Ps, D)
+            H = self.spa(H, geo_mask=geo_mask, sem_mask=sem_mask)
+            x = H.view(B, C, L, D)
 
         if self.norm is not None:
             x = self.norm(x)
 
         return x, attns
+
     
 class LinearPredictionHead(nn.Module):
     def __init__(self, patch_sizes, seq_len, pred_len, d_model, dropout=0.):
@@ -318,21 +342,49 @@ class LinearPredictionHead2(nn.Module):
         self.dropout = nn.Dropout(dropout)
         self.linear = nn.Linear(d_model, pred_len)
         
+    # def forward(self, xs, gates):
+    #     # Ps*[B, C, L, D]
+    #     _xs = []
+    #     for i, patch_size in enumerate(self.patch_sizes):
+    #         _xs.append(xs[i][:, :, -1:, :])
+    #     _xs = combine(_xs, gates)
+    #     _xs = self.linear(self.dropout(_xs.flatten(-2)))
+    #     _xs = rearrange(_xs, 'B C P -> B P C')
+    #     return _xs
+    
     def forward(self, xs, gates):
         # Ps*[B, C, L, D]
         _xs = []
         for i, patch_size in enumerate(self.patch_sizes):
             _xs.append(xs[i][:, :, -1:, :])
         _xs = combine(_xs, gates)
-        _xs = self.linear(self.dropout(_xs.flatten(-2)))
-        _xs = rearrange(_xs, 'B C P -> B P C')
+        _xs = self.linear(self.dropout(_xs.flatten(-2)))   # [B, C, pred_len]
+        _xs = _xs.transpose(1, 2).contiguous()             # ✅ [B, pred_len, C]
         return _xs
+
 
 
 class Model(nn.Module):
     def __init__(self, configs):
         super(Model, self).__init__()
         self.configs = configs 
+
+        # === 新增: 时空 Patch Embedding 模块 ===
+        # 让模型可以直接接受 (B, T, H, W, C) 格点输入
+        self.use_spatial_patch = getattr(configs, 'use_spatial_patch', True)
+
+        if self.use_spatial_patch:
+            # 根据论文实验可调整 patch 大小
+            self.patch_embed = PatchEmbedding3D(
+                t_patch=getattr(configs, 't_patch', 5),   # 时间维 patch 大小
+                h_patch=getattr(configs, 'h_patch', 4),   # 空间 patch 高度
+                w_patch=getattr(configs, 'w_patch', 4),   # 空间 patch 宽度
+                embed_dim=getattr(configs, 'd_model', 64),
+                input_format='BTHWC',   # 对应 NOAA OISST 格式
+                use_pos=True
+            )
+
+
         self.seq_len = configs.seq_len
         self.label_len = configs.label_len
         self.pred_len = configs.pred_len
@@ -367,29 +419,122 @@ class Model(nn.Module):
 
         self.head = LinearPredictionHead2(self.patch_sizes, self.seq_len, self.pred_len, configs.d_model, dropout=configs.dropout)
 
-
-
     def forward(self, x_enc, x_mark_enc, x_dec, x_mark_dec):
-        # Normalization from Non-stationary Transformer
-        means = x_enc.mean(1, keepdim=True).detach()
-        x_enc = x_enc - means
-        stdev = torch.sqrt(torch.var(x_enc, dim=1, keepdim=True, unbiased=False) + 1e-5)
-        x_enc /= stdev
+        """
+        支持两种输入情况：
+        - use_spatial_patch == True: x_enc shape = (B, T, H, W, C)
+        - use_spatial_patch == False: x_enc shape = (B, L, C)  (原始 MSPT 行为)
+        我们会把空间格点展平成特征维 num_features = H*W*C，
+        并在需要时动态重建 self.msppe 使其 start_fc.in_features 与之匹配。
+        """
+        # -----------------------
+        # CASE A: 使用时空 patch（网格输入）
+        # -----------------------
+        if self.use_spatial_patch:
+            # Expect x_enc: [B, T, H, W, C]
+            if x_enc.dim() != 5:
+                raise ValueError(f"Expected x_enc with 5 dims (B,T,H,W,C) when use_spatial_patch=True, got {x_enc.shape}")
+
+            B, T, H, W, C = x_enc.shape
+            num_features = H * W * C  # flatten spatial dims -> features
+
+            # --- 动态重建 MultiScalePeriodicPatchEmbedding（若需要） ---
+            # self.msppe 初始化时使用的是 configs.enc_in；如果与实际 num_features 不同，重建它
+            if not hasattr(self, 'msppe') or getattr(self.msppe, 'start_fc', None) is None or self.msppe.start_fc.in_features != num_features:
+                # preserve original hyperparams where possible
+                top_k = getattr(self.configs, 'top_k', 5) if hasattr(self, 'configs') else getattr(self, 'top_k', 5)
+                d_model = getattr(self.configs, 'd_model', 64) if hasattr(self, 'configs') else getattr(self, 'd_model', 64)
+                dropout = getattr(self.configs, 'dropout', 0.0) if hasattr(self, 'configs') else 0.0
+
+                # Recreate msppe with correct num_features
+                self.msppe = MultiScalePeriodicPatchEmbedding(self.seq_len, num_features, top_k=top_k, d_model=d_model, dropout=dropout)
+                self.msppe = self.msppe.to(x_enc.device)
+                # update stored patch_sizes (encoder construction later expects this attribute)
+                self.patch_sizes = self.msppe.patch_sizes
+
+                
+
+            # --- 将网格展平为时序特征 [B, T, num_features] ---
+            x_flat = x_enc.view(B, T, num_features)  # [B, L, C_feat]
+
+            # --- 归一化（沿时间维）: mean / stdev 用于训练后反归一化 ---
+            means = x_flat.mean(1, keepdim=True).detach()   # [B, 1, num_features]
+            x_norm = x_flat - means
+            stdev = torch.sqrt(torch.var(x_norm, dim=1, keepdim=True, unbiased=False) + 1e-5)  # [B,1,num_features]
+            x_norm = x_norm / stdev
+
+            # --- Multi-scale periodic patch embedding expects [B, L, C_feat] ---
+            xs_enc, gates_enc = self.msppe(x_norm)  # returns list of tensors: Ps * [B, C_feat, L_patch, D],  and gates [B,Ps]
+
+            # Encoder expects inputs shaped [B, C, L, D] for each scale (this matches original code)
+            enc_outs = []
+            for i, x_enc_scale in enumerate(xs_enc):
+                # x_enc_scale is [B, C_feat, L_patch, D] as original implementation expects
+                enc_out, attns = self.encoders[i](x_enc_scale)  # encoder implementation we modified supports this
+                enc_outs.append(enc_out)
+
+            # Head: will produce dec_out shape [B, pred_len, num_features] (see LinearPredictionHead2 logic)
+            dec_out = self.head(enc_outs, gates_enc)  # [B, P, C_feat] where P = pred_len or patches -> consistent with head
+
+            # --- 反归一化: 使用之前保存的 means / stdev ---
+            # dec_out shape expected [B, pred_len, num_features]
+            # ensure stdev/means broadcast shape: [B, 1, num_features]
+            dec_out = dec_out * stdev  # broadcast multiply (B, pred_len, num_features) * (B,1,num_features)
+            dec_out = dec_out + means
+
+            # 返回: 与原 MSPT 返回形状保持兼容（B, pred_len, num_features）
+            return dec_out
+
+        # -----------------------
+        # CASE B: 原始 MSPT 行为：输入为 [B, L, C]
+        # -----------------------
+        else:
+            # Keep original pipeline when not using spatial patching
+            # Normalization from Non-stationary Transformer
+            means = x_enc.mean(1, keepdim=True).detach()
+            x_enc = x_enc - means
+            stdev = torch.sqrt(torch.var(x_enc, dim=1, keepdim=True, unbiased=False) + 1e-5)
+            x_enc /= stdev
+
+            # Multi-scale periodic patch embedding 
+            xs_enc, gates_enc = self.msppe(x_enc) # Ps*[B, C, L, D], [B, Ps]
+            # Encoder and Decoder
+            enc_outs = []
+            for i, x_enc_scale in enumerate(xs_enc):
+                enc_out, attns = self.encoders[i](x_enc_scale) # [B, C, VT, D]
+                enc_outs.append(enc_out)
+
+            # Head
+            dec_out = self.head(enc_outs, gates_enc)
+
+            # De-Normalization from Non-stationary Transformer
+            dec_out = dec_out * (stdev[:, 0, :].unsqueeze(1).repeat(1, self.pred_len, 1))
+            dec_out = dec_out + (means[:, 0, :].unsqueeze(1).repeat(1, self.pred_len, 1))
+
+            return dec_out
 
 
-        # Multi-scale periodic patch embedding 
-        xs_enc, gates_enc = self.msppe(x_enc) # Ps*[B, C, L, D], [B, Ps]
-        # Encoder and Decoder
-        enc_outs = []
-        for i, x_enc in enumerate(xs_enc):
-            enc_out, attns = self.encoders[i](x_enc) # [B, C, VT, D]
-            enc_outs.append(enc_out)
+    # def forward(self, x_enc, x_mark_enc, x_dec, x_mark_dec):
+    #     # Normalization from Non-stationary Transformer
+    #     means = x_enc.mean(1, keepdim=True).detach()
+    #     x_enc = x_enc - means
+    #     stdev = torch.sqrt(torch.var(x_enc, dim=1, keepdim=True, unbiased=False) + 1e-5)
+    #     x_enc /= stdev
 
-        # Head
-        dec_out = self.head(enc_outs, gates_enc)
 
-        # De-Normalization from Non-stationary Transformer
-        dec_out = dec_out * (stdev[:, 0, :].unsqueeze(1).repeat(1, self.pred_len, 1))
-        dec_out = dec_out + (means[:, 0, :].unsqueeze(1).repeat(1, self.pred_len, 1))
+    #     # Multi-scale periodic patch embedding 
+    #     xs_enc, gates_enc = self.msppe(x_enc) # Ps*[B, C, L, D], [B, Ps]
+    #     # Encoder and Decoder
+    #     enc_outs = []
+    #     for i, x_enc in enumerate(xs_enc):
+    #         enc_out, attns = self.encoders[i](x_enc) # [B, C, VT, D]
+    #         enc_outs.append(enc_out)
 
-        return dec_out
+    #     # Head
+    #     dec_out = self.head(enc_outs, gates_enc)
+
+    #     # De-Normalization from Non-stationary Transformer
+    #     dec_out = dec_out * (stdev[:, 0, :].unsqueeze(1).repeat(1, self.pred_len, 1))
+    #     dec_out = dec_out + (means[:, 0, :].unsqueeze(1).repeat(1, self.pred_len, 1))
+
+    #     return dec_out

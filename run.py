@@ -5,6 +5,9 @@ from exp.exp_main import Exp_Main
 import random
 import numpy as np
 
+from data_provider import get_data_provider
+
+
 # def get_patch_sizes(seq_len):
 #     # get the period list, first element is inf if exclude_zero is False
 #     peroid_list = 1 / torch.fft.rfftfreq(seq_len)[1:]
@@ -22,8 +25,10 @@ if __name__ == '__main__':
     # basic config
     parser.add_argument('--is_training', type=int, required=True, default=1, help='status')
     parser.add_argument('--model_id', type=str, required=True, default='test', help='model id')
-    parser.add_argument('--model', type=str, required=True, default='MSPT',
-                        help='model name, options: [MSPT]')
+    #parser.add_argument('--model', type=str, required=True, default='MSPT',
+    #                    help='model name, options: [MSPT]')
+    parser.add_argument('--model', type=str, required=True, default='SpatialMSPT',
+                    help='model name, options: [MSPT, SpatialMSPT]')
 
     # data loader
     parser.add_argument('--data', type=str, required=True, default='ETTm1', help='dataset type')
