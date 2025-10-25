@@ -43,6 +43,8 @@ class PatchEmbedding3D(nn.Module):
         self.input_format = input_format
         self.use_pos = use_pos
 
+        
+
         # Conv3d applied on per-variable mini-batch (B*C, 1, T, H, W) -> (B*C, D, Nt, Nh, Nw)
         self.conv = nn.Conv3d(in_channels=1, out_channels=embed_dim,
                               kernel_size=(t_patch, h_patch, w_patch),

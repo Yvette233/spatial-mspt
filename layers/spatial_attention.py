@@ -17,24 +17,18 @@ class DelayAwareTransform(nn.Module):
         if proj_dim is not None:
             self.proj = nn.Linear(proj_dim, proj_dim)
 
-    def forward(self, H):
-        # H: (B, C, Nt, Ps, D)
+    def forward(self, H):  # H: (B, C, Nt, Ps, D)
         B, C, Nt, Ps, D = H.shape
-        if Nt == 0:
-            return H.new_zeros((B, C, Ps, D))
-        k = min(self.mem_window, Nt)
-        recent = H[:, :, Nt - k : Nt, :, :]  # (B, C, k, Ps, D)
-        if self.mode == 'mean':
-            mem = recent.mean(dim=2)  # (B, C, Ps, D)
-        else:
-            weights = torch.linspace(1.0, 0.2, steps=k, device=H.device)
-            weights = weights / weights.sum()
-            mem = (recent * weights.view(1, 1, k, 1, 1)).sum(dim=2)
-        if self.proj is not None:
-            mem_flat = mem.reshape(-1, D)
-            mem_flat = self.proj(mem_flat)
-            mem = mem_flat.view(B, C, Ps, D)
-        return mem  # shape (B, C, Ps, D)
+        T = Nt
+        if T <= self.mem_window:
+            # 直接返回 0 记忆
+            return H.new_zeros(B, C, Ps, D)
+
+        mem = H[:, :, T - self.mem_window:T, :, :]  # (B, C, W, Ps, D)
+        mem_flat = mem.contiguous().view(B * C * Ps, self.mem_window * D)
+        mem_flat = self.proj(mem_flat)              # Linear(self.mem_window*D -> D)
+        mem = mem_flat.view(B, C, Ps, D)
+        return mem
 
 class SpatialSelfAttention(nn.Module):
     """
@@ -69,6 +63,10 @@ class SpatialSelfAttention(nn.Module):
         return mask
 
     def forward(self, H, geo_mask=None, sem_mask=None):
+        if H.shape[2] == 0:
+            print("[Warning] Empty spatial patches, skip SpatialSelfAttention.")
+            return H
+
         """
         Args:
             H: (B, C, Nt, Ps, D)

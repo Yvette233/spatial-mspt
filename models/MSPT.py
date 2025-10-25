@@ -28,32 +28,71 @@ def dispatch(inp, gates):
     inp_exp = inp[_batch_index].squeeze(1)
     return torch.split(inp_exp, _part_sizes, dim=0)
 
-def combine(expert_out, gates, multiply_by_gates=True):
-    # sort experts
-    sorted_experts, index_sorted_experts = torch.nonzero(gates).sort(0)
-    _, _expert_index = sorted_experts.split(1, dim=1)
-    # get according batch index for each expert
-    _batch_index = torch.nonzero(gates)[index_sorted_experts[:, 1], 0]
-    gates_exp = gates[_batch_index.flatten()]
-    _nonzero_gates = torch.gather(gates_exp, 1, _expert_index)
-    # apply exp to expert outputs, so we are not longer in log space
-    stitched = torch.cat(expert_out, 0).exp()
-    if multiply_by_gates:
-        stitched = torch.einsum("bcld,bc -> bcld", stitched, _nonzero_gates)
-    zeros = torch.zeros(gates.size(0), expert_out[-1].size(1), expert_out[-1].size(2), expert_out[-1].size(3),
-                        requires_grad=True, device=stitched.device)
-    # combine samples that have been processed by the same k experts
-    combined = zeros.index_add(0, _batch_index, stitched.float())
-    # add eps to all zero values in order to avoid nans when going back to log space
-    combined[combined == 0] = np.finfo(float).eps
-    # back to log space
-    return combined.log()
+def combine(xs, gates):
+    """
+    xs: list of [B_i, C, L, D]，每个周期分支 batch 大小可能不同
+    gates: [B, Ps]
+    返回: [B, C, L, D]
+    """
+    device = gates.device
+    B = gates.size(0)
+    C, L, D = xs[0].shape[1:]
+    Ps = len(xs)
+
+    # 初始化输出
+    combined = torch.zeros(B, C, L, D, device=device)
+    eps = 1e-9
+
+    # 逐周期聚合
+    for i in range(Ps):
+        if xs[i].shape[0] == 0:
+            continue
+
+        # 找出当前周期对应的样本索引
+        active_idx = (gates[:, i] > 0).nonzero(as_tuple=True)[0]
+        g = gates[active_idx, i].view(-1, 1, 1, 1)
+
+        # 聚合到对应样本位置
+        combined[active_idx] += xs[i] * g
+
+    # 防止除以零
+    combined = combined + eps
+    return combined
+
+
+
+
+# def combine(expert_out, gates, multiply_by_gates=True):
+#     # sort experts
+#     sorted_experts, index_sorted_experts = torch.nonzero(gates).sort(0)
+#     _, _expert_index = sorted_experts.split(1, dim=1)
+#     # get according batch index for each expert
+#     _batch_index = torch.nonzero(gates)[index_sorted_experts[:, 1], 0]
+#     gates_exp = gates[_batch_index.flatten()]
+#     _nonzero_gates = torch.gather(gates_exp, 1, _expert_index)
+#     # apply exp to expert outputs, so we are not longer in log space
+#     stitched = torch.cat(expert_out, 0).exp()
+#     if multiply_by_gates:
+#         stitched = torch.einsum("bcld,bc -> bcld", stitched, _nonzero_gates)
+#     zeros = torch.zeros(gates.size(0), expert_out[-1].size(1), expert_out[-1].size(2), expert_out[-1].size(3),
+#                         requires_grad=True, device=stitched.device)
+#     # combine samples that have been processed by the same k experts
+#     combined = zeros.index_add(0, _batch_index, stitched.float())
+#     # add eps to all zero values in order to avoid nans when going back to log space
+#     combined[combined == 0] = np.finfo(float).eps
+#     # back to log space
+#     return combined.log()
+
 
 class MultiScalePeriodicPatchEmbedding(nn.Module):
     def __init__(self, seq_len, num_features, top_k=5, d_model=512, dropout=0., adaptive=True, use_periodicity=True):
         super(MultiScalePeriodicPatchEmbedding, self).__init__()
         self.seq_len = seq_len
         self.top_k = top_k
+        self.num_features = num_features  # ✅ 可以为 None，稍后自动初始化
+        self.initialized = False  # ✅ 延迟初始化参数
+        self.d_model = d_model
+
         # get the patch sizes
         self.patch_sizes = self.get_patch_sizes(seq_len)
         # AFNO1D parameters
@@ -80,6 +119,35 @@ class MultiScalePeriodicPatchEmbedding(nn.Module):
         self.adaptive = adaptive
         self.use_periodicity = use_periodicity
     
+    def _build_layers(self, num_features, device=None):
+        """ ✅ 根据输入动态创建线性层 """
+        self.num_features = num_features
+        self.start_fc = nn.Linear(num_features, 1)
+        self.num_freqs = self.seq_len // 2
+        self.scale = 1 / self.d_model
+        self.w1 = nn.Parameter(self.scale * torch.randn(2, self.num_freqs, self.num_freqs * 4))
+        self.b1 = nn.Parameter(self.scale * torch.randn(2, self.num_freqs * 4))
+        self.w2 = nn.Parameter(self.scale * torch.randn(2, self.num_freqs * 4, self.num_freqs))
+        self.b2 = nn.Parameter(self.scale * torch.randn(2, self.num_freqs))
+        self.w_gate = nn.Parameter(torch.zeros(self.num_freqs, self.seq_len - 1))
+        self.w_noise = nn.Parameter(torch.zeros(self.num_freqs, self.seq_len - 1))
+
+        # 生成 patch embedding 层
+        self.patch_sizes = self.get_patch_sizes(self.seq_len)
+        self.value_embeddings = nn.ModuleList([
+            nn.Linear(p, self.d_model, bias=False) for p in self.patch_sizes
+        ])
+        self.padding_patch_layers = nn.ModuleList([
+            nn.ReplicationPad1d((0, ceil(self.seq_len / p) * p - self.seq_len)) for p in self.patch_sizes
+        ])
+        self.position_embedding = PositionalEmbedding2D(self.d_model, num_features, 512)
+        self.initialized = True
+
+        # ✅ 新增：将所有模块移动到输入所在设备
+        if device is not None:
+            self.to(device)
+        self.initialized = True
+
     def get_patch_sizes(self, seq_len):
         # get the period list, first element is inf if exclude_zero is False
         peroid_list = 1 / torch.fft.rfftfreq(seq_len)[1:]
@@ -136,6 +204,15 @@ class MultiScalePeriodicPatchEmbedding(nn.Module):
         return self.dropout(x) # [B, C, L, D]
 
     def forward(self, x):
+
+        """
+        x: [B, L, C]
+        """
+        device = x.device
+        if not self.initialized:
+            self._build_layers(x.shape[-1], device=device)  # ✅ 传入设备
+
+
         gates = self.afno1d_for_peroid_weights(x, self.training) # [B, Ps]
         xs = dispatch(x, gates)
         _xs = []
@@ -419,122 +496,51 @@ class Model(nn.Module):
 
         self.head = LinearPredictionHead2(self.patch_sizes, self.seq_len, self.pred_len, configs.d_model, dropout=configs.dropout)
 
-    def forward(self, x_enc, x_mark_enc, x_dec, x_mark_dec):
+
+    def forward(self, x_enc, x_mark_enc=None, x_dec=None, x_mark_dec=None):
         """
-        支持两种输入情况：
-        - use_spatial_patch == True: x_enc shape = (B, T, H, W, C)
-        - use_spatial_patch == False: x_enc shape = (B, L, C)  (原始 MSPT 行为)
-        我们会把空间格点展平成特征维 num_features = H*W*C，
-        并在需要时动态重建 self.msppe 使其 start_fc.in_features 与之匹配。
+        x_enc: [B, T, H, W, 1]
+        输出:  [B, pred_len, H, W, 1]
         """
-        # -----------------------
-        # CASE A: 使用时空 patch（网格输入）
-        # -----------------------
-        if self.use_spatial_patch:
-            # Expect x_enc: [B, T, H, W, C]
-            if x_enc.dim() != 5:
-                raise ValueError(f"Expected x_enc with 5 dims (B,T,H,W,C) when use_spatial_patch=True, got {x_enc.shape}")
+        # === 1️⃣ 保存原始空间形状 ===
+        B, T, H, W, C = x_enc.shape
+        self.x_enc_original = x_enc
 
-            B, T, H, W, C = x_enc.shape
-            num_features = H * W * C  # flatten spatial dims -> features
+        # === 2️⃣ 展平空间维度以适配 MSPT ===
+        x_enc = x_enc.view(B, T, H * W * C)  # -> [B, seq_len, enc_in]
+        x_enc = x_enc.permute(0, 2, 1)       # -> [B, enc_in, seq_len]
+        x_enc = x_enc.contiguous()
 
-            # --- 动态重建 MultiScalePeriodicPatchEmbedding（若需要） ---
-            # self.msppe 初始化时使用的是 configs.enc_in；如果与实际 num_features 不同，重建它
-            if not hasattr(self, 'msppe') or getattr(self.msppe, 'start_fc', None) is None or self.msppe.start_fc.in_features != num_features:
-                # preserve original hyperparams where possible
-                top_k = getattr(self.configs, 'top_k', 5) if hasattr(self, 'configs') else getattr(self, 'top_k', 5)
-                d_model = getattr(self.configs, 'd_model', 64) if hasattr(self, 'configs') else getattr(self, 'd_model', 64)
-                dropout = getattr(self.configs, 'dropout', 0.0) if hasattr(self, 'configs') else 0.0
-
-                # Recreate msppe with correct num_features
-                self.msppe = MultiScalePeriodicPatchEmbedding(self.seq_len, num_features, top_k=top_k, d_model=d_model, dropout=dropout)
-                self.msppe = self.msppe.to(x_enc.device)
-                # update stored patch_sizes (encoder construction later expects this attribute)
-                self.patch_sizes = self.msppe.patch_sizes
-
-                
-
-            # --- 将网格展平为时序特征 [B, T, num_features] ---
-            x_flat = x_enc.view(B, T, num_features)  # [B, L, C_feat]
-
-            # --- 归一化（沿时间维）: mean / stdev 用于训练后反归一化 ---
-            means = x_flat.mean(1, keepdim=True).detach()   # [B, 1, num_features]
-            x_norm = x_flat - means
-            stdev = torch.sqrt(torch.var(x_norm, dim=1, keepdim=True, unbiased=False) + 1e-5)  # [B,1,num_features]
-            x_norm = x_norm / stdev
-
-            # --- Multi-scale periodic patch embedding expects [B, L, C_feat] ---
-            xs_enc, gates_enc = self.msppe(x_norm)  # returns list of tensors: Ps * [B, C_feat, L_patch, D],  and gates [B,Ps]
-
-            # Encoder expects inputs shaped [B, C, L, D] for each scale (this matches original code)
-            enc_outs = []
-            for i, x_enc_scale in enumerate(xs_enc):
-                # x_enc_scale is [B, C_feat, L_patch, D] as original implementation expects
-                enc_out, attns = self.encoders[i](x_enc_scale)  # encoder implementation we modified supports this
-                enc_outs.append(enc_out)
-
-            # Head: will produce dec_out shape [B, pred_len, num_features] (see LinearPredictionHead2 logic)
-            dec_out = self.head(enc_outs, gates_enc)  # [B, P, C_feat] where P = pred_len or patches -> consistent with head
-
-            # --- 反归一化: 使用之前保存的 means / stdev ---
-            # dec_out shape expected [B, pred_len, num_features]
-            # ensure stdev/means broadcast shape: [B, 1, num_features]
-            dec_out = dec_out * stdev  # broadcast multiply (B, pred_len, num_features) * (B,1,num_features)
-            dec_out = dec_out + means
-
-            # 返回: 与原 MSPT 返回形状保持兼容（B, pred_len, num_features）
-            return dec_out
-
-        # -----------------------
-        # CASE B: 原始 MSPT 行为：输入为 [B, L, C]
-        # -----------------------
-        else:
-            # Keep original pipeline when not using spatial patching
-            # Normalization from Non-stationary Transformer
-            means = x_enc.mean(1, keepdim=True).detach()
-            x_enc = x_enc - means
-            stdev = torch.sqrt(torch.var(x_enc, dim=1, keepdim=True, unbiased=False) + 1e-5)
-            x_enc /= stdev
-
-            # Multi-scale periodic patch embedding 
-            xs_enc, gates_enc = self.msppe(x_enc) # Ps*[B, C, L, D], [B, Ps]
-            # Encoder and Decoder
-            enc_outs = []
-            for i, x_enc_scale in enumerate(xs_enc):
-                enc_out, attns = self.encoders[i](x_enc_scale) # [B, C, VT, D]
-                enc_outs.append(enc_out)
-
-            # Head
-            dec_out = self.head(enc_outs, gates_enc)
-
-            # De-Normalization from Non-stationary Transformer
-            dec_out = dec_out * (stdev[:, 0, :].unsqueeze(1).repeat(1, self.pred_len, 1))
-            dec_out = dec_out + (means[:, 0, :].unsqueeze(1).repeat(1, self.pred_len, 1))
-
-            return dec_out
+        # === 3️⃣ 标准化（沿时间维）===
+        means = x_enc.mean(dim=-1, keepdim=True).detach()   # ✅ 对时间维求均值
+        x_enc = x_enc - means
+        stdev = torch.sqrt(torch.var(x_enc, dim=-1, keepdim=True, unbiased=False) + 1e-5)
+        x_enc = x_enc / stdev
 
 
-    # def forward(self, x_enc, x_mark_enc, x_dec, x_mark_dec):
-    #     # Normalization from Non-stationary Transformer
-    #     means = x_enc.mean(1, keepdim=True).detach()
-    #     x_enc = x_enc - means
-    #     stdev = torch.sqrt(torch.var(x_enc, dim=1, keepdim=True, unbiased=False) + 1e-5)
-    #     x_enc /= stdev
+        # === 4️⃣ 多尺度周期 Patch Embedding ===
+        # [B, enc_in, seq_len] -> [B, seq_len, enc_in]
+        x_enc = x_enc.permute(0, 2, 1)
+        xs_enc, gates_enc = self.msppe(x_enc)  # 正确输入: [B, L, C]
 
 
-    #     # Multi-scale periodic patch embedding 
-    #     xs_enc, gates_enc = self.msppe(x_enc) # Ps*[B, C, L, D], [B, Ps]
-    #     # Encoder and Decoder
-    #     enc_outs = []
-    #     for i, x_enc in enumerate(xs_enc):
-    #         enc_out, attns = self.encoders[i](x_enc) # [B, C, VT, D]
-    #         enc_outs.append(enc_out)
+        # === 5️⃣ 编码阶段（周期 + 空间）===
+        enc_outs = []
+        for i, x_e in enumerate(xs_enc):
+            enc_out, _ = self.encoders[i](x_e)
+            enc_outs.append(enc_out)
 
-    #     # Head
-    #     dec_out = self.head(enc_outs, gates_enc)
+        # === 6️⃣ 预测头 ===
+        dec_out = self.head(enc_outs, gates_enc)  # [B, pred_len, C_flat]
 
-    #     # De-Normalization from Non-stationary Transformer
-    #     dec_out = dec_out * (stdev[:, 0, :].unsqueeze(1).repeat(1, self.pred_len, 1))
-    #     dec_out = dec_out + (means[:, 0, :].unsqueeze(1).repeat(1, self.pred_len, 1))
+        # === 7️⃣ 恢复空间结构 ===
+        # 将输出还原为 [B, pred_len, H, W, 1]
+        dec_out = dec_out.view(B, self.pred_len, H, W, C)
 
-    #     return dec_out
+        # === 8️⃣ 去标准化（与上对应）===
+        means_reshaped = means.permute(0, 2, 1).view(B, 1, H, W, C)
+        stdev_reshaped = stdev.permute(0, 2, 1).view(B, 1, H, W, C)
+        dec_out = dec_out * stdev_reshaped + means_reshaped
+        return dec_out
+
+        
