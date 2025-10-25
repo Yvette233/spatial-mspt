@@ -83,6 +83,7 @@ if __name__ == '__main__':
     parser.add_argument('--loss', type=str, default='MSE', help='loss function')
     parser.add_argument('--lradj', type=str, default='OneCycleLR', help='adjust learning rate')
     parser.add_argument('--use_amp', action='store_true', help='use automatic mixed precision training', default=False)
+    parser.add_argument('--weight_decay', type=float, default=1e-4)
 
     # GPU
     parser.add_argument('--use_gpu', type=bool, default=True, help='use gpu')
@@ -94,6 +95,12 @@ if __name__ == '__main__':
     parser.add_argument('--p_hidden_dims', type=int, nargs='+', default=[128, 128],
                         help='hidden layer dimensions of projector (List)')
     parser.add_argument('--p_hidden_layers', type=int, default=2, help='number of hidden layers in projector')
+
+    parser.add_argument('--max_lr', type=float, default=None)
+    parser.add_argument('--pct_start', type=float, default=0.1)
+
+    parser.add_argument('--sota_mode', type=int, default=1, help='Enable stronger, safer defaults for SOTA-level training')
+
 
 
     args = parser.parse_args()
