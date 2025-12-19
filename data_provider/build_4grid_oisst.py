@@ -4,7 +4,7 @@ import numpy as np
 
 # === 配置部分 ===
 data_dir = "E:/CodeSpace/MSPT/dataset/multivariate"
-save_path = "E:/CodeSpace/MSPT/dataset/oisst_4grid.npy"
+save_path = "E:/CodeSpace/MSPT/dataset/oisst_16grid.npy"
 
 # === 1. 找到所有csv文件 ===
 csv_files = [f for f in os.listdir(data_dir) if f.endswith(".csv") and "oisst" in f]

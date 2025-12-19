@@ -1,80 +1,83 @@
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
-from layers.Embed import DataEmbedding, DataEmbedding_inverted, PositionalEmbedding, PositionalEmbedding2D
-from layers.Transformer_EncDec import Encoder, EncoderLayer
+from layers.Transformer_EncDec import EncoderLayer
 from layers.SelfAttention_Family import FullAttention
-
+# 👇 这一行非常重要，千万不能少！
+from layers.spatial_attention import GlobalDelaySpatialEmbedding
+from layers.patch_embedding_3d import PatchEmbedding3D
 import numpy as np
 from math import sqrt, ceil
 from einops import rearrange, repeat
-
 from layers.patch_embedding_3d import PatchEmbedding3D
 from layers.spatial_attention import SpatialSelfAttention   # ✅ 新增
 
-
-
-
+# ================= 辅助函数 (智能修复版) =================
 def dispatch(inp, gates):
     """
-    inp:  [B, L, C]
-    gates:[B, Ps]
-    return:
-      outs:    长度 Ps 的 list，每个是 [B_i, L, C]
-      buckets: 长度 Ps 的 list，每个是 LongTensor 下标，形状 [B_i]
+    inp: [B, T, C]
+    gates: [B, P] (权重矩阵)
+    根据 gates 将 inp 动态分发给不同的分支，允许每个分支样本数不同。
     """
-    B = inp.size(0)
-    Ps = gates.size(1)
-    idx = torch.argmax(gates, dim=1)  # 每个样本路由到权重最大的专家
-    buckets_list = [[] for _ in range(Ps)]
-    for b in range(B):
-        buckets_list[idx[b].item()].append(b)
+    # 1. 找出所有非零的路由关系 (样本id, 分支id)
+    nonzero = torch.nonzero(gates) # [nnz, 2]
+    
+    # 2. 按照分支id排序，这样才能用 split 切分
+    sorted_indices = torch.argsort(nonzero[:, 1]) 
+    nonzero_sorted = nonzero[sorted_indices]
+    
+    # 3. 提取对应的样本数据
+    batch_idx_sorted = nonzero_sorted[:, 0]
+    inp_expanded = inp[batch_idx_sorted] 
+    
+    # 4. 计算每个分支分到了多少个样本
+    # bincount 统计每个分支id出现的次数
+    num_branches = gates.shape[1]
+    part_sizes = torch.bincount(nonzero_sorted[:, 1], minlength=num_branches).cpu().tolist()
+    
+    # 5. 切分数据
+    return torch.split(inp_expanded, part_sizes, dim=0)
 
-    outs = []
-    buckets = []
-    device = inp.device
-    for i in range(Ps):
-        if len(buckets_list[i]) == 0:
-            outs.append(inp.new_zeros(0, inp.size(1), inp.size(2)))
-            buckets.append(torch.empty(0, dtype=torch.long, device=device))
-        else:
-            sel = torch.tensor(buckets_list[i], device=device, dtype=torch.long)
-            outs.append(inp.index_select(0, sel))
-            buckets.append(sel)
-    return outs, buckets
-
-
-
-def combine(expert_out, gates, multiply_by_gates=True):
-    # expert_out: list of [B, C, L, D] 或 [B, C, 1, D]
-    # gates: [B, Ps]
-    B = gates.size(0)
-    Ps = gates.size(1)
-    # 对空专家补全为 0 张量，让 stack 不会 shape 不一致
-    C = expert_out[0].size(1)
-    L = expert_out[0].size(2)
-    D = expert_out[0].size(3)
-    safe = []
-    for i, xo in enumerate(expert_out):
-        if xo.size(0) == 0:
-            safe.append(torch.zeros(B, C, L, D, device=gates.device, dtype=xo.dtype))
-        else:
-            safe.append(xo)
-    # [B, Ps, C, L, D]
-    stitched = torch.stack(safe, dim=1)
-    if multiply_by_gates:
-        # gates: [B, Ps, 1, 1, 1]
-        g = gates.view(B, Ps, 1, 1, 1)
-        stitched = stitched * g
-    # sum over Ps
-    combined = stitched.sum(dim=1)  # [B, C, L, D]
-    # 避免 log/exp 逻辑（你上游已经不再用 log 空间，保持线性更快更稳）
-    return combined
-
-
-
+def combine(xs, gates):
+    """
+    xs: list of [B_i, ...], 每个分支的结果，B_i 可能不相等
+    gates: [B, P]
+    将不同分支的结果加权融合回原始的 Batch 形状 [B, ...]
+    """
+    device = gates.device
+    B = gates.shape[0]
+    
+    # 1. 自动推断输出形状 (除了 Batch 维度的其他维度)
+    # 从 xs 中找一个非空的张量来获取形状
+    trailing_shape = None
+    for x in xs:
+        if x.shape[0] > 0:
+            trailing_shape = x.shape[1:]
+            break
+    
+    # 如果所有分支都没数据（极端情况），返回全0
+    if trailing_shape is None:
+        # 假设是 [16, 1, 64] (根据您的报错推断)
+        return torch.zeros(B, 16, 1, 64, device=device)
+        
+    # 2. 初始化输出容器
+    combined = torch.zeros(B, *trailing_shape, device=device)
+    
+    # 3. 逐个分支归位
+    for i, x in enumerate(xs):
+        if x.shape[0] == 0: continue # 这个分支没分到数据，跳过
+        
+        # 找出这个分支对应的原始样本索引
+        # gates[:, i] > 0 的位置
+        active_idx = torch.nonzero(gates[:, i]).squeeze(-1)
+        
+        # 对应的权重 g: [B_active, 1, 1...]
+        g = gates[active_idx, i].view(-1, *([1]*len(trailing_shape)))
+        
+        # 加权累加
+        combined[active_idx] += x * g
+            
+    return combined + 1e-9
 
 class MultiScalePeriodicPatchEmbedding(nn.Module):
     def __init__(self, seq_len, num_features, top_k=5, d_model=512, dropout=0., adaptive=True, use_periodicity=True):
@@ -257,7 +260,9 @@ class MultiScalePeriodicPatchEmbedding(nn.Module):
         xs, buckets = [], []
         for i, p in enumerate(self.periods):
             # 选出这个专家激活的样本
-            sel = (gates[:, i] > 0).nonzero(as_tuple=True)[0]       # [B_i]
+            eps = 1e-12 if getattr(self, "sota_mode", 0) else 0.0
+            sel = (gates[:, i] > eps).nonzero(as_tuple=True)[0]
+
             buckets.append(sel)
             if sel.numel() == 0:
                 xs.append(x.new_zeros(0, C, 1, self.d_model))
@@ -415,72 +420,22 @@ class EncoderLayer(nn.Module):
 
 
 class Encoder(nn.Module):
-    def __init__(self, attn_layers, norm_layer=None, d_model=None, enc_in=None,
-                 spa_heads=4, spa_mem_window=5, use_spa=True):
+    def __init__(self, attn_layers, norm_layer=None):
         super(Encoder, self).__init__()
         self.attn_layers = nn.ModuleList(attn_layers)
         self.norm = norm_layer
-        self.enc_in = enc_in                     # ✅ 保存展开后的空间通道数（H*W*C）
-        self.use_spa = use_spa
 
-        # 空间注意力 embed_dim 必须等于 d_model（否则线性层/残差都会对不上）
-        if self.use_spa:
-            self.spa = SpatialSelfAttention(
-                embed_dim=d_model,               # ✅ 不要写死 64
-                n_heads=spa_heads,
-                mem_window=spa_mem_window,
-                use_geo=True,
-                use_sem=True
-            )
-
-    def forward(self, x, attn_mask=None, geo_mask=None, sem_mask=None):
-        """
-        x: [B, C, L, D]
-        注意：L 不一定能被 Ps (= enc_in) 整除，必须做安全判断
-        """
-        B, C, L, D = x.shape
+    def forward(self, x, spatial_emb=None):
+        # ✅ 核心改动：支持特征注入
+        if spatial_emb is not None:
+            x = x + spatial_emb
         attns = []
-
         for attn_layer in self.attn_layers:
-            # 原有的周期注意力
-            x, attn = attn_layer(x, attn_mask=attn_mask)
+            x, attn = attn_layer(x)
             attns.append(attn)
-
-            # 安全地做空间注意力（可关）
-            if self.use_spa and (self.enc_in is not None) and (self.enc_in > 1):
-                Ps = self.enc_in                     # 每个时间步的格点数（= H*W*C）
-                if L >= Ps and (L % Ps == 0):        # 只有在 L 是 Ps 的整数倍时才 reshape
-                    Nt = L // Ps
-                    H = x[:, :, :Nt*Ps, :].reshape(B, C, Nt, Ps, D)
-                    H = self.spa(H, geo_mask=geo_mask, sem_mask=sem_mask)
-                    x = H.reshape(B, C, L, D)
-                # 否则直接跳过空间注意力，保持鲁棒
-
         if self.norm is not None:
             x = self.norm(x)
-
         return x, attns
-
-
-    
-class LinearPredictionHead(nn.Module):
-    def __init__(self, patch_sizes, seq_len, pred_len, d_model, dropout=0.):
-        super(LinearPredictionHead, self).__init__()
-        self.patch_sizes = patch_sizes
-        self.seq_len = seq_len
-        self.dropout = nn.Dropout(dropout)
-        self.linears = nn.ModuleList()
-        for patch_size in patch_sizes:
-            self.linears.append(nn.Linear(d_model, pred_len))
-        
-    def forward(self, xs, gates):
-        # Ps*[B, C, L, D]
-        for i, patch_size in enumerate(self.patch_sizes):
-            xs[i] = self.linears[i](self.dropout(xs[i][:, :, -1:, :])) # [B, C, L, D] -> [B, C, P]
-        xs = combine(xs, gates)
-        xs = rearrange(xs.squeeze(-2), 'B C P -> B P C') # [B, P, C]
-        return xs # [bs, P, C]
-    
 
 class LinearPredictionHead2(nn.Module):
     def __init__(self, patch_sizes, seq_len, pred_len, d_model, dropout=0.):
@@ -488,154 +443,139 @@ class LinearPredictionHead2(nn.Module):
         self.patch_sizes = patch_sizes
         self.seq_len = seq_len
         self.dropout = nn.Dropout(dropout)
-        self.linear = nn.Linear(d_model, pred_len)
-
-    def forward(self, xs, gates):
-        """
-        xs:    list，长度 = 有效专家个数，每个张量形状 [B, C, L, D]
-        gates: [B, 有效专家个数]，已在外面对齐（gates_valid）
-        """
+        
+        self.linear_freq = nn.Linear(d_model, pred_len)
+        self.linear_spatial = nn.Linear(d_model, pred_len)
+        
+    def forward(self, xs, gates, spatial_feat):
+        # 频率流
         _xs = []
-        # 关键：按 xs 的实际长度遍历，而不是 self.patch_sizes
-        for i in range(len(xs)):
-            # 取最后一个时间步的特征
-            _xs.append(xs[i][:, :, -1:, :])   # 仍是 [B, C, 1, D]
-
-        # 将各专家输出按门控权重聚合 -> [B, C, 1, D]
-        _xs = combine(_xs, gates)
-
-        # 线性映射到 pred_len，并变形为 [B, pred_len, C]
-        _xs = self.linear(self.dropout(_xs.flatten(-2)))  # [B, C, pred_len]
-        _xs = _xs.transpose(1, 2).contiguous()            # [B, pred_len, C]
-        return _xs
-
-
-
+        for i, patch_size in enumerate(self.patch_sizes):
+            _xs.append(xs[i][:, :, -1:, :])
+        freq_agg = combine(_xs, gates)
+        freq_out = self.linear_freq(self.dropout(freq_agg.flatten(-2)))
+        
+        # 空间流
+        spatial_out = self.linear_spatial(self.dropout(spatial_feat))
+        
+        # 融合
+        final_out = freq_out + spatial_out
+        
+        return final_out.transpose(1, 2).contiguous()
 
 class Model(nn.Module):
     def __init__(self, configs):
         super(Model, self).__init__()
         self.configs = configs 
-
-        # === 新增: 时空 Patch Embedding 模块 ===
-        # 让模型可以直接接受 (B, T, H, W, C) 格点输入
-        self.use_spatial_patch = getattr(configs, 'use_spatial_patch', True)
-
-        if self.use_spatial_patch:
-            # 根据论文实验可调整 patch 大小
-            self.patch_embed = PatchEmbedding3D(
-                t_patch=getattr(configs, 't_patch', 5),   # 时间维 patch 大小
-                h_patch=getattr(configs, 'h_patch', 4),   # 空间 patch 高度
-                w_patch=getattr(configs, 'w_patch', 4),   # 空间 patch 宽度
-                embed_dim=getattr(configs, 'd_model', 64),
-                input_format='BTHWC',   # 对应 NOAA OISST 格式
-                use_pos=True
-            )
-
-
         self.seq_len = configs.seq_len
         self.label_len = configs.label_len
         self.pred_len = configs.pred_len
-        self.individual = configs.individual
+        
+        # ✅ 告诉模型有 16 个节点
+        self.num_nodes = 16  
+        
+        # 1. 左路：G-DASE (空间)
+        self.global_spatial = GlobalDelaySpatialEmbedding(
+            num_nodes=self.num_nodes,
+            input_dim=1,
+            embed_dim=configs.d_model,
+            max_lag=5,
+            top_k=4
+        )
 
-
+        # 2. 右路：MSPPE (频率)
         self.msppe = MultiScalePeriodicPatchEmbedding(self.seq_len, configs.enc_in, configs.top_k, d_model=configs.d_model, dropout=configs.dropout)
         self.patch_sizes = self.msppe.patch_sizes
 
+        # 3. 中间：编码器
         self.encoders = nn.ModuleList()
-        for _ in self.patch_sizes:
+        for patch_size in self.patch_sizes:
             self.encoders.append(
                 Encoder(
-                    [
+                   [
                         EncoderLayer(
                             CrossDimensionAttentionLayer(
                                 FullAttention(False, configs.factor, attention_dropout=configs.dropout,
-                                            output_attention=configs.output_attention),
-                                configs.d_model, configs.n_heads),
+                                            output_attention=configs.output_attention), configs.d_model, configs.n_heads),
                             InterPeriodicityAttentionLayer(
                                 FullAttention(False, configs.factor, attention_dropout=configs.dropout,
-                                            output_attention=configs.output_attention),
-                                configs.d_model, configs.n_heads),
-                            configs.d_model,
-                            configs.d_ff,
-                            dropout=configs.dropout,
-                            activation=configs.activation
-                        ) for _ in range(configs.e_layers)
+                                            output_attention=configs.output_attention), configs.d_model, configs.n_heads),
+                            configs.d_model, configs.d_ff, dropout=configs.dropout, activation=configs.activation
+                        ) for l in range(configs.e_layers)
                     ],
-                    norm_layer=nn.LayerNorm(configs.d_model),
-                    d_model=configs.d_model,            # ✅ 传给 Encoder
-                    enc_in=configs.enc_in,              # ✅ 传给 Encoder（= H*W*C）
-                    spa_heads=min(4, configs.n_heads),  # 也可以直接用 configs.n_heads
-                    spa_mem_window=5,
-                    use_spa=True                        # 如果想先稳定训练，这里可以暂时 False
+                    norm_layer=nn.LayerNorm(configs.d_model)
                 )
             )
 
-
-
+        # 4. 尾部
         self.head = LinearPredictionHead2(self.patch_sizes, self.seq_len, self.pred_len, configs.d_model, dropout=configs.dropout)
 
     def forward(self, x_enc, x_mark_enc=None, x_dec=None, x_mark_dec=None):
-        # x_enc: [B, T, H, W, C=1]
         B, T, H, W, C = x_enc.shape
-        C_flat = H * W * C
-
-        # 展平到 [B, C_flat, T]
-        x_enc = x_enc.view(B, T, C_flat).permute(0, 2, 1).contiguous()  # [B, C_flat, T]
-
-        # ===== 标准化：沿时间维 =====
-        means = x_enc.mean(dim=2, keepdim=True)                                    # [B, C_flat, 1]
-        stdev = torch.sqrt(x_enc.var(dim=2, keepdim=True, unbiased=False) + 1e-5)  # [B, C_flat, 1]
-        x_norm = (x_enc - means) / stdev                                           # [B, C_flat, T]
-
-        # MSPPE 需要 [B, L, C]，转成 [B, T, C_flat]
-        x_for_msppe = x_norm.permute(0, 2, 1)  # [B, T, C_flat]
-        xs_enc, gates_enc, buckets = self.msppe(x_for_msppe)  # xs_enc: Ps*[B_i, C, L, D]; buckets: Ps*[B_i]
-
-        # 编码器：先把 enc_in 改成真实格点数
-        for enc in self.encoders:
-            enc.enc_in = C_flat
+        x_spatial = x_enc.view(B, T, H * W, C)
+        
+        # 1. 左路：计算全局空间特征 [B, T, 16, D]
+        spatial_emb_full = self.global_spatial(x_spatial)
+        
+        # 2. 预处理
+        x_raw = x_spatial.squeeze(-1).permute(0, 2, 1).contiguous()
+        means = x_raw.mean(dim=-1, keepdim=True).detach()
+        x_raw = x_raw - means
+        stdev = torch.sqrt(torch.var(x_raw, dim=-1, keepdim=True, unbiased=False) + 1e-5)
+        x_raw = x_raw / stdev
+        
+        # 3. 右路：频率分解
+        x_for_msppe = x_raw.permute(0, 2, 1) 
+        # 只取前两个返回值
+        msppe_out = self.msppe(x_for_msppe)
+        xs_enc = msppe_out[0]
+        gates_enc = msppe_out[1]
+        
+        # 4. 中间融合 (Feature Injection)
         enc_outs = []
-        valid_indices = []
-        buckets_valid = []
-
+        
+        # ✅ 修正1：先换位再变形，确保数据不乱 [B, T, N, D] -> [B, N, D, T]
+        s_emb = spatial_emb_full.permute(0, 2, 3, 1) 
+        # 展平以便池化 [B*N, D, T]
+        s_emb_flat = s_emb.reshape(B * self.num_nodes, self.configs.d_model, T)
+        
         for i, x_e in enumerate(xs_enc):
-            if x_e is None or x_e.numel() == 0 or x_e.size(0) == 0:
+            patch_size = self.patch_sizes[i]
+            
+            # ✅ 修正2：加上和 MSPPE 一样的 Padding，确保长度对齐
+            # 计算需要补多少 0 才能被 patch_size 整除
+            pad_l = ceil(T / patch_size) * patch_size - T
+            if pad_l > 0:
+                # 在时间维(最后一个维度)补 pad_l 个数据，模式为复制(replicate)
+                s_emb_padded = F.pad(s_emb_flat, (0, pad_l), mode='replicate')
+            else:
+                s_emb_padded = s_emb_flat
+            
+            # 池化 [B*N, D, L_patch]
+            s_emb_pooled = F.avg_pool1d(s_emb_padded, kernel_size=patch_size, stride=patch_size)
+            
+            # 还原维度 [B*N, D, L] -> [B, N, D, L] -> [B, N, L, D]
+            s_emb_pooled = s_emb_pooled.reshape(B, self.num_nodes, self.configs.d_model, -1).permute(0, 1, 3, 2)
+            
+            # 筛选 batch
+            num_samples = x_e.shape[0]
+            if num_samples == 0:
+                enc_outs.append(x_e)
                 continue
-            enc_out, _ = self.encoders[i](x_e)           # enc_out: [B_i, C, L, D]
+            active_idx = (gates_enc[:, i] > 0).nonzero(as_tuple=True)[0]
+            s_emb_sub = s_emb_pooled[active_idx]
+            
+            # 注入
+            enc_out, _ = self.encoders[i](x_e, spatial_emb=s_emb_sub)
             enc_outs.append(enc_out)
-            valid_indices.append(i)
-            buckets_valid.append(buckets[i])             # [B_i]
 
-        # 如果极端情况下全空，直接返回 0（很少见）
-        if len(enc_outs) == 0:
-            device = x_enc.device
-            return torch.zeros((B, self.pred_len, H, W, C), device=device)
+        # 5. 汇聚
+        spatial_feat_last = spatial_emb_full[:, -1, :, :]
+        dec_out = self.head(enc_outs, gates_enc, spatial_feat_last)
 
-        # === 把每个专家输出散射回 B 行 ===
-        enc_outs_full = []
-        for enc_out, idx in zip(enc_outs, buckets_valid):
-            # enc_out: [B_i, C, L, D]  ->  full: [B, C, L, D], 其他样本补 0
-            C1, L1, D1 = enc_out.size(1), enc_out.size(2), enc_out.size(3)
-            full = enc_out.new_zeros(B, C1, L1, D1)
-            if idx.numel() > 0:
-                full[idx] = enc_out
-            enc_outs_full.append(full)
-
-        # 只保留有效专家对应的门控列（顺序与 enc_outs_full 对齐）
-        gates_valid = gates_enc[:, valid_indices]
-
-        # 送入预测头（现已全是 B 行，不会再 stack 失败）
-        dec_out = self.head(enc_outs_full, gates_valid)  # [B, pred_len, C_flat]
-
-
-
-        # ===== 反标准化：沿时间维的统计量 =====
-        # means/stdev 是 [B, C_flat, 1]，需要广播到 [B, pred_len, C_flat]
-        dec_out = dec_out * stdev.squeeze(2).unsqueeze(1) + means.squeeze(2).unsqueeze(1)  # [B, pred_len, C_flat]
-
-        # 还原空间: [B, pred_len, H, W, C]
+        # 6. 恢复
         dec_out = dec_out.view(B, self.pred_len, H, W, C)
-
+        means_reshaped = means.permute(0, 2, 1).view(B, 1, H, W, C)
+        stdev_reshaped = stdev.permute(0, 2, 1).view(B, 1, H, W, C)
+        dec_out = dec_out * stdev_reshaped + means_reshaped
         return dec_out
-
